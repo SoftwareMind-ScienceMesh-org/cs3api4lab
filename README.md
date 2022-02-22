@@ -154,6 +154,12 @@ to
 ```
 c.ServerApp.contents_manager_class = 'cs3api4lab.CS3APIsManager'
 ```
+### Disable default file browser
+Copy page_config.json from jupyter-config/page_config.json to:
+* Windows:
+  ```C:\Users\{USER_PROFILE}\.jupyter\labconfig```
+* Linux:
+  ```HOME_FOLDER/.jupyter/labconfig```
 
 ### CS3 config file
 Copy cs3 example config file from "jupyter-config/jupyter_cs3_config.json"

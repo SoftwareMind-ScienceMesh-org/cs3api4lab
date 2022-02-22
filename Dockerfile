@@ -13,9 +13,13 @@ RUN cd /opt/cs3 && \
     rm -rf "/home/${NB_USER}/.cache/yarn" && \
     cd / && \
     rm -rf /opt/cs3 && \
-    fix-permissions "/home/${NB_USER}" 
+    fix-permissions "/home/${NB_USER}"
+
 
 RUN echo "c.ServerApp.contents_manager_class = 'cs3api4lab.CS3APIsManager'" >> /etc/jupyter/jupyter_server_config.py
+
+RUN mkdir /etc/jupyter/labconfig
+COPY ./jupyter-config/page_config.json /etc/jupyter/labconfig/
 
 USER $NB_UID
 
