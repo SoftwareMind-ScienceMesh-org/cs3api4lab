@@ -189,8 +189,9 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
     commandPalette: ICommandPalette | null,
     mainMenu: IMainMenu | null
   ): void {
-    const browser = factory.defaultBrowser;
+    // const browser = factory.defaultBrowser;
     const { commands } = app;
+    docManager.services.contents.dispose();
 
     const cs3Panel = new Cs3Panel(
       'cs3 panel',
@@ -331,14 +332,14 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
       mainMenu
     );
 
-    void Promise.all([app.restored, browser.model.restored]).then(() => {
+    void Promise.all([app.restored, fileBrowser.model.restored]).then(() => {
       function maybeCreate() {
         // Create a launcher if there are no open items.
         if (
           labShell.isEmpty('main') &&
           commands.hasCommand('launcher:create')
         ) {
-          void createLauncher(commands, browser);
+          void createLauncher(commands, fileBrowser);
         }
       }
 
@@ -358,17 +359,17 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
           navigateToCurrentDirectory = settings.get(
             'navigateToCurrentDirectory'
           ).composite as boolean;
-          browser.navigateToCurrentDirectory = navigateToCurrentDirectory;
+          fileBrowser.navigateToCurrentDirectory = navigateToCurrentDirectory;
         });
         navigateToCurrentDirectory = settings.get('navigateToCurrentDirectory')
           .composite as boolean;
-        browser.navigateToCurrentDirectory = navigateToCurrentDirectory;
+        fileBrowser.navigateToCurrentDirectory = navigateToCurrentDirectory;
         settings.changed.connect(settings => {
           useFuzzyFilter = settings.get('useFuzzyFilter').composite as boolean;
-          browser.useFuzzyFilter = useFuzzyFilter;
+          fileBrowser.useFuzzyFilter = useFuzzyFilter;
         });
         useFuzzyFilter = settings.get('useFuzzyFilter').composite as boolean;
-        browser.useFuzzyFilter = useFuzzyFilter;
+        fileBrowser.useFuzzyFilter = useFuzzyFilter;
       });
 
     cs3Panel.addTab(fileBrowser);

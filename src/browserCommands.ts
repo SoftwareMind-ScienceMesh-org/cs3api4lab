@@ -391,11 +391,10 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.createNewFile, {
     execute: () => {
-      const {
-        model: { path }
-      } = browser;
       void commands.execute('docmanager:new-untitled', {
-        path,
+        path: tracker.currentWidget?.model.path
+          .toString()
+          .replace('cs3drive:', ''),
         type: 'file',
         ext: 'txt'
       });
@@ -406,11 +405,10 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.createNewMarkdownFile, {
     execute: () => {
-      const {
-        model: { path }
-      } = browser;
       void commands.execute('docmanager:new-untitled', {
-        path,
+        path: tracker.currentWidget?.model.path
+          .toString()
+          .replace('cs3drive:', ''),
         type: 'file',
         ext: 'md'
       });
