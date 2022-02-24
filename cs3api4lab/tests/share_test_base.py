@@ -1,13 +1,6 @@
 import random
 import string
 
-from cs3api4lab.api.cs3_ocm_share_api import Cs3OcmShareApi
-from cs3api4lab.api.share_api_facade import ShareAPIFacade
-
-from cs3api4lab.api.cs3_file_api import Cs3FileApi
-from cs3api4lab.api.cs3_share_api import Cs3ShareApi
-from cs3api4lab.config.config_manager import Cs3ConfigManager
-from cs3api4lab.logic.storage_logic import StorageLogic
 from cs3api4lab.tests.extensions import *
 
 
@@ -34,7 +27,8 @@ class ShareTestBase:
             "authenticator_class": "cs3api4lab.auth.RevaPassword",
             "client_id": "marie",
             "client_secret": "radioactivity",
-	        "locks_expiration_time": 10
+	        "locks_expiration_time": 10,
+            "tus_enabled": False
             }
         richard_local_config = {
             "reva_host": "127.0.0.1:19000",
@@ -49,7 +43,8 @@ class ShareTestBase:
             "authenticator_class": "cs3api4lab.auth.RevaPassword",
             "client_id": "richard",
             "client_secret": "superfluidity",
-	        "locks_expiration_time": 10
+	        "locks_expiration_time": 10,
+            "tus_enabled": False
         }
         self.marie_uni_api = ExtCs3ShareApiFacade(self.log, marie_ext_config)
         self.marie_file_api = ExtCs3FileApi(self.log, marie_ext_config)

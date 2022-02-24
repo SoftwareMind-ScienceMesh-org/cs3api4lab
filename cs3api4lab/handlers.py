@@ -70,7 +70,8 @@ class ListReceivedSharesHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self):
-        RequestHandler.handle_request(self, self.share_api.list_received, 200)
+        accepted = self.get_query_argument('accepted', default='true')
+        RequestHandler.handle_request(self, self.share_api.list_received, 200, accepted == 'true')
 
     @web.authenticated
     @gen.coroutine

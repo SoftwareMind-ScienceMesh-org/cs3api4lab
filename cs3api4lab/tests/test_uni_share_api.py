@@ -78,6 +78,30 @@ class TestCs3UniShareApi(ShareTestBase, TestCase, LoggingConfigurable):
             if self.file_name:
                 self.remove_test_file('richard', self.file_name)
 
+    def test_list_received_not_accepted(self):
+        try:
+            self.file_name = self.file_path + self.get_random_suffix()
+            created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
+            self.share_id = created_share['opaque_id']
+
+            share_list = self.uni_api.list_received()
+            contains = False
+            for share in share_list['content']:
+                if share['path'].__contains__(self.file_name.split('/')[-1]):
+                    contains = True
+            self.assertTrue(contains, "Share not present")
+
+            self.uni_api.update_received(self.share_id, 'ACCEPTED')
+            share_list = self.uni_api.list_received(accepted=False)
+            for share in share_list['content']:
+                self.assertFalse(share['path'].__contains__(self.file_name.split('/')[-1]),
+                                 "Accepted share present")
+        finally:
+            if self.share_id:
+                self.remove_test_share('richard', self.share_id)
+            if self.file_name:
+                self.remove_test_file('richard', self.file_name)
+
     @skip
     def test_list_received_ocm(self):
         try:

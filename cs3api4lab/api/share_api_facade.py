@@ -100,7 +100,7 @@ class ShareAPIFacade:
             ocm_share_list = None
         return self.map_shares(share_list, ocm_share_list)
 
-    def list_received(self):
+    def list_received(self, accepted=True):
         """
         :return: received shares and OCM received shares combined and mapped to Jupyter model
         :rtype: dict
@@ -110,7 +110,10 @@ class ShareAPIFacade:
             ocm_share_list = self.ocm_share_api.list_received()
         else:
             ocm_share_list = None
-        return self.map_shares(share_list, ocm_share_list, True)
+        mapped_shares = self.map_shares(share_list, ocm_share_list, True)
+        if not accepted:
+            mapped_shares['content'] = list(filter(lambda share: share['accepted'] is False, mapped_shares['content']))
+        return mapped_shares
 
     def list_grantees_for_file(self, file_path):
         """
