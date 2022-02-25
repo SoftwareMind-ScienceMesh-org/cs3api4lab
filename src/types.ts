@@ -61,3 +61,11 @@ export type Grantee = {
   permissions: string;
   idp: string;
 };
+
+export type PendingSharesOptions = {
+  id: string;
+  title: {
+    caption: string;
+    label: string;
+  };
+};
