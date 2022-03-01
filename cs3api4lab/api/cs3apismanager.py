@@ -1,15 +1,18 @@
-from base64 import decodebytes
-from datetime import datetime
 import nbformat
 import mimetypes
-from notebook.services.contents.manager import ContentsManager
-from cs3api4lab.api.cs3_file_api import Cs3FileApi
+
+from base64 import decodebytes
+from datetime import datetime
 from tornado import web
 from notebook import _tz as tz
 from nbformat.v4 import new_notebook
+from notebook.services.contents.manager import ContentsManager
+
+from cs3api4lab.api.cs3_file_api import Cs3FileApi
 from cs3api4lab.config.config_manager import Cs3ConfigManager
-from cs3api4lab.utils.share_utils import ShareUtils
 from cs3api4lab.api.share_api_facade import ShareAPIFacade
+from cs3api4lab.utils.share_utils import ShareUtils
+from cs3api4lab.utils.file_utils import FileUtils
 
 
 class CS3APIsManager(ContentsManager):
@@ -56,7 +59,7 @@ class CS3APIsManager(ContentsManager):
         hidden : bool
             Whether the path is hidden.
         """
-        path = self._normalize_path(path)
+        path = FileUtils.normalize_path(path)
         parts = path.split('/')
         if any(part.startswith('.') for part in parts):
             return True
@@ -76,7 +79,7 @@ class CS3APIsManager(ContentsManager):
             Whether the file exists.
         """
         parent_path = self._get_parent_path(path)
-        path = self._normalize_path(path)
+        path = FileUtils.normalize_path(path)
         try:
             cs3_container = self.file_api.read_directory(parent_path, self.cs3_config['endpoint'])
         except Exception as ex:
@@ -91,7 +94,7 @@ class CS3APIsManager(ContentsManager):
 
     def get(self, path, content=True, type=None, format=None):
         """Get a file, notebook or directory model."""
-        path = self._normalize_path(path)
+        path = FileUtils.normalize_path(path)
         if type in (None, 'directory') and self._is_dir(path):
             model = self._dir_model(path, content=content)
         elif type == 'notebook' or (type is None and path.endswith('.ipynb')):
@@ -110,7 +113,7 @@ class CS3APIsManager(ContentsManager):
         should call self.run_pre_save_hook(model=model, path=path) prior to
         writing any data.
         """
-        path = self._normalize_path(path)
+        path = FileUtils.normalize_path(path)
         self._check_write_permissions(path)
 
         if 'type' not in model:
@@ -168,7 +171,7 @@ class CS3APIsManager(ContentsManager):
 
     def delete_file(self, path):
         """Delete the file or directory at path."""
-        path = self._normalize_path(path)
+        path = FileUtils.normalize_path(path)
         try:
             self.file_api.remove(path, self.cs3_config['endpoint'])
 
@@ -189,8 +192,8 @@ class CS3APIsManager(ContentsManager):
         #
         # ToDo: Implements validate file like: notebook/services/contents/filemanager.py:587 using Reva API
         #
-        old_path = self._normalize_path(old_path)
-        new_path = self._normalize_path(new_path)
+        old_path = FileUtils.normalize_path(old_path)
+        new_path = FileUtils.normalize_path(new_path)
 
         # Move the file
         try:
@@ -229,14 +232,6 @@ class CS3APIsManager(ContentsManager):
 
         return model
 
-    def _normalize_path(self, path):
-
-        if len(path) > 0 and path[0] != '/':
-            path = '/' + path
-        elif path == '' or path is None:
-            path = '/'
-        return path
-
     def _get_parent_path(self, path):
 
         directories = path.rsplit('/')
@@ -245,7 +240,7 @@ class CS3APIsManager(ContentsManager):
         if directories[0] != '':
             path = self._replace_last(str(path), directories[0])
 
-        return self._normalize_path(path)
+        return FileUtils.normalize_path(path)
 
     def _replace_last(self, source_string, replace_what, replace_with=""):
         head, _sep, tail = source_string.rpartition(replace_what)
@@ -313,7 +308,7 @@ class CS3APIsManager(ContentsManager):
             return True
 
         parent_path = self._get_parent_path(path)
-        path = self._normalize_path(path)
+        path = FileUtils.normalize_path(path)
 
         try:
             cs3_container = self.file_api.read_directory(parent_path, self.cs3_config['endpoint'])

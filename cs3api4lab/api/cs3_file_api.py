@@ -191,7 +191,8 @@ class Cs3FileApi:
         out = []
         for info in res.infos:
             if len(self.config['home_dir']) > 0 and info.path.startswith(self.config['home_dir']):
-                info.path = info.path.rsplit(self.config['home_dir'])[-1]
+                info_path = info.path.rsplit(self.config['home_dir'])[-1]
+                info.path = FileUtils.normalize_path(info_path)
             out.append(info)
         return out
 
