@@ -37,3 +37,12 @@ class FileUtils:
             content_len = len(content.decode('utf-8'))
         content_size = str(content_len)
         return content_size
+
+    @staticmethod
+    def normalize_path(path):
+
+        if len(path) > 0 and path[0] != '/':
+            path = '/' + path
+        elif path == '' or path is None:
+            path = '/'
+        return path
