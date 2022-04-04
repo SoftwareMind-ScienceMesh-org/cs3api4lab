@@ -70,8 +70,8 @@ class ListReceivedSharesHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self):
-        accepted = self.get_query_argument('accepted', default='true')
-        RequestHandler.handle_request(self, self.share_api.list_received, 200, accepted == 'true')
+        status = self.get_query_argument('status', default=None)
+        RequestHandler.handle_request(self, self.share_api.list_received, 200, status)
 
     @web.authenticated
     @gen.coroutine
@@ -101,6 +101,16 @@ class GetHome(APIHandler):
     @gen.coroutine
     def get(self):
         RequestHandler.handle_request(self, self.file_api.mount_point, 200)
+
+class SharedFolder(APIHandler):
+    @property
+    def file_api(self):
+        return Cs3FileApi(self.log)
+
+    @web.authenticated
+    @gen.coroutine
+    def get(self):
+        RequestHandler.handle_request(self, self.file_api.shared_folder, 200)
 
 class PublicSharesHandler(APIHandler):
     @property
@@ -210,6 +220,7 @@ def setup_handlers(web_app, url_path):
         (r"/api/cs3/shares/list", ListSharesHandler),
         (r"/api/cs3/shares/received", ListReceivedSharesHandler),
         (r"/api/cs3/shares/file", ListSharesForFile),
+        (r"/api/cs3/shares/shared_folder", SharedFolder),
         (r"/api/cs3/public/shares", PublicSharesHandler),
         (r"/api/cs3/public/shares/list", ListPublicSharesHandler),
         (r"/api/cs3/public/share", GetPublicShareByTokenHandler),

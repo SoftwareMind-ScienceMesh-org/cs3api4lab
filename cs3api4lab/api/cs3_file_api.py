@@ -22,6 +22,7 @@ from cs3api4lab.auth.authenticator import Auth
 from cs3api4lab.auth.channel_connector import ChannelConnector
 from cs3api4lab.config.config_manager import Cs3ConfigManager
 from cs3api4lab.api.lock_manager import LockManager
+from cs3api4lab.utils.model_utils import ModelUtils
 
 
 class Cs3FileApi:
@@ -40,7 +41,7 @@ class Cs3FileApi:
         intercept_channel = grpc.intercept_channel(channel, auth_interceptor)
         self.cs3_api = cs3gw_grpc.GatewayAPIStub(intercept_channel)
         self.storage_logic = StorageLogic(log)
-
+        self.model_utils = ModelUtils()
         self.lock_manager = LockManager(log)
 
         return
@@ -231,3 +232,10 @@ class Cs3FileApi:
         tend = time.time()
         self.log.debug(
             'msg="Invoked create container" filepath="%s" elapsedTimems="%.1f"' % (path, (tend - tstart) * 1000))
+
+    def shared_folder(self):
+        """
+        List a shared folder - MyShares by default
+        """
+        container = self.read_directory(self.config['shared_folder'])
+        return self.model_utils.convert_container_to_directory_model(self.config['shared_folder'], container)

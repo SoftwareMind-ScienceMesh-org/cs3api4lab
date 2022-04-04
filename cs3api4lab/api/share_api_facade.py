@@ -2,7 +2,7 @@ import cs3.ocm.provider.v1beta1.provider_api_pb2_grpc as ocm_provider_api_grpc
 import urllib.parse
 
 from cs3api4lab.auth.authenticator import Auth
-from cs3api4lab.api.cs3_file_api import Cs3FileApi  # todo remove this
+from cs3api4lab.api.cs3_file_api import Cs3FileApi
 from cs3api4lab.common.strings import *
 from cs3api4lab.config.config_manager import Cs3ConfigManager
 from cs3api4lab.auth.channel_connector import ChannelConnector
@@ -15,7 +15,6 @@ from cs3api4lab.utils.share_utils import ShareUtils
 from cs3api4lab.utils.model_utils import ModelUtils
 from cs3api4lab.logic.storage_logic import StorageLogic
 from cs3api4lab.exception.exceptions import OCMError
-
 
 class ShareAPIFacade:
     TYPE_FILE = 1
@@ -100,19 +99,22 @@ class ShareAPIFacade:
             ocm_share_list = None
         return self.map_shares(share_list, ocm_share_list)
 
-    def list_received(self, accepted=True):
+    def list_received(self, status=None):
         """
         :return: received shares and OCM received shares combined and mapped to Jupyter model
         :rtype: dict
         """
+
         share_list = self.share_api.list_received()
         if self.config['enable_ocm']:
             ocm_share_list = self.ocm_share_api.list_received()
         else:
             ocm_share_list = None
+
         mapped_shares = self.map_shares(share_list, ocm_share_list, True)
-        if not accepted:
-            mapped_shares['content'] = list(filter(lambda share: share['accepted'] is False, mapped_shares['content']))
+        if status is not None:
+            mapped_shares['content'] = list(filter(lambda share: share['state'] == status, mapped_shares['content']))
+
         return mapped_shares
 
     def list_grantees_for_file(self, file_path):
@@ -206,7 +208,7 @@ class ShareAPIFacade:
                 continue
 
             if received:
-                model['accepted'] = ShareUtils.is_accepted(list_response.shares[share_no].state)
+                model['state'] = ShareUtils.map_state(list_response.shares[share_no].state)
             if model['path'] not in path_list:
                 respond_model['content'].append(model)
                 path_list.append(model['path'])

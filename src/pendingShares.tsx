@@ -4,6 +4,8 @@ import * as React from 'react';
 import { folderIcon } from '@jupyterlab/ui-components';
 import { acceptIcon, declineIcon } from './icons';
 import { PendingSharesOptions } from './types';
+import { Message } from '@lumino/messaging';
+import { requestAPI } from './services';
 
 export class Cs3PendingSharesWidget extends Widget {
   layout: PanelLayout;
@@ -33,6 +35,18 @@ class PendingSharesList extends ReactWidget {
     super();
     this.addClass('jp-pending-shares-listing-wrapper');
   }
+
+  protected async onBeforeAttach(msg: Message) {
+    super.onBeforeAttach(msg);
+    const pendingRequest = await requestAPI(
+      '/api/cs3/shares/received?status=pending',
+      {
+        method: 'GET'
+      }
+    );
+    console.log('pending shares', pendingRequest);
+  }
+
   protected render(): JSX.Element {
     const randomList: number[] = Array.from({ length: 40 }, () =>
       Math.floor(Math.random() * 40)
