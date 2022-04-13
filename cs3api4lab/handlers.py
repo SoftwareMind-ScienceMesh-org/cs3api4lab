@@ -76,9 +76,10 @@ class ListReceivedSharesHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def put(self):
-        share_id = self.get_query_argument('share_id', default=None)
-        state = self.get_query_argument('state', default='pending')
-        RequestHandler.handle_request(self, self.share_api.update_received, 200, share_id, state)
+        body = self.get_json_body()
+        # share_id = self.get_query_argument('share_id', default=None)
+        # state = self.get_query_argument('state', default='pending')
+        RequestHandler.handle_request(self, self.share_api.update_received, 200, body["share_id"], body["state"])
 
 
 class ListSharesForFile(APIHandler):

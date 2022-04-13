@@ -133,7 +133,7 @@ class Cs3OcmShareApi:
             return
         else:
             self._handle_error(response, "Error updating OCM received share:")
-        return response
+        return response.opaque
 
     def list(self, share_id=None):
         if share_id is None:

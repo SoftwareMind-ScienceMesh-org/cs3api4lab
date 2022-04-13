@@ -43,7 +43,7 @@
 }
 
 .jp-pending-shares-header {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     display: flex;
     padding: 0 12px;
     align-items: stretch;

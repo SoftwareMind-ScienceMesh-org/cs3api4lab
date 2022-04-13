@@ -1,11 +1,16 @@
 import { ReactWidget } from '@jupyterlab/apputils';
 import { PanelLayout, Widget } from '@lumino/widgets';
 import * as React from 'react';
-import { folderIcon } from '@jupyterlab/ui-components';
 import { acceptIcon, declineIcon } from './icons';
-import { PendingSharesOptions } from './types';
-import { Message } from '@lumino/messaging';
-import { requestAPI } from './services';
+import {
+  AcceptButtonProps,
+  DeclineButtonProps,
+  PendingShareProp,
+  PendingSharesOptions
+} from './types';
+import { findFileIcon, requestAPI } from './services';
+import { useEffect, useState } from 'react';
+import { Time } from '@jupyterlab/coreutils';
 
 export class Cs3PendingSharesWidget extends Widget {
   layout: PanelLayout;
@@ -19,7 +24,7 @@ export class Cs3PendingSharesWidget extends Widget {
 
     this.layout = new PanelLayout();
     this.layout.addWidget(new PendingSharesHeader(options));
-    this.layout.addWidget(new PendingSharesList());
+    this.layout.addWidget(new PendingSharesListWrapper());
   }
 
   protected onResize(msg: Widget.ResizeMessage): void {
@@ -30,50 +35,82 @@ export class Cs3PendingSharesWidget extends Widget {
   }
 }
 
-class PendingSharesList extends ReactWidget {
+class PendingSharesListWrapper extends ReactWidget {
   constructor() {
     super();
     this.addClass('jp-pending-shares-listing-wrapper');
   }
 
-  protected async onBeforeAttach(msg: Message) {
-    super.onBeforeAttach(msg);
-    const pendingRequest = await requestAPI(
-      '/api/cs3/shares/received?status=pending',
-      {
-        method: 'GET'
-      }
-    );
-    console.log('pending shares', pendingRequest);
-  }
-
   protected render(): JSX.Element {
-    const randomList: number[] = Array.from({ length: 40 }, () =>
-      Math.floor(Math.random() * 40)
-    );
-    console.log(randomList);
-
-    return (
-      <>
-        <div className="jp-pending-shares-header">
-          <div className="jp-pending-shares-header-item jp-pending-shares-header-item-name">
-            <span>Name</span>
-          </div>
-          <div className="jp-pending-shares-narrow-column">...</div>
-          <div className="jp-pending-shares-header-item jp-pending-shares-header-item-shared-by jp-pending-shares-header-item-shared-by-hidden">
-            <span>Shared By</span>
-          </div>
-          <div className="jp-pending-shares-header-item-buttons" />
-        </div>
-        <ul className="jp-pending-shares-listing">
-          {randomList.map(() => {
-            return <PendingSharesElement />;
-          })}
-        </ul>
-      </>
-    );
+    return <PendingSharesContent />;
   }
 }
+
+const PendingSharesContent = (): JSX.Element => {
+  const [pendingShares, setPendingShares] = useState([]);
+
+  const refreshPendingShares = async (): Promise<void> => {
+    requestAPI('/api/cs3/shares/received?status=pending', {
+      method: 'GET'
+    }).then((pendingRequest: any) => {
+      setPendingShares(pendingRequest.content);
+    });
+  };
+
+  const acceptShare = async (pendingShare: any): Promise<void> => {
+    requestAPI('/api/cs3/shares/received', {
+      method: 'PUT',
+      body: JSON.stringify({
+        share_id: pendingShare.opaque_id,
+        state: 'accepted'
+      })
+    }).then(() => {
+      refreshPendingShares();
+    });
+  };
+
+  const declineShare = async (pendingShare: any): Promise<void> => {
+    requestAPI('/api/cs3/shares/received', {
+      method: 'PUT',
+      body: JSON.stringify({
+        share_id: pendingShare.opaque_id,
+        state: 'rejected'
+      })
+    }).then(() => {
+      refreshPendingShares();
+    });
+  };
+
+  useEffect((): void => {
+    void refreshPendingShares();
+  }, []);
+
+  return (
+    <>
+      <div className="jp-pending-shares-header">
+        <div className="jp-pending-shares-header-item jp-pending-shares-header-item-name">
+          <span>Name</span>
+        </div>
+        <div className="jp-pending-shares-narrow-column">...</div>
+        <div className="jp-pending-shares-header-item jp-pending-shares-header-item-shared-by jp-pending-shares-header-item-shared-by-hidden">
+          <span>Shared By</span>
+        </div>
+        <div className="jp-pending-shares-header-item-buttons" />
+      </div>
+      <ul className="jp-pending-shares-listing">
+        {pendingShares.map((pendingShare: any) => {
+          return (
+            <PendingSharesElement
+              content={pendingShare}
+              acceptShare={acceptShare}
+              declineShare={declineShare}
+            />
+          );
+        })}
+      </ul>
+    </>
+  );
+};
 
 class PendingSharesHeader extends ReactWidget {
   constructor(options: any) {
@@ -92,20 +129,36 @@ class PendingSharesHeader extends ReactWidget {
   }
 }
 
-const PendingSharesElement = (): JSX.Element => {
-  const Icon = folderIcon;
+const PendingSharesElement = (props: PendingShareProp): JSX.Element => {
+  const Icon = findFileIcon(props.content);
+  const created = Time.format(
+    new Date(props.content.created),
+    'YYYY-MM-DD HH:mm:ss'
+  );
+  const lastModified = Time.format(
+    new Date(props.content.last_modified),
+    'YYYY-MM-DD HH:mm:ss'
+  );
+
+  const title =
+    'Name: ' +
+    props.content.name +
+    '\n' +
+    'Path: ' +
+    props.content.path +
+    '\n' +
+    'Created: ' +
+    created +
+    '\n' +
+    'Modified: ' +
+    lastModified;
+  '\n' + 'Writable: ' + props.content.writable;
+
   return (
-    <li
-      className="jp-pending-shares-listing-item"
-      title="Name: testDir
-                                          Path: cs3driveShareByMe:reva/einstein
-                                          Created: 2022-02-13 12:40:37
-                                          Modified: 2022-02-13 12:40:37
-                                          Writable: true"
-    >
+    <li className="jp-pending-shares-listing-item" title={title}>
       <Icon.react className="jp-pending-shares-listing-icon" />
       <span className="jp-pending-shares-listing-name">
-        <span>testDir</span>
+        <span>{props.content.name}</span>
       </span>
       <div className="jp-pending-shares-listing-narrow-column" />
       <span className="jp-pending-shares-listing-shared-by jp-pending-shares-listing-shared-by-hidden">
@@ -113,20 +166,24 @@ const PendingSharesElement = (): JSX.Element => {
         John Doe
       </span>
       <div className="jp-pending-shares-listing-buttons">
-        <AcceptButton />
-        <RejectButton />
+        <AcceptButton content={props.content} acceptShare={props.acceptShare} />
+        <RejectButton
+          content={props.content}
+          declineShare={props.declineShare}
+        />
       </div>
     </li>
   );
 };
 
-const AcceptButton = (): JSX.Element => {
+const AcceptButton = (props: AcceptButtonProps): JSX.Element => {
   const Icon = acceptIcon;
   return (
     <button
       className="jp-button jp-pending-shares-listing-button"
       onClick={() => {
-        console.log('accept');
+        console.log(props.content);
+        void props.acceptShare(props.content);
       }}
     >
       <Icon.react
@@ -138,13 +195,13 @@ const AcceptButton = (): JSX.Element => {
   );
 };
 
-const RejectButton = (): JSX.Element => {
+const RejectButton = (props: DeclineButtonProps): JSX.Element => {
   const Icon = declineIcon;
   return (
     <button
       className="jp-button jp-pending-shares-listing-button"
       onClick={() => {
-        console.log('reject');
+        void props.declineShare(props.content);
       }}
     >
       <Icon.react

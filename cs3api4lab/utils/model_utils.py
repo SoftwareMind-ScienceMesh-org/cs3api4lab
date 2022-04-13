@@ -24,11 +24,12 @@ class ModelUtils:
         model['type'] = 'directory'
         model['content'] = []
         model['format'] = 'json'
-
+        model['owner'] = None
+        model['opaque_id'] = None
         return model
 
     @staticmethod
-    def map_share_to_base_model(share, stat):
+    def map_share_to_base_model(share, stat, optional={}):
 
         created = datetime.fromtimestamp(share.ctime.seconds, tz=tz.UTC).strftime(ModelUtils.date_fmt)
         last_modified = datetime.fromtimestamp(share.mtime.seconds, tz=tz.UTC).strftime(ModelUtils.date_fmt)
@@ -46,12 +47,15 @@ class ModelUtils:
         model['content'] = None
         model['format'] = None
         model['writable'] = writable
+        model['opaque_id'] = share.id.opaque_id
+        if 'owner' in optional:
+            model['owner'] = optional['owner']
         return model
 
     @staticmethod
-    def map_share_to_file_model(share, stat):
+    def map_share_to_file_model(share, stat, optional={}):
 
-        model = ModelUtils.map_share_to_base_model(share, stat)
+        model = ModelUtils.map_share_to_base_model(share, stat, optional)
         model['size'] = stat['size']
         model['type'] = 'file'
         model['mimetype'] = mimetypes.guess_type(stat['filepath'])[0]
@@ -59,9 +63,9 @@ class ModelUtils:
         return model
 
     @staticmethod
-    def map_share_to_dir_model(share, stat):
+    def map_share_to_dir_model(share, stat, optional={}):
 
-        model = ModelUtils.map_share_to_base_model(share, stat)
+        model = ModelUtils.map_share_to_base_model(share, stat, optional)
         model['size'] = None
         model['type'] = 'directory'
         model['mimetype'] = None
