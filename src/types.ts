@@ -69,17 +69,23 @@ export type PendingSharesOptions = {
 };
 
 export type PendingShareProp = {
-  content: Contents.IModel;
+  content: Contents.IModel & {
+    owner: string;
+  };
   acceptShare: (pendingShare: any) => Promise<void>;
   declineShare: (pendingShare: any) => Promise<void>;
 };
 
 export type AcceptButtonProps = {
-  content: Contents.IModel;
+  content: Contents.IModel & {
+    owner: string;
+  };
   acceptShare: (pendingShare: any) => Promise<void>;
 };
 
 export type DeclineButtonProps = {
-  content: Contents.IModel;
+  content: Contents.IModel & {
+    owner: string;
+  };
   declineShare: (pendingShare: any) => Promise<void>;
 };

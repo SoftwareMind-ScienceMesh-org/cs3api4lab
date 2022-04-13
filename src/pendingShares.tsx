@@ -162,8 +162,7 @@ const PendingSharesElement = (props: PendingShareProp): JSX.Element => {
       </span>
       <div className="jp-pending-shares-listing-narrow-column" />
       <span className="jp-pending-shares-listing-shared-by jp-pending-shares-listing-shared-by-hidden">
-        {' '}
-        John Doe
+        {props.content.owner}
       </span>
       <div className="jp-pending-shares-listing-buttons">
         <AcceptButton content={props.content} acceptShare={props.acceptShare} />
