@@ -22,7 +22,7 @@ class TestCs3FileApi(TestCase):
 
         self.storage.write_file(file_id, message, self.endpoint)
 
-        stat_info = self.storage.stat(file_id, self.endpoint)
+        stat_info = self.storage.stat_info(file_id, self.endpoint)
 
         self.assertIsInstance(stat_info, dict)
         self.assertTrue('mtime' in stat_info, 'Missing mtime from stat output')
@@ -32,7 +32,7 @@ class TestCs3FileApi(TestCase):
 
     def test_stat_no_file(self):
         with self.assertRaises(IOError, msg='No such file or directory'):
-            self.storage.stat('/hopefullynotexisting', self.endpoint)
+            self.storage.stat_info('/hopefullynotexisting', self.endpoint)
 
     def test_read_file(self):
 
@@ -59,7 +59,7 @@ class TestCs3FileApi(TestCase):
         file_path = "/test_read_by_id.txt"
 
         self.storage.write_file(file_path, content_to_write, self.endpoint)
-        stat = self.storage.stat(file_path)
+        stat = self.storage.stat_info(file_path)
 
         content = ''
         for chunk in self.storage.read_file(file_path, self.endpoint):
@@ -81,8 +81,8 @@ class TestCs3FileApi(TestCase):
 
         self.storage.write_file(file_path, content_to_write, self.endpoint)
 
-        stat = self.storage.stat(file_path)
-        stat_by_id = self.storage.stat(stat['inode']['opaque_id'], stat['inode']['storage_id'])
+        stat = self.storage.stat_info(file_path)
+        stat_by_id = self.storage.stat_info(stat['inode']['opaque_id'], stat['inode']['storage_id'])
 
         content = ''
         for chunk in self.storage.read_file(file_path, self.endpoint):
@@ -111,12 +111,12 @@ class TestCs3FileApi(TestCase):
 
         self.storage.write_file(file_id, buffer, self.endpoint)
 
-        stat_info = self.storage.stat(file_id, self.endpoint)
+        stat_info = self.storage.stat_info(file_id, self.endpoint)
         self.assertIsInstance(stat_info, dict)
 
         self.storage.remove(file_id, self.endpoint)
         with self.assertRaises(IOError):
-            self.storage.stat(file_id, self.endpoint)
+            self.storage.stat_info(file_id, self.endpoint)
 
     def test_write_empty_file(self):
 
@@ -125,12 +125,12 @@ class TestCs3FileApi(TestCase):
 
         self.storage.write_file(file_id, buffer, self.endpoint)
 
-        stat_info = self.storage.stat(file_id, self.endpoint)
+        stat_info = self.storage.stat_info(file_id, self.endpoint)
         self.assertIsInstance(stat_info, dict)
 
         self.storage.remove(file_id, self.endpoint)
         with self.assertRaises(IOError):
-            self.storage.stat(file_id, self.endpoint)
+            self.storage.stat_info(file_id, self.endpoint)
 
     def test_write_example(self):
 
@@ -185,7 +185,7 @@ class TestCs3FileApi(TestCase):
 
         self.storage.remove(file_id, self.endpoint)
         with self.assertRaises(IOError):
-            self.storage.stat(file_id, self.endpoint)
+            self.storage.stat_info(file_id, self.endpoint)
 
     def test_read_directory(self):
 
@@ -210,7 +210,7 @@ class TestCs3FileApi(TestCase):
 
         self.storage.remove(dest_id, self.endpoint)
         with self.assertRaises(IOError):
-            self.storage.stat(dest_id, self.endpoint)
+            self.storage.stat_info(dest_id, self.endpoint)
 
     def test_move_file_already_exists(self):
         try:
