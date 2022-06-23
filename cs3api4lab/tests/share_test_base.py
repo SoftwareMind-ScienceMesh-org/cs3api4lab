@@ -219,7 +219,7 @@ class ShareTestBase:
             share_api = self.richard_share_api
             storage = self.richard_storage_api
 
-        stat = storage.stat(file_path, None)
+        stat = storage.stat(file_path)
         if stat.status.code == cs3code.CODE_NOT_FOUND:
             self.create_test_file(user, file_path)
         #todo the code above won't be necessary after https://github.com/cs3org/reva/issues/2847 is fixed

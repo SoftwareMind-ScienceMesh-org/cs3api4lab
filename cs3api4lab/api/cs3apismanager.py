@@ -338,7 +338,7 @@ class CS3APIsManager(ContentsManager):
         if path == '/' or path == '' or path is None:
             return True
 
-        path = self._normalize_path(path)
+        path = FileUtils.remove_drives_names(path)
         stat = self.storage_api.stat(path)
         return stat.status.code == cs3code.CODE_OK and stat.info.type == resource_types.RESOURCE_TYPE_CONTAINER
 
