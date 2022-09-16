@@ -147,7 +147,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
 
             self.uni_api.update_received(self.share_id, 'ACCEPTED')
             received_file_path = '/home/MyShares/' + self.file_name.split('/')[-1]
-            file_stat = self.file_api.stat(received_file_path, self.storage_id)
+            file_stat = self.file_api.stat_info(received_file_path, self.storage_id)
 
             self.assertEqual(file_stat['filepath'], received_file_path, 'Share not updated')
         finally:
@@ -242,12 +242,19 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
 
     def test_get_grantees_for_file(self):
         try:
+            expected_grantee_opaque = '932b4540-8d16-481e-8ef4-588e4b6b151c'
+            expected_grantee_idp = 'example.org'
             self.file_name = self.file_path + self.get_random_suffix()
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
             grantees = self.uni_api.list_grantees_for_file(self.file_name)
-            self.assertTrue(grantees['shares'], "Grantees not found")
+
+            self.assertTrue(
+                list(share for share in grantees['shares']
+                     if share['grantee']['opaque_id'] == expected_grantee_opaque
+                     and share['grantee']['idp'] == expected_grantee_idp),
+                "Grantee not present")
 
         finally:
             if self.share_id:
@@ -261,11 +268,38 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
 
     def test_get_grantees_for_file_with_drive_name(self):
         try:
+            expected_grantee_opaque = '932b4540-8d16-481e-8ef4-588e4b6b151c'
+            expected_grantee_idp = 'example.org'
             self.file_name = self.file_path + self.get_random_suffix()
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
             file_path = "cs3drive:" + self.file_name[1:]
+            grantees = self.uni_api.list_grantees_for_file(file_path)
+
+            self.assertTrue(
+                list(share for share in grantees['shares']
+                     if share['grantee']['opaque_id'] == expected_grantee_opaque
+                     and share['grantee']['idp'] == expected_grantee_idp),
+                "Grantee not present")
+
+        finally:
+            if self.share_id:
+                self.remove_test_share('einstein', self.share_id)
+            if self.ocm_share_id:
+                self.remove_test_ocm_share('einstein', self.ocm_share_id)
+            if self.ocm_file_name:
+                self.remove_test_file('einstein', self.ocm_file_name)
+            if self.file_name:
+                self.remove_test_file('einstein', self.file_name)
+    
+    def test_get_grantees_for_file_with_drive_name_starting_with_slash(self):
+        try:
+            self.file_name = self.file_path + self.get_random_suffix()
+            created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
+            self.share_id = created_share['opaque_id']
+
+            file_path = "/cs3drive:" + self.file_name[1:]
             grantees = self.uni_api.list_grantees_for_file(file_path)
             self.assertTrue(grantees['shares'], "Grantees not found")
 
@@ -281,13 +315,20 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
 
     def test_get_grantees_for_file_with_drive_name_starting_with_slash(self):
         try:
+            expected_grantee_opaque = '932b4540-8d16-481e-8ef4-588e4b6b151c'
+            expected_grantee_idp = 'example.org'
             self.file_name = self.file_path + self.get_random_suffix()
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
             file_path = "/cs3drive:" + self.file_name[1:]
             grantees = self.uni_api.list_grantees_for_file(file_path)
-            self.assertTrue(grantees['shares'], "Grantees not found")
+
+            self.assertTrue(
+                list(share for share in grantees['shares']
+                     if share['grantee']['opaque_id'] == expected_grantee_opaque
+                     and share['grantee']['idp'] == expected_grantee_idp),
+                "Grantee not present")
 
         finally:
             if self.share_id:

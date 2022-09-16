@@ -4,6 +4,7 @@ import os
 import posixpath
 
 import cs3.storage.provider.v1beta1.resources_pb2 as resource_types
+import cs3.rpc.v1beta1.code_pb2 as cs3code
 
 from base64 import decodebytes
 from jupyter_server.services.contents.manager import ContentsManager
@@ -15,6 +16,8 @@ from cs3api4lab.utils.share_utils import ShareUtils
 from cs3api4lab.utils.file_utils import FileUtils
 from cs3api4lab.api.share_api_facade import ShareAPIFacade
 from cs3api4lab.utils.model_utils import ModelUtils
+from cs3api4lab.utils.asyncify import asyncify
+from cs3api4lab.api.storage_api import StorageApi
 
 
 class CS3APIsManager(ContentsManager):
@@ -28,7 +31,9 @@ class CS3APIsManager(ContentsManager):
         self.log = log
         self.file_api = Cs3FileApi(self.log)
         self.share_api = ShareAPIFacade(log)
+        self.storage_api = StorageApi(log)
 
+    # _is_dir is already async, so no need to asyncify this
     def dir_exists(self, path):
         """Does a directory exist at the given path?
         Like os.path.isdir
@@ -45,6 +50,7 @@ class CS3APIsManager(ContentsManager):
         path = FileUtils.remove_drives_names(path)
         return self._is_dir(path)
 
+    @asyncify
     def is_hidden(self, path):
         """Is path a hidden directory or file?
         Parameters
@@ -63,6 +69,7 @@ class CS3APIsManager(ContentsManager):
             return True
         return False
 
+    @asyncify
     def file_exists(self, path=''):
         """Does a file exist at the given path?
         Like os.path.isfile
@@ -90,6 +97,7 @@ class CS3APIsManager(ContentsManager):
 
         return False
 
+    # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
     def get(self, path, content=True, type=None, format=None):
         """Get a file, notebook or directory model."""
         path = FileUtils.remove_drives_names(path)
@@ -104,6 +112,7 @@ class CS3APIsManager(ContentsManager):
 
         return model
 
+    @asyncify
     def get_kernel_path(self, path, model=None):
         """
         Return the initial API path of a kernel associated with a given notebook.
@@ -131,6 +140,7 @@ class CS3APIsManager(ContentsManager):
             parent_dir = ''
         return parent_dir
 
+    # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
     def save(self, model, path):
         """
         Save a file or directory model to path.
@@ -194,6 +204,7 @@ class CS3APIsManager(ContentsManager):
 
         return model
 
+    @asyncify
     def delete_file(self, path):
         """Delete the file or directory at path."""
         path = FileUtils.remove_drives_names(path)
@@ -208,6 +219,7 @@ class CS3APIsManager(ContentsManager):
             self.log.error(u'Unknown error delete file: %s %s', path, e, exc_info=True)
             raise web.HTTPError(500, u'Unknown error delete file: %s %s' % (path, e))
 
+    @asyncify
     def rename_file(self, old_path, new_path):
         """Rename a file or directory."""
 
@@ -226,6 +238,7 @@ class CS3APIsManager(ContentsManager):
             self.log.error(u'Error renaming file: %s %s', old_path, e)
             raise web.HTTPError(500, u'Error renaming file: %s %s' % (old_path, e))
 
+    # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
     def new(self, model=None, path=''):
 
         path = path.strip('/')
@@ -279,6 +292,7 @@ class CS3APIsManager(ContentsManager):
 
         return content
 
+    @asyncify
     def _dir_model(self, path, content):
 
         cs3_container = self.file_api.read_directory(path, self.cs3_config.endpoint)
@@ -286,6 +300,7 @@ class CS3APIsManager(ContentsManager):
 
         return model
 
+    @asyncify
     def _file_model(self, path, content, format):
         parent_path = self._get_parent_path(path)
         cs3_container = self.file_api.read_directory(parent_path, self.cs3_config.endpoint)
@@ -314,6 +329,7 @@ class CS3APIsManager(ContentsManager):
 
         return model
 
+    # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
     def _notebook_model(self, path, content):
         parent_path = self._get_parent_path(path)
         cs3_container = self.file_api.read_directory(parent_path, self.cs3_config.endpoint)
@@ -331,29 +347,17 @@ class CS3APIsManager(ContentsManager):
 
         return model
 
+    @asyncify
     def _is_dir(self, path):
 
         if path == '/' or path == '' or path is None:
             return True
 
-        parent_path = self._get_parent_path(path)
-        path = FileUtils.normalize_path(path)
+        path = FileUtils.remove_drives_names(path)
+        stat = self.storage_api.stat(path)
+        return stat.status.code == cs3code.CODE_OK and stat.info.type == resource_types.RESOURCE_TYPE_CONTAINER
 
-        try:
-            cs3_container = self.file_api.read_directory(parent_path, self.cs3_config.endpoint)
-        except Exception as ex:
-            self.log.error(u'Error while reading container: %s %s', path, ex, exc_info=True)
-            raise web.HTTPError(500, u'Unexpected error while reading container: %s %s' % (path, ex))
-
-        for cs3_model in cs3_container:
-
-            if cs3_model.type == resource_types.RESOURCE_TYPE_CONTAINER and cs3_model.path == path:
-                return True
-            if cs3_model.type == resource_types.RESOURCE_TYPE_FILE and cs3_model.path == path:
-                return False
-
-        return False
-
+    @asyncify
     def _save_file(self, path, content, format):
 
         if format not in {'text', 'base64'}:
@@ -372,6 +376,7 @@ class CS3APIsManager(ContentsManager):
             self.log.error(u'Error saving: %s %s', path, e)
             raise web.HTTPError(400, u'Error saving %s: %s' % (path, e))
 
+    # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
     def _save_notebook(self, path, nb):
 
         nb_content = nbformat.writes(nb)
@@ -382,6 +387,7 @@ class CS3APIsManager(ContentsManager):
             self.log.error(u'Error saving: %s %s', path, e)
             raise web.HTTPError(400, u'Error saving %s: %s' % (path, e))
 
+    @asyncify
     def _save_directory(self, path):
 
         if self.is_hidden(path) and not self.allow_hidden:
@@ -395,10 +401,11 @@ class CS3APIsManager(ContentsManager):
 
         self.file_api.create_directory(path, self.cs3_config.endpoint)
 
+    @asyncify
     def _check_write_permissions(self, path):
 
         parent = self._get_parent_path(path)
-        stat = self.file_api.stat(parent)
+        stat = self.file_api.stat_info(parent)
         if not ShareUtils.map_permissions_to_role(stat['permissions']) == 'editor':
             raise web.HTTPError(403, u'The path %s is not writable' % parent)
         # check if the path is a received share with editor permissions
@@ -409,12 +416,14 @@ class CS3APIsManager(ContentsManager):
     #
     # Notebook hack - disable checkpoint
     #
+    @asyncify
     def delete(self, path):
         path = path.strip('/')
         if not path:
             raise web.HTTPError(400, "Can't delete root")
         self.delete_file(path)
 
+    @asyncify
     def rename(self, old_path, new_path):
         self.rename_file(old_path, new_path)
 
