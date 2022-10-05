@@ -18,6 +18,7 @@ import cs3.rpc.v1beta1.code_pb2 as cs3code
 
 class LockManager:
     user = None
+    lock_name = 'cs3apis4lab_lock'
 
     def __init__(self, log):
         self.log = log
@@ -35,46 +36,45 @@ class LockManager:
 
     def generate_lock_entry(self):
         user = self._get_current_user()
-        return {self.get_my_lock_name(): urllib.parse.quote(json.dumps({
+        return urllib.parse.quote(json.dumps({
             "username": user.username,
             "idp": user.id.idp,
             "opaque_id": user.id.opaque_id,
             "updated": time.time(),
             "created": time.time()
-        }))}
+        }))
 
-    def get_my_lock_name(self):
-        user = self._get_current_user()
-        return 'lock_' + user.username + '_' + user.id.idp + '_' + user.id.opaque_id
-
-    def _lock_file(self, file_path, endpoint):
-        self.storage_api.set_metadata(self.generate_lock_entry(), file_path, endpoint)
+    def _lock_file(self, stat):
+        self.storage_api.set_metadata(self.lock_name, self.generate_lock_entry(), stat)
 
     def is_lock_mine(self, lock):
         user = self._get_current_user()
         if lock:
-            return lock['username'] == user.username and lock['idp'] == user.id.idp and lock['opaque_id'] == user.id.opaque_id
-        return False        
+            return lock['username'] == user.username and lock['idp'] == user.id.idp and lock[
+                'opaque_id'] == user.id.opaque_id
+        return False
 
     def is_lock_expired(self, lock):
         if not lock:
             return True
         return time.time() - lock['updated'] > datetime.timedelta(seconds=self.locks_expiration_time).total_seconds()
 
-    def resolve_file_path(self, file_path, endpoint):
-        lock = self._get_lock(file_path, endpoint)
+    def resolve_file_path(self, stat):
+        lock = self._get_lock(stat)
 
         is_locked = True if lock else False
         is_mine = self.is_lock_mine(lock)
 
+        file_path = stat['file_path']
         if is_locked and not is_mine and not self.is_lock_expired(lock):
             file_name = file_path.split('/')[-1]
             file_dir = '/'.join(file_path.split('/')[0:-1])
-            return self._resolve_directory(file_dir, endpoint) + self._get_conflict_filename(file_name)
+            return self._resolve_directory(file_dir, '/') + self._get_conflict_filename(file_name)
 
         return file_path
 
-    def _resolve_directory(self, dir_path, endpoint):#right now its possible to write in somone else's directory without it being shared
+    def _resolve_directory(self, dir_path,
+                           endpoint):  # right now its possible to write in somone else's directory without it being shared
         stat = self.storage_api.stat(dir_path, endpoint)
         if stat.status.code == cs3code.CODE_OK:
             return dir_path
@@ -84,31 +84,36 @@ class LockManager:
     def _get_conflict_filename(self, file_name):
         file_extension = file_name.split('.')[-1]
         name = '.'.join(file_name.split('.')[0:-1])
-        return name + '-' + self._get_current_user().username + '.' + datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S") + '-conflict.' + file_extension
+        return name + '-' + self._get_current_user().username + '.' + datetime.datetime.now().strftime(
+            "%Y-%m-%d_%H_%M_%S") + '-conflict.' + file_extension
 
-    def handle_locks(self, file_path, endpoint):
-        lock = self._get_lock(file_path, endpoint)
+    def handle_locks(self, stat):
+        lock = self._get_lock(stat)
 
         if not lock:
-            self._lock_file(file_path, endpoint)
+            self._lock_file(stat)
             return
         else:
             if self.is_lock_mine(lock):
-                self._lock_file(file_path, endpoint)
+                self._lock_file(stat)
                 return
             if self.is_lock_expired(lock):
-                self._lock_file(file_path, endpoint)
+                self._lock_file(stat)
                 return
         raise IOError("File locked")
 
     def _get_current_user(self):
         if self.user is None:
             self.user = self.cs3_api.WhoAmI(request=cs3gw.WhoAmIRequest(token=self.auth.authenticate()),
-                                   metadata=[('x-access-token', self.auth.authenticate())])
+                                            metadata=[('x-access-token', self.auth.authenticate())])
         return self.user.user
 
-    def _get_lock(self, file_path, endpoint):
-        metadata = self.storage_api.get_metadata(file_path, endpoint)
-        if not metadata:
-            return
-        return json.loads(urllib.parse.unquote(list(metadata.values())[0]))
+    def _get_lock(self, stat):
+        if not stat['arbitrary_metadata']:
+            return None
+
+        if not stat['arbitrary_metadata']['metadata'].get(self.lock_name):
+            return None
+
+        lock = stat['arbitrary_metadata']['metadata'].get(self.lock_name)
+        return json.loads(urllib.parse.unquote(lock))

@@ -77,6 +77,9 @@ class Config(LoggingConfigurable):
     oauth_token = Unicode(
         config=True, allow_none=True, help="""OAuth token"""
     )
+    dev_env = Bool(
+        config=True, allow_none=True, default_value=False, help=""""This is a temporary variable to determine whether this is dev environment"""
+    )
 
     @default("reva_host")
     def _reva_host_default(self):
@@ -173,6 +176,10 @@ class Config(LoggingConfigurable):
     def _oauth_token_default(self):
         return self._get_config_value("oauth_token")
 
+    @default("dev_env")
+    def _dev_env_default(self):
+        return self._get_config_value("dev_env") in ["true", True]
+
     def _get_config_value(self, key):
         env = os.getenv("CS3_" + key.upper())
         if env:
@@ -227,7 +234,8 @@ class Config(LoggingConfigurable):
         "eos_file": None,
         "eos_token": None,
         "oauth_file": None,
-        "oauth_token": None
+        "oauth_token": None,
+        "dev_env": False
     }
 
 
