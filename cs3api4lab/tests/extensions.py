@@ -32,6 +32,7 @@ class ExtStorageApi(StorageApi):
 
 class ExtMetadataLock(Metadata):
     def __init__(self, log, config):
+        super().__init__(log)
         self.config = config
         self.log = log
         self.auth = ExtAuthenticator(config, log)
@@ -46,9 +47,6 @@ class ExtMetadataLock(Metadata):
 class ExtCs3ConfigManager(Cs3ConfigManager):
     def __init__(self, config, log):
         super().__init__(config, log)
-        self.config = config
-        self.log = log
-
 
 class ExtAuthenticator(RevaPassword):
     def __init__(self, config, log):
