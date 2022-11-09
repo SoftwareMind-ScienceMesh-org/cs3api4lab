@@ -318,6 +318,9 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
             if self.file_name:
                 self.remove_test_file('einstein', self.file_name)
 
+    def test_list_shares_no_duplicates(self):
+        self.uni_api.list_shares()
+
     @skip
     def test_get_grantees_for_file_ocm(self):
         try:

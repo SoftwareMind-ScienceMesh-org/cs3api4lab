@@ -6,6 +6,8 @@ from datetime import datetime
 from IPython.utils import tz
 from cs3api4lab.utils.share_utils import ShareUtils
 
+from google.protobuf import json_format
+
 class ModelUtils:
     date_fmt = '%Y-%m-%dT%H:%M:%SZ'
 
@@ -40,18 +42,18 @@ class ModelUtils:
     @staticmethod
     def map_share_to_base_model(share, stat, optional={}):
         writable = False
-        if hasattr(share.permissions.permissions,
-                   'initiate_file_upload') and share.permissions.permissions.initiate_file_upload is True:
+        if 'initiateFileDownload' in share['permissions']['permissions']\
+                and share['permissions']['permissions']['initiateFileDownload']:
             writable = True
         model = {}
         model['name'] = stat['filepath'].rsplit('/', 1)[-1]
         model['path'] = stat['filepath']
-        model['last_modified'] = ModelUtils.parse_date(share.mtime.seconds)
-        model['created'] = ModelUtils.parse_date(share.ctime.seconds)
+        model['last_modified'] = ModelUtils.parse_date(int(share['mtime']['seconds']))
+        model['created'] = ModelUtils.parse_date(int(share['ctime']['seconds']))
         model['content'] = None
         model['format'] = None
         model['writable'] = writable
-        model['opaque_id'] = share.id.opaque_id
+        model['opaque_id'] = share['id']['opaqueId']
 
         if 'owner' in optional:
             model['owner'] = optional['owner']
@@ -170,7 +172,7 @@ class ModelUtils:
                 created = ModelUtils.parse_date(cs3_model.mtime.seconds)
                 last_modified = ModelUtils.parse_date(cs3_model.mtime.seconds)
 
-                if ShareUtils.map_permissions_to_role(cs3_model.permission_set) == "editor":
+                if ShareUtils.map_permissions_to_role(json_format.MessageToDict(cs3_model.permission_set)) == "editor":
                     writable = True
 
         return created, last_modified, size, writable

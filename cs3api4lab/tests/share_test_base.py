@@ -5,6 +5,7 @@ from traitlets.config import LoggingConfigurable
 import cs3.rpc.v1beta1.code_pb2 as cs3code
 from collections import namedtuple
 
+
 class ShareTestBase:
     storage_id = '123e4567-e89b-12d3-a456-426655440000'
     receiver_role = 'editor'
@@ -36,7 +37,8 @@ class ShareTestBase:
             "client_secret": "radioactivity",
 	        "locks_expiration_time": 10,
 	        "tus_enabled": True,
-  	        "enable_ocm": False
+  	        "enable_ocm": False,
+            "dev_env": True
             }
         marie_ext_config = namedtuple('MarieConfig', marie_ext_config)(**marie_ext_config)
 
@@ -56,7 +58,8 @@ class ShareTestBase:
             "client_secret": "superfluidity",
 	        "locks_expiration_time": 10,
 	        "tus_enabled": True,
-  	        "enable_ocm": False
+  	        "enable_ocm": False,
+            "dev_env": True
         }
         richard_local_config = namedtuple('richardConfig', richard_local_config)(**richard_local_config)
 

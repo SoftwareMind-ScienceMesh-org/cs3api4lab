@@ -19,6 +19,9 @@ from cs3api4lab.utils.file_utils import FileUtils
 from cs3api4lab.api.storage_api import StorageApi
 from cs3api4lab.exception.exceptions import OCMDisabledError
 
+from google.protobuf import json_format
+
+
 class ShareAPIFacade:
     def __init__(self, log):
         self.log = log
@@ -80,11 +83,11 @@ class ShareAPIFacade:
             else:
                 raise OCMDisabledError('Cannot update received OCM share - OCM functionality is disabled')
         else:
-            result = self.share_api.update_received(share_id, state)
+            result = json_format.MessageToDict(self.share_api.update_received(share_id, state))
 
-        stat = self.file_api.stat_info(urllib.parse.unquote(result.share.resource_id.opaque_id),
-                                       result.share.resource_id.storage_id)  # todo remove this and use storage_logic
-        return ModelUtils.map_share_to_base_model(result.share, stat)
+        stat = self.file_api.stat_info(urllib.parse.unquote(result['share']['resourceId']['opaqueId']),
+                                       result['share']['resourceId']['storageId'])  # todo remove this and use storage_logic
+        return ModelUtils.map_share_to_base_model(result['share'], stat)
 
     def remove(self, share_id):
         """Removes a share with given opaque_id """
@@ -97,35 +100,57 @@ class ShareAPIFacade:
             else:
                 raise OCMDisabledError('Cannot remove OCM share - OCM functionality is disabled')
 
-    def list_shares(self):
+    def list_shares(self, merge=True):
         """
-        :return: created shares and OCM shares combined and mapped to Jupyter model
+        :return: created shares and OCM shares mapped to Jupyter model
+        :param: merge - wether to combine all shares into one consistent list without duplicates
         :rtype: dict
         """
+        shares = []
         share_list = self.share_api.list()
+        if share_list.shares:
+            shares += json_format.MessageToDict(share_list)['shares']
         if self.config.enable_ocm:
             ocm_share_list = self.ocm_share_api.list()
-        else:
-            ocm_share_list = None
-        return self.map_shares(share_list, ocm_share_list)
+            if ocm_share_list.shares:
+                shares += json_format.MessageToDict(ocm_share_list)['shares']
+        if merge:
+            shares = self._merge_shares(shares)
+        return self.map_shares_to_model(shares)
+
+    def _merge_shares(self, share_list):
+        # https://github.com/cs3org/reva/issues/3243
+        if self.config.dev_env:
+            for share in share_list:
+                share['resourceId']['opaqueId'] = share['resourceId']['opaqueId'].replace('fileid-/', 'fileid-')
+        merged_shares = []
+        for share in share_list:
+            if not share['resourceId'] in list(map(lambda share: share['resourceId'], merged_shares)):
+                merged_shares.append(share)
+        return merged_shares
 
     def list_received(self, status=None):
         """
         :return: received shares and OCM received shares combined and mapped to Jupyter model
         :rtype: dict
         """
-
+        shares_received = []
         share_list = self.share_api.list_received()
+
+        if share_list.shares:
+            shares_received += json_format.MessageToDict(share_list)['shares']
+
         if self.config.enable_ocm:
             ocm_share_list = self.ocm_share_api.list_received()
-        else:
-            ocm_share_list = None
+            if ocm_share_list.shares:
+                shares_received += json_format.MessageToDict(ocm_share_list)['shares']
 
-        mapped_shares = self.map_shares(share_list, ocm_share_list, True)
-        if status is not None:
-            mapped_shares['content'] = list(filter(lambda share: share['state'] == status, mapped_shares['content']))
+        mapped_shares_received = self.map_shares_to_model(shares_received, True)
 
-        return mapped_shares
+        if status and shares_received:
+            mapped_shares_received['content'] = list(filter(lambda share: share['state'] == status, mapped_shares_received['content']))
+
+        return mapped_shares_received
 
     def list_grantees_for_file(self, file_path):
         """
@@ -150,8 +175,6 @@ class ShareAPIFacade:
 
         return {"file_path": file_path, "shares": shares}
 
-
-
     def _token(self):
         return [('x-access-token', self.auth.authenticate())]
 
@@ -164,7 +187,6 @@ class ShareAPIFacade:
             self.share_api.get(opaque_id)
         except Exception:
             return False
-
         return True
 
     def is_ocm_share(self, share_id):
@@ -187,53 +209,35 @@ class ShareAPIFacade:
                 self.log.error("Error checking OCM " + str(e))
         return False
 
-    def map_shares(self, share_list, ocm_share_list, received=False):
-        """Converts both types of shares into Jupyter model"""
-        share_list_mapped = self.map_shares_to_model(share_list, received)
-        if ocm_share_list:
-            ocm_share_list_mapped = self.map_shares_to_model(ocm_share_list, received)
-            for share in ocm_share_list_mapped['content']:
-                share_list_mapped['content'].append(share)
-        return share_list_mapped
-
     def map_shares_to_model(self, list_response, received=False):
         respond_model = ModelUtils.create_respond_model()
-        path_list = []
-        share_no = 0
-        for share in list_response.shares:
+        for share in list_response:
             if received:
-                share = share.share
+                state = share['state']
+                share = share['share']
+                share['state'] = state
             try:
-                user = self.user_api.get_user_info(share.owner.idp, share.owner.opaque_id)
-                stat = self.file_api.stat_info(urllib.parse.unquote(share.resource_id.opaque_id),
-                                               share.resource_id.storage_id)  # todo remove this and use storage_logic
+                user = self.user_api.get_user_info(share['owner']['idp'], share['owner']['opaqueId'])
+                stat = self.file_api.stat_info(urllib.parse.unquote(share['resourceId']['opaqueId']),
+                                               share['resourceId']['storageId'])
+                # todo remove this and use storage_logic
                 # stat = self.storage_logic.stat_info(urllib.parse.unquote(share.resource_id.opaque_id), share.resource_id.storage_id)
 
                 if stat['type'] == Resources.RESOURCE_TYPE_FILE:
-                    if hasattr(share.permissions.permissions,
-                               'initiate_file_download') and share.permissions.permissions.initiate_file_download is False:
-                        continue
                     model = ModelUtils.map_share_to_file_model(share, stat, optional={
                         'owner': user['display_name']
                     })
                 else:
-                    if hasattr(share.permissions.permissions,
-                               'list_container') and share.permissions.permissions.list_container is False:
-                        continue
                     model = ModelUtils.map_share_to_dir_model(share, stat, optional={
                         'owner': user['display_name']
                     })
-                model['writable'] = True if ShareUtils.map_permissions_to_role(
-                    share.permissions.permissions) == 'editor' else False
+                model['writable'] = ShareUtils.map_permissions_to_role(share['permissions']['permissions']) == 'editor'
             except Exception as e:
-                self.log.error("Unable to map share " + share.resource_id.opaque_id + ", " + e.__str__())
+                self.log.error("Unable to map share " + share['resourceId']['opaqueId'] + ", " + e.__str__())
                 continue
 
             if received:
-                model['state'] = ShareUtils.map_state(list_response.shares[share_no].state)
-            if model['path'] not in path_list:
-                respond_model['content'].append(model)
-                path_list.append(model['path'])
-                share_no = share_no + 1
+                model['state'] = ShareUtils.map_state(share['state'])
+            respond_model['content'].append(model)
 
         return respond_model
