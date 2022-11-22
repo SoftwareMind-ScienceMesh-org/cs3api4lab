@@ -11,11 +11,11 @@
   	"client_key": "",
   	"ca_cert": "",
 	"authenticator_class": "cs3api4lab.auth.RevaPassword",
-	"client_id": "richard",
-	"client_secret": "superfluidity",
+	"client_id": "einstein",
+	"client_secret": "relativity",
 	"locks_expiration_time": 150,
 	"tus_enabled": false,
-	"enable_ocm": true,
+	"enable_ocm": false,
 	"dev_env": true
 	}
 }
