@@ -223,10 +223,7 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
     commandPalette: ICommandPalette | null,
     mainMenu: IMainMenu | null
   ): void {
-    // const browser = factory.defaultBrowser;
     const { commands } = app;
-    docManager.services.contents.dispose();
-
     const cs3Panel = new Cs3Panel(
       'cs3 panel',
       'cs3-panel',
@@ -241,9 +238,7 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
     requestAPI('/api/cs3/user/home_dir', {
       method: 'get'
     }).then(homeDir => {
-      if (homeDir !== '') {
-        void stateDB.save('homeDir', homeDir as string);
-      }
+      void stateDB.save('homeDir', homeDir as string);
     });
 
     //
@@ -460,11 +455,14 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
 
     // fold accordion widget
     pendingShares.hide();
+    fileBrowserSharedByMe.hide();
+
+    fileBrowser.activate();
+    cs3Accordion.setRelativeSizes([100, 400, 400]);
 
     cs3Accordion.insertWidget(1, pendingShares);
-    cs3Accordion.insertWidget(2, fileBrowserSharedByMe);
-    cs3Accordion.insertWidget(3, fileBrowserSharedWithMe);
-    cs3Accordion.setRelativeSizes([100, 400, 400]);
+    cs3Accordion.insertWidget(2, fileBrowserSharedWithMe);
+    cs3Accordion.insertWidget(3, fileBrowserSharedByMe);
 
     cs3Panel.addTab(fileBrowser);
     cs3Panel.addTab(cs3TabWidget3);
