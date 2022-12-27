@@ -29,7 +29,7 @@ import { debounce } from 'ts-debounce';
 class Main extends React.Component<any, any> {
   private readonly tabname: string;
 
-  public state =  {
+  public state = {
     activeTab: 'info'
   };
 
@@ -40,7 +40,7 @@ class Main extends React.Component<any, any> {
    */
   public constructor(props: MainProps) {
     super(props);
-    this.tabname =  props.tabname;
+    this.tabname = props.tabname;
   }
 
   public componentDidMount() {
@@ -54,7 +54,7 @@ class Main extends React.Component<any, any> {
    *
    * @param tabname
    */
-  protected switchTabs =  (tabname: string): void => {
+  protected switchTabs = (tabname: string): void => {
     this.setState({
       activeTab: tabname
     });
@@ -74,15 +74,15 @@ class Main extends React.Component<any, any> {
   }
 }
 
-export const Menu =  (props: MenuProps): JSX.Element => {
-  const [activeTab, setActiveTab] =  useState(props.tabname);
+export const Menu = (props: MenuProps): JSX.Element => {
+  const [activeTab, setActiveTab] = useState(props.tabname);
 
   return (
     <>
       <nav className="jp-file-info-menu">
         <ul>
           <li
-            className={activeTab ===  'info' ? 'active' : ''}
+            className={activeTab === 'info' ? 'active' : ''}
             onClick={() => {
               setActiveTab('info');
               props.tabHandler('info');
@@ -91,7 +91,7 @@ export const Menu =  (props: MenuProps): JSX.Element => {
             INFO
           </li>
           <li
-            className={activeTab ===  'shares' ? 'active' : ''}
+            className={activeTab === 'shares' ? 'active' : ''}
             onClick={() => {
               setActiveTab('shares');
               props.tabHandler('shares');
@@ -106,25 +106,25 @@ export const Menu =  (props: MenuProps): JSX.Element => {
   );
 };
 
-const Content =  (props: ContentProps): JSX.Element => {
+const Content = (props: ContentProps): JSX.Element => {
   let elementToDisplay: JSX.Element;
 
   switch (props.contentType) {
     case 'shares':
-      elementToDisplay =  Shares({
+      elementToDisplay = Shares({
         fileInfo: props.content
       });
       break;
     case 'info':
     default:
-      elementToDisplay =  Info({ content: props.content });
+      elementToDisplay = Info({ content: props.content });
   }
 
   return <div className="jp-file-info-content">{elementToDisplay}</div>;
 };
 
-const Header =  (props: HeaderProps): JSX.Element => {
-  const Icon: LabIcon =  findFileIcon(props.fileInfo);
+const Header = (props: HeaderProps): JSX.Element => {
+  const Icon: LabIcon = findFileIcon(props.fileInfo);
 
   return (
     <div className="jp-file-info-header">
@@ -144,8 +144,8 @@ export class InfoboxWidget extends ReactWidget {
   public constructor(props: InfoboxProps) {
     super();
     this.addClass('jp-ReactWidget');
-    this.fileInfo =  props.fileInfo;
-    this.tabname =  props.tabname;
+    this.fileInfo = props.fileInfo;
+    this.tabname = props.tabname;
   }
 
   protected render(): JSX.Element {
@@ -155,7 +155,7 @@ export class InfoboxWidget extends ReactWidget {
 
 // TABS
 
-const Info =  (props: InfoProps): JSX.Element => {
+const Info = (props: InfoProps): JSX.Element => {
   return (
     <table className="jp-file-detail">
       <tbody>
@@ -194,21 +194,21 @@ const Info =  (props: InfoProps): JSX.Element => {
   );
 };
 
-const Shares =  (props: ShareProps): JSX.Element => {
-  const [grantees, setGrantees] =  useState<User[]>([]);
-  const [share, setShare] =  useState<any>({});
+const Shares = (props: ShareProps): JSX.Element => {
+  const [grantees, setGrantees] = useState<User[]>([]);
+  const [share, setShare] = useState<any>({});
 
-  const getGrantees =  async (): Promise<any> => {
+  const getGrantees = async (): Promise<any> => {
     requestAPI<any>(`/api/cs3/shares/file?file_path=${props.fileInfo.path}`, {
       method: 'GET'
     }).then(async granteesRequest => {
-      if (granteesRequest.shares.length <=  0) {
+      if (granteesRequest.shares.length <= 0) {
         setGrantees([]);
         return false;
       }
 
       setShare(granteesRequest);
-      const granteesSet: Array<Grantee> =  [];
+      const granteesSet: Array<Grantee> = [];
       granteesRequest.shares.forEach((item: any) => {
         granteesSet.push({
           opaque_id: item.grantee.opaque_id,
@@ -217,21 +217,21 @@ const Shares =  (props: ShareProps): JSX.Element => {
         });
       });
 
-      if (granteesSet.length <=  0) {
+      if (granteesSet.length <= 0) {
         return false;
       }
 
-      const granteesPromises: Array<UsersRequest> =  [];
+      const granteesPromises: Array<UsersRequest> = [];
       for (const gr of granteesSet) {
         granteesPromises.push(await getUsernames(gr.opaque_id, gr.idp));
       }
 
       Promise.all([...granteesPromises]).then(responses => {
-        const granteesArray: User[] =  [];
+        const granteesArray: User[] = [];
 
         for (const res of responses) {
           for (const gr of granteesSet) {
-            if (gr.opaque_id ===  res.opaque_id) {
+            if (gr.opaque_id === res.opaque_id) {
               granteesArray.push({
                 idp: res.idp,
                 opaqueId: res.opaque_id,
@@ -256,7 +256,7 @@ const Shares =  (props: ShareProps): JSX.Element => {
     void getGrantees();
   }, []);
 
-  const getUsernames =  async (
+  const getUsernames = async (
     opaqueId: string,
     idp: string
   ): Promise<UsersRequest> => {
@@ -311,10 +311,10 @@ const Shares =  (props: ShareProps): JSX.Element => {
                     }
                   ]}
                   onChange={async selected => {
-                    const selectedValue =  selected[0].name;
-                    const selectedShare =  share.shares
+                    const selectedValue = selected[0].name;
+                    const selectedShare = share.shares
                       .filter((item: any) => {
-                        return item.grantee.opaque_id ===  granteeItem.opaqueId;
+                        return item.grantee.opaque_id === granteeItem.opaqueId;
                       })
                       .pop();
 
@@ -337,9 +337,9 @@ const Shares =  (props: ShareProps): JSX.Element => {
                     cursor: 'pointer'
                   }}
                   onClick={() => {
-                    const selectedShare =  share.shares
+                    const selectedShare = share.shares
                       .filter((item: any) => {
-                        return item.grantee.opaque_id ===  granteeItem.opaqueId;
+                        return item.grantee.opaque_id === granteeItem.opaqueId;
                       })
                       .pop();
                     requestAPI(
@@ -373,28 +373,28 @@ const Shares =  (props: ShareProps): JSX.Element => {
  * @constructor
  */
 
-const ShareForm: React.FC<ShareFormProps> =  (
+const ShareForm: React.FC<ShareFormProps> = (
   shareProps: ShareFormProps
 ): JSX.Element => {
-  const [searchString, setSearchString] =  useState('');
-  const [userList, setUserList] =  useState([]);
+  const [searchString, setSearchString] = useState('');
+  const [userList, setUserList] = useState([]);
 
-  const getUsers =  async (searchStr: string): Promise<void> => {
-    if (searchStr.length <=  0) {
+  const getUsers = async (searchStr: string): Promise<void> => {
+    if (searchStr.length <= 0) {
       return;
     }
 
     shareProps.getUsers(searchStr).then(users => {
-      const parsedUsers: any =  [];
+      const parsedUsers: any = [];
 
-      let i =  1;
+      let i = 1;
 
       for (const user of users) {
-        const itemExists: number =  parsedUsers.filter((item: any) => {
-          return item.grantee ===  user.opaque_id && item.idp ===  user.idp;
+        const itemExists: number = parsedUsers.filter((item: any) => {
+          return item.grantee === user.opaque_id && item.idp === user.idp;
         }).length;
 
-        if (itemExists <=  0) {
+        if (itemExists <= 0) {
           parsedUsers.push({
             id: i++,
             name: user.display_name,
@@ -409,7 +409,7 @@ const ShareForm: React.FC<ShareFormProps> =  (
     });
   };
 
-  const debounceHook =  useCallback(
+  const debounceHook = useCallback(
     debounce(searchStr => {
       void getUsers(searchStr);
     }, 500),
@@ -439,12 +439,12 @@ const ShareForm: React.FC<ShareFormProps> =  (
             labelField="fullName"
             placeholder="Select user..."
             onChange={async (userValue: any) => {
-              if (userValue.length ===  0) {
+              if (userValue.length === 0) {
                 return;
               }
 
-              const user =  userValue[0] as { [key: string]: string };
-              const formValues =  {
+              const user = userValue[0] as { [key: string]: string };
+              const formValues = {
                 endpoint: '/',
                 file_path:
                   '/' + shareProps.fileInfo.path.replace('cs3drive:', ''),

@@ -15,15 +15,15 @@ import { Widget } from '@lumino/widgets';
 export class PendingSharesListWrapper extends ReactWidget {
   constructor() {
     super();
-    this.hide =  this.hide.bind(this);
-    this.show =  this.show.bind(this);
+    this.hide = this.hide.bind(this);
+    this.show = this.show.bind(this);
 
     this.addClass('jp-pending-shares-listing-wrapper');
   }
 
   protected onResize(msg: Widget.ResizeMessage): void {
     const { width } =
-      msg.width ===  -1 ? this.node.getBoundingClientRect() : msg;
+      msg.width === -1 ? this.node.getBoundingClientRect() : msg;
 
     this.toggleClass('jp-pending-shares-narrow', width < 290);
   }
@@ -37,12 +37,12 @@ export class PendingSharesListWrapper extends ReactWidget {
   }
 }
 
-const PendingSharesContent =  (
+const PendingSharesContent = (
   props: PendingSharesContentProps
 ): JSX.Element => {
-  const [pendingShares, setPendingShares] =  useState([]);
+  const [pendingShares, setPendingShares] = useState([]);
 
-  const refreshPendingShares =  async (): Promise<void> => {
+  const refreshPendingShares = async (): Promise<void> => {
     requestAPI('/api/cs3/shares/received?status=pending', {
       method: 'GET'
     }).then((pendingRequest: any) => {
@@ -50,7 +50,7 @@ const PendingSharesContent =  (
     });
   };
 
-  const acceptShare =  async (pendingShare: any): Promise<void> => {
+  const acceptShare = async (pendingShare: any): Promise<void> => {
     requestAPI('/api/cs3/shares/received', {
       method: 'PUT',
       body: JSON.stringify({
@@ -62,7 +62,7 @@ const PendingSharesContent =  (
     });
   };
 
-  const declineShare =  async (pendingShare: any): Promise<void> => {
+  const declineShare = async (pendingShare: any): Promise<void> => {
     requestAPI('/api/cs3/shares/received', {
       method: 'PUT',
       body: JSON.stringify({
@@ -112,18 +112,18 @@ const PendingSharesContent =  (
   );
 };
 
-const PendingSharesElement =  (props: PendingShareProp): JSX.Element => {
-  const Icon =  findFileIcon(props.content);
-  const created =  Time.format(
+const PendingSharesElement = (props: PendingShareProp): JSX.Element => {
+  const Icon = findFileIcon(props.content);
+  const created = Time.format(
     new Date(props.content.created),
     'YYYY-MM-DD HH:mm:ss'
   );
-  const lastModified =  Time.format(
+  const lastModified = Time.format(
     new Date(props.content.last_modified),
     'YYYY-MM-DD HH:mm:ss'
   );
 
-  const title =  `Name: ${props.content.name}
+  const title = `Name: ${props.content.name}
 Path: ${props.content.path}
 Created: ${created}
 Modified: ${lastModified}
@@ -151,8 +151,8 @@ Writable: ${props.content.writable}
   );
 };
 
-const AcceptButton =  (props: AcceptButtonProps): JSX.Element => {
-  const Icon =  acceptIcon;
+const AcceptButton = (props: AcceptButtonProps): JSX.Element => {
+  const Icon = acceptIcon;
   return (
     <button
       className="jp-button jp-pending-shares-listing-button"
@@ -169,8 +169,8 @@ const AcceptButton =  (props: AcceptButtonProps): JSX.Element => {
   );
 };
 
-const RejectButton =  (props: DeclineButtonProps): JSX.Element => {
-  const Icon =  declineIcon;
+const RejectButton = (props: DeclineButtonProps): JSX.Element => {
+  const Icon = declineIcon;
   return (
     <button
       className="jp-button jp-pending-shares-listing-button"
