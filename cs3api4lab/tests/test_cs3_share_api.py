@@ -188,17 +188,12 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
             if self.file_name:
                 self.remove_test_file('richard', self.file_name)
 
-    def test_update_received_share(self):
+    def test_stat_received_share(self):
         try:
             self.file_name = self.file_path + "_test_update_received_share"
             created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
             self.share_id = created_share['opaque_id']
-
-            self.share_api.update_received(self.share_id, 'ACCEPTED')
-            received_file_path = '/home/MyShares/' + self.file_name.split('/')[-1]
-            file_stat = self.file_api.stat_info(received_file_path, self.storage_id)
-
-            self.assertEqual(file_stat['filepath'], received_file_path, 'Share not updated')
+            self.file_api.stat_info(created_share['id']['opaque_id'], created_share['id']['storage_id'])
         finally:
             if self.share_id:
                 self.remove_test_share('richard', self.share_id)
@@ -215,13 +210,9 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
             self.file_name = self.file_path + "_test_read_share"
             created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
             self.share_id = created_share['opaque_id']
+            file_stat = self.file_api.stat_info(created_share['id']['opaque_id'], created_share['id']['storage_id'])
+            received_file_path = file_stat['filepath']
 
-            self.share_api.update_received(self.share_id, 'ACCEPTED')
-            received_file_path = '/home/MyShares/' + self.file_name.split('/')[-1]
-            file_stat = self.file_api.stat_info(received_file_path, self.storage_id)
-            self.assertEqual(file_stat['filepath'], received_file_path, 'Share not updated')
-
-            self.clear_locks_on_file(received_file_path)
             stat = self.file_api.stat_info(received_file_path)
             content = ''
             for chunk in self.file_api.read_file(stat):
@@ -239,10 +230,8 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
             created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
-            self.share_api.update_received(self.share_id, 'ACCEPTED')
-            received_file_path = '/home/MyShares/' + self.file_name.split('/')[-1]
-            file_stat = self.file_api.stat_info(received_file_path, self.storage_id)
-            self.assertEqual(file_stat['filepath'], received_file_path, 'Share not updated')
+            file_stat = self.file_api.stat_info(created_share['id']['opaque_id'], created_share['id']['storage_id'])
+            received_file_path = file_stat['filepath']
 
             self.clear_locks_on_file(received_file_path)
             self.file_api.write_file(received_file_path, self.content + self.content)
@@ -257,17 +246,19 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
             if self.file_name:
                 self.remove_test_file('richard', self.file_name)
 
-    def test_read_write_file_in_shared_container(self):
+    def test_read_file_in_shared_container(self):
         try:
-            self.container_name = '/home/test_container' + "test_read_write_file_in_shared_container"
+            self.container_name = '/home/test_container'
             created_share = self.create_container_share('richard', self.einstein_id, self.einstein_idp, self.container_name)
             self.share_id = created_share['opaque_id']
             file_name = '/test.txt' + self.get_random_suffix()
-            self.create_test_file('richard', self.container_name + file_name)
+            file_path = self.container_name + file_name
+            self.create_test_file('richard', file_path)
 
-            self.share_api.update_received(self.share_id, 'ACCEPTED')
-            received_container_path = '/home/MyShares/' + self.container_name.split('/')[-1]
+            container_stat = self.file_api.stat_info(created_share['id']['opaque_id'], created_share['id']['storage_id'])
+            received_container_path = container_stat['filepath']
             dir_read = self.file_api.read_directory(received_container_path)
+            self.assertEqual(len(dir_read), 1)
             self.assertEqual('/' + dir_read[0].path.split('/')[-1], file_name)
 
             self.clear_locks_on_file(received_container_path + file_name)
@@ -293,22 +284,19 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
             if self.container_name:
                 self.remove_test_file('richard', self.container_name)
 
-    def test_create_file_and_dir_in_shared_container(self):
+    def test_write_file_in_shared_container(self):
         try:
-            self.container_name = '/home/test_container' + "_test_create_file_and_dir_in_shared_container"
+            self.container_name = '/home/test_container'
             created_share = self.create_container_share('richard', self.einstein_id, self.einstein_idp, self.container_name)
             self.share_id = created_share['opaque_id']
-            self.share_api.update_received(self.share_id, 'ACCEPTED')
+            file_name = '/test.txt' + self.get_random_suffix()
 
-            inner_container = '/test_container' + "_test_create_file_and_dir_in_shared_container_inner_container"
-            file_name = '/test.txt' + "_test_create_file_and_dir_in_shared_container_file_naem"
+            container_stat = self.file_api.stat_info(created_share['id']['opaque_id'], created_share['id']['storage_id'])
+            received_container_path = container_stat['filepath']
 
-            received_container_path = '/home/MyShares/' + self.container_name.split('/')[-1]
-            self.create_test_container('einstein', received_container_path + inner_container)
-            self.create_test_file('einstein', received_container_path + inner_container + file_name)
+            self.file_api.write_file(received_container_path + file_name, self.content)
+            stat = self.richard_file_api.stat_info(self.container_name + file_name, self.config.endpoint)
 
-            self.clear_locks_on_file(received_container_path + inner_container + file_name)
-            stat = self.richard_file_api.stat_info(self.container_name + inner_container + file_name, self.config.endpoint)
             content = ''
             for chunk in self.richard_file_api.read_file(stat):
                 content += chunk.decode('utf-8')
@@ -319,18 +307,3 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
                 self.remove_test_share('richard', self.share_id)
             if self.container_name:
                 self.remove_test_file('richard', self.container_name)
-
-    def test_get_share_received(self):
-        try:
-            self.file_name = self.file_path + "_test_list_received"
-            shared_file_path = '/reva/richard/' + self.file_name.split('/')[-1]
-            created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
-            self.share_id = created_share['opaque_id']
-            share = self.share_api.get_share_received(shared_file_path)
-            self.assertIn(self.file_name.split('/')[-1], share.resource_id.opaque_id, 'Share is incorrect')
-
-        finally:
-            if self.share_id:
-               self.remove_test_share('richard', self.share_id)
-            if self.file_name:
-                self.remove_test_file('richard', self.file_name)

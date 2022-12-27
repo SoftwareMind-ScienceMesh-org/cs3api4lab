@@ -1,7 +1,5 @@
 from cs3api4lab.tests.share_test_base import ShareTestBase
-
 from unittest import TestCase
-
 from unittest import skip
 
 
@@ -164,17 +162,12 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
             if self.file_name:
                 self.remove_test_file('richard', self.file_name)
 
-    def test_update_received_share(self):
+    def test_stat_received_share(self):
         try:
             self.file_name = self.file_path + self.get_random_suffix()
             created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
             self.share_id = created_share['opaque_id']
-
-            self.uni_api.update_received(self.share_id, 'ACCEPTED')
-            received_file_path = '/home/MyShares/' + self.file_name.split('/')[-1]
-            file_stat = self.file_api.stat_info(received_file_path, self.storage_id)
-
-            self.assertEqual(file_stat['filepath'], received_file_path, 'Share not updated')
+            self.file_api.stat_info(created_share['id']['opaque_id'], created_share['id']['storage_id'])
         finally:
             if self.share_id:
                 self.remove_test_share('richard', self.share_id)
