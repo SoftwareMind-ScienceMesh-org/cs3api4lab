@@ -2,184 +2,243 @@ import os
 from jupyter_core.paths import jupyter_config_path
 from jupyter_server.services.config import ConfigManager
 from traitlets.config import LoggingConfigurable
-from traitlets import Unicode, Bool, CInt, Tuple, default
+from traitlets import Unicode, Bool, CInt, Tuple
 
 
 class Config(LoggingConfigurable):
 
     reva_host = Unicode(
-        config=True, help="""Address and port on which the Reva server is listening"""
+        config=True,
+        allow_none=False,
+        help="""Address and port on which the Reva server is listening"""
     )
     client_id = Unicode(
-        config=True, allow_none=True, help="""Client login to authenticate in Reva"""
+        config=True,
+        allow_none=False,
+        help="""Client login to authenticate in Reva"""
     )
     client_secret = Unicode(
-        config=True, allow_none=True, help="""Client password to authenticate in Reva"""
+        config=True,
+        allow_none=True,
+        help="""Client password to authenticate in Reva"""
     )
     auth_token_validity = CInt(
-        config=True, help="""The lifetime of the authenticating token"""
+        default_value=3600,
+        config=True,
+        allow_none=False,
+        help="""The lifetime of the authenticating token"""
     )
     endpoint = Unicode(
-        config=True, help="""Endpoint for Reva storage provider"""
+        default_value="/",
+        config=True,
+        help="""Endpoint for Reva storage provider""",
+        allow_none=False
     )
     mount_dir = Unicode(
-        config=True, help="""root directory of the filesystem"""
+        default_value="/",
+        config=True,
+        help="""root directory of the filesystem""",
+        allow_none=False
     )
     home_dir = Unicode(
-        config=True, help="""Home directory of the user"""
+        config=True,
+        allow_none=True,
+        help="""Home directory of the user"""
     )
     root_dir_list = Tuple(
-        config=True, allow_none=True,
-        help="""list of root dirs, for example https://developer.sciencemesh.io/docs/iop/deployment/kubernetes/providers/ root dirs are "/home,/reva"""
+        config=True,
+        allow_none=True,
+        help="""list of root dirs, for example https://developer.sciencemesh.io/docs/iop/deployment/kubernetes/providers/"""
     )
     chunk_size = CInt(
-        config=True, help="""Size of the downloaded fragment from Reva"""
+        default_value=4194304,
+        config=True,
+        allow_none=False,
+        help="""Size of the downloaded fragment from Reva"""
     )
     secure_channel = Bool(
-        config=True, help="""Secure channel flag"""
+        default_value=False,
+        config=True,
+        allow_none=False,
+        help="""Secure channel flag"""
     )
     authenticator_class = Unicode(
-        config=True, help="""Authenticator class"""
+        default_value="cs3api4lab.auth.RevaPassword",
+        config=True,
+        allow_none=False,
+        help="""Authenticator class"""
     )
     login_type = Unicode(
-        config=True, help="""Reva login type"""
+        default_value="basic",
+        config=True,
+        allow_none=False,
+        help="""Reva login type"""
     )
     locks_expiration_time = CInt(
-        config=True, help="""File lock lifetime"""
+        default_value=150,
+        config=True,
+        allow_none=False,
+        help="""File lock lifetime in seconds"""
     )
     client_key = Unicode(
-        config=True, allow_none=True, help="""Private key file path"""
+        config=True,
+        allow_none=True,
+        help="""Private key file path"""
     )
     client_cert = Unicode(
-        config=True, allow_none=True, help="""Public key file path (PEM-encoded)"""
+        config=True,
+        allow_none=True,
+        help="""Public key file path (PEM-encoded)"""
     )
     ca_cert = Unicode(
-        config=True, allow_none=True, help="""Certificate authority file path"""
+        config=True,
+        allow_none=True,
+        help="""Certificate authority file path"""
     )
     enable_ocm = Bool(
-        config=True, help="""Flag to enable OCM functionality"""
+        default_value=False,
+        config=True,
+        help="""Flag to enable OCM functionality"""
     )
     tus_enabled = Bool(
-        config=True, help="""Flag to enable TUS"""
+        default_value=False,
+        config=True,
+        help="""Flag to enable TUS"""
     )
     eos_file = Unicode(
-        config=True, allow_none=True, help="""EOS file location"""
+        config=True,
+        allow_none=True,
+        help="""EOS file location"""
     )
     kernel_path = Unicode(
-        config=True, help="""Path where the kernel starts"""
+        default_value="/",
+        config=True,
+        allow_none=False,
+        help="""Path where the kernel starts"""
     )
     eos_token = Unicode(
-        config=True, allow_none=True, help="""EOS token"""
+        config=True,
+        allow_none=True,
+        help="""EOS token"""
     )
     oauth_file = Unicode(
-        config=True, allow_none=True, help="""Path for OAuth file"""
+        config=True,
+        allow_none=True,
+        help="""Path for OAuth file"""
     )
     oauth_token = Unicode(
-        config=True, allow_none=True, help="""OAuth token"""
+        config=True,
+        allow_none=True,
+        help="""OAuth token"""
     )
     locks_api = Unicode(
-        config=True, allow_none=False, help="""Locking API implementation to choose from 'cs3' (cs3apis 
+        default_value='metadata',
+        config=True,
+        allow_none=False,
+        help="""Locking API implementation to choose from 'cs3' (cs3apis 
         grpc locks) and 'metadata' (file arbitrary metadata, the default one)""",
     )
 
-    @default("reva_host")
-    def _reva_host_default(self):
-        return self._get_config_value("reva_host")
+    def __init__(self):
+        LoggingConfigurable.__init__(self)
 
-    @default("client_id")
-    def _client_id_default(self):
-        return self._get_config_value("client_id")
+        reva_host = self._get_config_value("reva_host")
+        if reva_host:
+            self.reva_host = reva_host
 
-    @default("client_secret")
-    def _client_secret_default(self):
-        return self._get_config_value("client_secret")
+        client_id = self._get_config_value("client_id")
+        if client_id:
+            self.client_id = client_id
 
-    @default("auth_token_validity")
-    def _auth_token_validity_default(self):
-        return self._get_config_value("auth_token_validity")
+        client_secret = self._get_config_value("client_secret")
+        if client_secret:
+            self.client_secret = client_secret
 
-    @default("endpoint")
-    def _endpoint_default(self):
-        return self._get_config_value("endpoint")
+        auth_token_validity = self._get_config_value("auth_token_validity")
+        if auth_token_validity:
+            self.auth_token_validity = auth_token_validity
 
-    @default("mount_dir")
-    def _mount_dir_default(self):
-        return self._get_config_value("mount_dir")
+        endpoint = self._get_config_value("endpoint")
+        if endpoint:
+            self.endpoint = endpoint
 
-    @default("home_dir")
-    def _home_dir_default(self):
-        return self._get_config_value("home_dir")
+        mount_dir = self._get_config_value("mount_dir")
+        if mount_dir:
+            self.mount_dir = mount_dir
 
-    @default("root_dir_list")
-    def _root_dir_list_default(self):
+        homedir = self._get_config_value("homedir")
+        if homedir:
+            self.homedir = homedir
+
         root_dir_list = self._get_config_value("root_dir_list")
         if len(root_dir_list) > 0 and type(root_dir_list) is str:
             root_dir_list = tuple(dir.strip() for dir in root_dir_list.split(','))
-        return root_dir_list
+        if root_dir_list:
+            self.root_dir_list = root_dir_list
 
-    @default("chunk_size")
-    def _chunk_size_default(self):
-        return self._get_config_value("chunk_size")
+        chunk_size = self._get_config_value("chunk_size")
+        if chunk_size:
+            self.chunk_size = chunk_size
 
-    @default("secure_channel")
-    def _secure_channel_default(self):
-        return self._get_config_value("secure_channel") in ["true", True]
+        secure_channel = self._get_config_value("secure_channel")
+        if secure_channel in ["true", True]:
+            self.secure_channel = True
 
-    @default("authenticator_class")
-    def _authenticator_class_default(self):
-        return self._get_config_value("authenticator_class")
+        authenticator_class = self._get_config_value("authenticator_class")
+        if authenticator_class:
+            self.authenticator_class = authenticator_class
 
-    @default("login_type")
-    def _login_type_default(self):
-        return self._get_config_value("login_type")
+        login_type = self._get_config_value("login_type")
+        if login_type:
+            self.login_type = login_type
 
-    @default("locks_expiration_time")
-    def _locks_expiration_time_default(self):
-        return self._get_config_value("locks_expiration_time")
+        locks_expiration_time = self._get_config_value("locks_expiration_time")
+        if locks_expiration_time:
+            self.locks_expiration_time = locks_expiration_time
 
-    @default("client_key")
-    def _client_key_default(self):
-        return self._get_config_value("client_key")
+        client_key = self._get_config_value("client_key")
+        if client_key:
+            self.client_key = client_key
 
-    @default("client_cert")
-    def _client_cert_default(self):
-        return self._get_config_value("client_cert")
+        client_cert = self._get_config_value("client_cert")
+        if client_cert:
+            self.client_cert = client_cert
 
-    @default("ca_cert")
-    def _ca_cert_default(self):
-        return self._get_config_value("ca_cert")
+        ca_cert = self._get_config_value("ca_cert")
+        if ca_cert:
+            self.ca_cert = ca_cert
 
-    @default("tus_enabled")
-    def _tus_enabled_default(self):
-        return self._get_config_value("tus_enabled") in ["true", True]
+        tus_enabled = self._get_config_value("tus_enabled")
+        if tus_enabled in ["true", True]:
+            self.tus_enabled = True
 
-    @default("enable_ocm")
-    def _enable_ocm_default(self):
-        return self._get_config_value("enable_ocm") in ["true", True]
+        enable_ocm = self._get_config_value("enable_ocm")
+        if enable_ocm in ["true", True]:
+            self.enable_ocm = True
 
-    @default("kernel_path")
-    def _kernel_path_default(self):
-        return self._get_config_value("kernel_path")
+        kernel_path = self._get_config_value("kernel_path")
+        if kernel_path:
+            self.kernel_path = kernel_path
 
-    @default("eos_file")
-    def _eos_file_default(self):
-        return self._get_config_value("eos_file")
+        eos_file = self._get_config_value("eos_file")
+        if eos_file:
+            self.eos_file = eos_file
 
-    @default("eos_token")
-    def _eos_token_default(self):
-        return self._get_config_value("eos_token")
+        eos_token = self._get_config_value("eos_token")
+        if eos_token:
+            self.eos_token = eos_token
 
-    @default("oauth_file")
-    def _oauth_file_default(self):
-        return self._get_config_value("oauth_file")
+        oauth_file = self._get_config_value("oauth_file")
+        if oauth_file:
+            self.oauth_file = oauth_file
 
-    @default("oauth_token")
-    def _oauth_token_default(self):
-        return self._get_config_value("oauth_token")
+        oauth_token = self._get_config_value("oauth_token")
+        if oauth_token:
+            self.oauth_token = oauth_token
 
-    @default("locks_api")
-    def _locks_api(self):
-        return self._get_config_value("locks_api")
+        locks_api = self._get_config_value("locks_api")
+        if locks_api:
+            self.locks_api = locks_api
 
     def _get_config_value(self, key):
         env = os.getenv("CS3_" + key.upper())
@@ -187,8 +246,6 @@ class Config(LoggingConfigurable):
             return env
         elif self._file_config(key) is not None:
             return self._file_config(key)
-        elif self._default_config[key] is not None:
-            return self._default_config[key]
         else:
             return None
 
@@ -201,8 +258,8 @@ class Config(LoggingConfigurable):
             config_path = jupyter_config_path()
             if self.__config_dir not in config_path:
                 # add self._config_dir to the front, if set manually
-                config_path.insert(0, os.path.join(os.getcwd(),
-                                                   self.__config_dir))  # might be os.path.join(os.getcwd(), 'cs3api4lab', self.__config_dir) depending on the environment setup"
+                # might be os.path.join(os.getcwd(), 'cs3api4lab', self.__config_dir) depending on the environment setup"
+                config_path.insert(0, os.path.join(os.getcwd(), self.__config_dir))
             cm = ConfigManager(read_config_path=config_path)
             try:
                 config_file = cm.get(self.__config_file_name)
@@ -211,33 +268,6 @@ class Config(LoggingConfigurable):
                 self.log.warn("No config files found")
                 self.__file_config = {}
         return self.__file_config[key] if key in self.__file_config else None
-
-    _default_config = {
-        "reva_host": "localhost:19000",
-        "client_id": "einstein",
-        "client_secret": "relativity",
-        "auth_token_validity": 3600,
-        "endpoint": "/",
-        "mount_dir": "/home",
-        "home_dir": "/",
-        "root_dir_list": ['/home', '/reva'],
-        "chunk_size": "4194304",
-        "secure_channel": True,
-        "authenticator_class": "cs3api4lab.auth.RevaPassword",
-        "login_type": "basic",
-        "locks_expiration_time": 150,
-        "client_key": None,
-        "client_cert": None,
-        "ca_cert": None,
-        "tus_enabled": False,
-        "enable_ocm": False,
-        "kernel_path": "/",
-        "eos_file": None,
-        "eos_token": None,
-        "oauth_file": None,
-        "oauth_token": None,
-        "locks_api": "metadata"
-    }
 
 
 class Cs3ConfigManager:

@@ -1,9 +1,10 @@
 import random
 import string
+import copy
 from cs3api4lab.tests.extensions import *
 from traitlets.config import LoggingConfigurable
 import cs3.rpc.v1beta1.code_pb2 as cs3code
-from collections import namedtuple
+from cs3api4lab.config.config_manager import Config
 
 class ShareTestBase:
     storage_id = '123e4567-e89b-12d3-a456-426655440000'
@@ -20,45 +21,14 @@ class ShareTestBase:
         self.auth = ExtAuthenticator(self.config, self.log)
         self.storage_api = StorageApi(self.log)
 
-        marie_ext_config = {
-            "reva_host": "127.0.0.1:29000",
-            "auth_token_validity": 3600,
-            "endpoint": "/",
-            "mount_dir": "/home",
-            "home_dir": "/",
-            "chunk_size": 4194304,
-            "secure_channel": False,
-            "client_cert": "",
-            "client_key": "",
-            "ca_cert": "",
-            "authenticator_class": "cs3api4lab.auth.RevaPassword",
-            "client_id": "marie",
-            "client_secret": "radioactivity",
-	        "locks_expiration_time": 10,
-	        "tus_enabled": True,
-  	        "enable_ocm": False
-            }
-        marie_ext_config = namedtuple('MarieConfig', marie_ext_config)(**marie_ext_config)
+        marie_ext_config = copy.copy(Config())
+        marie_ext_config.reva_host = "127.0.0.1:29000"
+        marie_ext_config.client_id = "marie"
+        marie_ext_config.client_secret = "radioactivity"
 
-        richard_local_config = {
-            "reva_host": "127.0.0.1:19000",
-            "auth_token_validity": 3600,
-            "endpoint": "/",
-            "mount_dir": "/home",
-            "home_dir": "/",
-            "chunk_size": 4194304,
-            "secure_channel": False,
-            "client_cert": "",
-            "client_key": "",
-            "ca_cert": "",
-            "authenticator_class": "cs3api4lab.auth.RevaPassword",
-            "client_id": "richard",
-            "client_secret": "superfluidity",
-	        "locks_expiration_time": 10,
-	        "tus_enabled": True,
-  	        "enable_ocm": False
-        }
-        richard_local_config = namedtuple('richardConfig', richard_local_config)(**richard_local_config)
+        richard_local_config = copy.copy(Config())
+        richard_local_config.client_id = "richard"
+        richard_local_config.client_secret = "superfluidity"
 
         self.marie_uni_api = ExtCs3ShareApiFacade(self.log, marie_ext_config)
         self.marie_file_api = ExtCs3FileApi(self.log, marie_ext_config)
