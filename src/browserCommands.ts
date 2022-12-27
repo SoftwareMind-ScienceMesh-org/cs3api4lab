@@ -49,61 +49,61 @@ import { IIterator, map, reduce, toArray } from '@lumino/algorithm';
  * Copied from packages/filebrowser-extension/src/index.ts:81
  */
 namespace CommandIDs {
-  export const copy = 'filebrowser:copy';
+  export const copy =  'filebrowser:copy';
 
-  export const copyDownloadLink = 'filebrowser:copy-download-link';
-
-  // For main browser only.
-  export const createLauncher = 'filebrowser:create-main-launcher';
-
-  export const cut = 'filebrowser:cut';
-
-  export const del = 'filebrowser:delete';
-
-  export const download = 'filebrowser:download';
-
-  export const duplicate = 'filebrowser:duplicate';
+  export const copyDownloadLink =  'filebrowser:copy-download-link';
 
   // For main browser only.
-  export const hideBrowser = 'filebrowser:hide-main';
+  export const createLauncher =  'filebrowser:create-main-launcher';
 
-  export const goToPath = 'filebrowser:go-to-path';
+  export const cut =  'filebrowser:cut';
 
-  export const openPath = 'filebrowser:open-path';
+  export const del =  'filebrowser:delete';
 
-  export const open = 'filebrowser:open';
+  export const download =  'filebrowser:download';
 
-  export const openBrowserTab = 'filebrowser:open-browser-tab';
-
-  export const paste = 'filebrowser:paste';
-
-  export const createNewDirectory = 'filebrowser:create-new-directory';
-
-  export const createNewFile = 'filebrowser:create-new-file';
-
-  export const createNewMarkdownFile = 'filebrowser:create-new-markdown-file';
-
-  export const rename = 'filebrowser:rename';
+  export const duplicate =  'filebrowser:duplicate';
 
   // For main browser only.
-  export const share = 'filebrowser:share-main';
+  export const hideBrowser =  'filebrowser:hide-main';
+
+  export const goToPath =  'filebrowser:go-to-path';
+
+  export const openPath =  'filebrowser:open-path';
+
+  export const open =  'filebrowser:open';
+
+  export const openBrowserTab =  'filebrowser:open-browser-tab';
+
+  export const paste =  'filebrowser:paste';
+
+  export const createNewDirectory =  'filebrowser:create-new-directory';
+
+  export const createNewFile =  'filebrowser:create-new-file';
+
+  export const createNewMarkdownFile =  'filebrowser:create-new-markdown-file';
+
+  export const rename =  'filebrowser:rename';
 
   // For main browser only.
-  export const copyPath = 'filebrowser:copy-path';
-
-  export const showBrowser = 'filebrowser:activate';
-
-  export const shutdown = 'filebrowser:shutdown';
+  export const share =  'filebrowser:share-main';
 
   // For main browser only.
-  export const toggleBrowser = 'filebrowser:toggle-main';
+  export const copyPath =  'filebrowser:copy-path';
+
+  export const showBrowser =  'filebrowser:activate';
+
+  export const shutdown =  'filebrowser:shutdown';
+
+  // For main browser only.
+  export const toggleBrowser =  'filebrowser:toggle-main';
 
   export const toggleNavigateToCurrentDirectory =
     'filebrowser:toggle-navigate-to-current-directory';
 
-  export const toggleLastModified = 'filebrowser:toggle-last-modified';
+  export const toggleLastModified =  'filebrowser:toggle-last-modified';
 
-  export const search = 'filebrowser:search';
+  export const search =  'filebrowser:search';
 }
 
 /**
@@ -120,13 +120,13 @@ export function addCommands(
   commandPalette: ICommandPalette | null,
   mainMenu: IMainMenu | null
 ): void {
-  const trans = translator.load('jupyterlab');
-  const { docRegistry: registry, commands } = app;
-  const { defaultBrowser: browser, tracker } = factory;
+  const trans =  translator.load('jupyterlab');
+  const { docRegistry: registry, commands } =  app;
+  const { defaultBrowser: browser, tracker } =  factory;
 
   commands.addCommand(CommandIDs.del, {
     execute: () => {
-      const widget = tracker.currentWidget;
+      const widget =  tracker.currentWidget;
 
       if (widget) {
         return widget.delete();
@@ -139,7 +139,7 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.copy, {
     execute: () => {
-      const widget = tracker.currentWidget;
+      const widget =  tracker.currentWidget;
 
       if (widget) {
         return widget.copy();
@@ -152,7 +152,7 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.cut, {
     execute: () => {
-      const widget = tracker.currentWidget;
+      const widget =  tracker.currentWidget;
 
       if (widget) {
         return widget.cut();
@@ -164,7 +164,7 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.download, {
     execute: () => {
-      const widget = tracker.currentWidget;
+      const widget =  tracker.currentWidget;
 
       if (widget) {
         return widget.download();
@@ -176,7 +176,7 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.duplicate, {
     execute: () => {
-      const widget = tracker.currentWidget;
+      const widget =  tracker.currentWidget;
 
       if (widget) {
         return widget.duplicate();
@@ -188,7 +188,7 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.hideBrowser, {
     execute: () => {
-      const widget = tracker.currentWidget;
+      const widget =  tracker.currentWidget;
       if (widget && !widget.isHidden) {
         labShell.collapseLeft();
       }
@@ -197,16 +197,16 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.goToPath, {
     execute: async args => {
-      const path = (args.path as string) || '';
-      const showBrowser = !(args?.dontShowBrowser ?? false);
+      const path =  (args.path as string) || '';
+      const showBrowser =  !(args?.dontShowBrowser ?? false);
       try {
-        const item = await Private.navigateToPath(path, factory, translator);
-        if (item.type !== 'directory' && showBrowser) {
-          const browserForPath = Private.getBrowserForPath(path, factory);
+        const item =  await Private.navigateToPath(path, factory, translator);
+        if (item.type !==  'directory' && showBrowser) {
+          const browserForPath =  Private.getBrowserForPath(path, factory);
           if (browserForPath) {
             browserForPath.clearSelectedItems();
-            const parts = path.split('/');
-            const name = parts[parts.length - 1];
+            const parts =  path.split('/');
+            const name =  parts[parts.length - 1];
             if (name) {
               await browserForPath.selectItemByName(name);
             }
@@ -229,7 +229,7 @@ export function addCommands(
     execute: async args => {
       let path: string | undefined;
       if (args?.path) {
-        path = args.path as string;
+        path =  args.path as string;
       } else {
         path =
           (
@@ -245,21 +245,21 @@ export function addCommands(
         return;
       }
       try {
-        const trailingSlash = path !== '/' && path.endsWith('/');
+        const trailingSlash =  path !==  '/' && path.endsWith('/');
         if (trailingSlash) {
           // The normal contents service errors on paths ending in slash
-          path = path.slice(0, path.length - 1);
+          path =  path.slice(0, path.length - 1);
         }
-        path = path ?? '/';
-        const browserForPath: FileBrowser = Private.getBrowserForPath(
+        path =  path ?? '/';
+        const browserForPath: FileBrowser =  Private.getBrowserForPath(
           path,
           factory
         ) as FileBrowser;
-        const { services } = browserForPath.model.manager;
-        const item = await services.contents.get(path, {
+        const { services } =  browserForPath.model.manager;
+        const item =  await services.contents.get(path, {
           content: false
         });
-        if (trailingSlash && item.type !== 'directory') {
+        if (trailingSlash && item.type !==  'directory') {
           return showErrorMessage(
             trans.__('Cannot open'),
             new Error(`Path ${path}/ is not a directory`)
@@ -269,13 +269,13 @@ export function addCommands(
           path,
           dontShowBrowser: args.dontShowBrowser
         });
-        if (item.type === 'directory') {
+        if (item.type ===  'directory') {
           return;
         }
         return commands.execute('docmanager:open', { path });
       } catch (reason) {
-        if (reason.response && reason.response.status === 404) {
-          reason.message = trans.__('Could not find path: %1', path);
+        if (reason.response && reason.response.status ===  404) {
+          reason.message =  trans.__('Could not find path: %1', path);
         }
         return showErrorMessage(trans.__('Cannot open'), reason);
       }
@@ -291,19 +291,19 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.open, {
     execute: args => {
-      const factory = (args['factory'] as string) || void 0;
-      const widget = tracker.currentWidget;
+      const factory =  (args['factory'] as string) || void 0;
+      const widget =  tracker.currentWidget;
 
       if (!widget) {
         return;
       }
 
-      const { contents } = widget.model.manager.services;
+      const { contents } =  widget.model.manager.services;
       return Promise.all(
         toArray(
           map(widget.selectedItems(), item => {
-            if (item.type === 'directory') {
-              const localPath = contents.localPath(item.path);
+            if (item.type ===  'directory') {
+              const localPath =  contents.localPath(item.path);
               return widget.model.cd(`/${localPath}`);
             }
 
@@ -316,10 +316,10 @@ export function addCommands(
       );
     },
     icon: args => {
-      const factory = (args['factory'] as string) || void 0;
+      const factory =  (args['factory'] as string) || void 0;
       if (factory) {
         // if an explicit factory is passed...
-        const ft = registry.getFileType(factory);
+        const ft =  registry.getFileType(factory);
         // ...set an icon if the factory name corresponds to a file type name...
         // ...or leave the icon blank
         return ft?.icon?.bindprops({ stylesheet: 'menuItem' });
@@ -335,7 +335,7 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.openBrowserTab, {
     execute: () => {
-      const widget = tracker.currentWidget;
+      const widget =  tracker.currentWidget;
 
       if (!widget) {
         return;
@@ -358,7 +358,7 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.copyDownloadLink, {
     execute: () => {
-      const widget = tracker.currentWidget;
+      const widget =  tracker.currentWidget;
       if (!widget) {
         return;
       }
@@ -376,7 +376,7 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.paste, {
     execute: () => {
-      const widget = tracker.currentWidget;
+      const widget =  tracker.currentWidget;
 
       if (widget) {
         return widget.paste();
@@ -389,7 +389,7 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.createNewDirectory, {
     execute: () => {
-      const widget = tracker.currentWidget;
+      const widget =  tracker.currentWidget;
 
       if (widget) {
         return widget.createNewDirectory();
@@ -431,7 +431,7 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.rename, {
     execute: () => {
-      const widget = tracker.currentWidget;
+      const widget =  tracker.currentWidget;
 
       if (widget) {
         return widget.rename();
@@ -444,11 +444,11 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.copyPath, {
     execute: () => {
-      const widget = tracker.currentWidget;
+      const widget =  tracker.currentWidget;
       if (!widget) {
         return;
       }
-      const item = widget.selectedItems().next();
+      const item =  widget.selectedItems().next();
       if (!item) {
         return;
       }
@@ -457,35 +457,35 @@ export function addCommands(
     },
     isVisible: () =>
       !!tracker.currentWidget &&
-      tracker.currentWidget.selectedItems().next !== undefined,
+      tracker.currentWidget.selectedItems().next !==  undefined,
     icon: fileIcon.bindprops({ stylesheet: 'menuItem' }),
     label: trans.__('Copy Path')
   });
 
   commands.addCommand(CommandIDs.showBrowser, {
     execute: args => {
-      const path = (args.path as string) || '';
-      const browserForPath = Private.getBrowserForPath(path, factory);
+      const path =  (args.path as string) || '';
+      const browserForPath =  Private.getBrowserForPath(path, factory);
 
       // Check for browser not found
       if (!browserForPath) {
         return;
       }
       // Shortcut if we are using the main file browser
-      if (browser === browserForPath) {
+      if (browser ===  browserForPath) {
         labShell.activateById(browser.id);
         return;
       } else {
-        const areas: ILabShell.Area[] = ['left', 'right'];
+        const areas: ILabShell.Area[] =  ['left', 'right'];
         for (const area of areas) {
-          const it = labShell.widgets(area);
-          let widget = it.next();
+          const it =  labShell.widgets(area);
+          let widget =  it.next();
           while (widget) {
             if (widget.contains(browserForPath)) {
               labShell.activateById(widget.id);
               return;
             }
-            widget = it.next();
+            widget =  it.next();
           }
         }
       }
@@ -494,7 +494,7 @@ export function addCommands(
 
   commands.addCommand(CommandIDs.shutdown, {
     execute: () => {
-      const widget = tracker.currentWidget;
+      const widget =  tracker.currentWidget;
 
       if (widget) {
         return widget.shutdownKernels();
@@ -523,8 +523,8 @@ export function addCommands(
     label: trans.__('Show Active File in File Browser'),
     isToggled: () => browser.navigateToCurrentDirectory,
     execute: () => {
-      const value = !browser.navigateToCurrentDirectory;
-      const key = 'navigateToCurrentDirectory';
+      const value =  !browser.navigateToCurrentDirectory;
+      const key =  'navigateToCurrentDirectory';
       return settingRegistry
         .set('@jupyterlab/filebrowser-extension:browser', key, value)
         .catch(() => {
@@ -536,19 +536,19 @@ export function addCommands(
   commands.addCommand(CommandIDs.toggleLastModified, {
     label: trans.__('Toggle Last Modified Column'),
     execute: () => {
-      const header = DOMUtils.findElement(document.body, 'jp-id-modified');
-      const column = DOMUtils.findElements(
+      const header =  DOMUtils.findElement(document.body, 'jp-id-modified');
+      const column =  DOMUtils.findElements(
         document.body,
         'jp-DirListing-itemModified'
       );
       if (header.classList.contains('jp-LastModified-hidden')) {
         header.classList.remove('jp-LastModified-hidden');
-        for (let i = 0; i < column.length; i++) {
+        for (let i =  0; i < column.length; i++) {
           column[i].classList.remove('jp-LastModified-hidden');
         }
       } else {
         header.classList.add('jp-LastModified-hidden');
-        for (let i = 0; i < column.length; i++) {
+        for (let i =  0; i < column.length; i++) {
           column[i].classList.add('jp-LastModified-hidden');
         }
       }
@@ -585,7 +585,7 @@ export function addCommands(
 
       // get the widget factories that could be used to open all of the items
       // in the current filebrowser selection
-      const factories = tracker.currentWidget
+      const factories =  tracker.currentWidget
         ? OpenWithMenu._intersection(
             map(tracker.currentWidget.selectedItems(), i => {
               return OpenWithMenu._getFactories(i);
@@ -607,14 +607,14 @@ export function addCommands(
     }
 
     static _getFactories(item: Contents.IModel): Array<string> {
-      const factories = registry
+      const factories =  registry
         .preferredWidgetFactories(item.path)
         .map(f => f.name);
-      const notebookFactory = registry.getWidgetFactory('notebook')?.name;
+      const notebookFactory =  registry.getWidgetFactory('notebook')?.name;
       if (
         notebookFactory &&
-        item.type === 'notebook' &&
-        factories.indexOf(notebookFactory) === -1
+        item.type ===  'notebook' &&
+        factories.indexOf(notebookFactory) ===  -1
       ) {
         factories.unshift(notebookFactory);
       }
@@ -624,14 +624,14 @@ export function addCommands(
 
     static _intersection<T>(iter: IIterator<Array<T>>): Set<T> | void {
       // pop the first element of iter
-      const first = iter.next();
+      const first =  iter.next();
       // first will be undefined if iter is empty
       if (!first) {
         return;
       }
 
       // "initialize" the intersection from first
-      const isect = new Set(first);
+      const isect =  new Set(first);
       // reduce over the remaining elements of iter
       return reduce(
         iter,
@@ -646,11 +646,11 @@ export function addCommands(
   }
 
   // matches anywhere on filebrowser
-  const selectorContent = '.jp-DirListing-content';
+  const selectorContent =  '.jp-DirListing-content';
   // matches all filebrowser items
-  const selectorItem = '.jp-DirListing-item[data-isdir]';
+  const selectorItem =  '.jp-DirListing-item[data-isdir]';
   // matches only non-directory items
-  const selectorNotDir = '.jp-DirListing-item[data-isdir="false"]';
+  const selectorNotDir =  '.jp-DirListing-item[data-isdir="false"]';
 
   // If the user did not click on any file, we still want to show paste and new folder,
   // so target the content rather than an item.
@@ -684,8 +684,8 @@ export function addCommands(
     rank: 1
   });
 
-  const openWith = new OpenWithMenu({ commands });
-  openWith.title.label = trans.__('Open With');
+  const openWith =  new OpenWithMenu({ commands });
+  openWith.title.label =  trans.__('Open With');
   app.contextMenu.addItem({
     type: 'submenu',
     submenu: openWith,
@@ -770,7 +770,7 @@ export async function restoreBrowser(
   router: IRouter | null,
   tree: JupyterFrontEnd.ITreeResolver | null
 ): Promise<void> {
-  const restoring = 'jp-mod-restoring';
+  const restoring =  'jp-mod-restoring';
 
   browser.addClass(restoring);
 
@@ -781,10 +781,10 @@ export async function restoreBrowser(
     return;
   }
 
-  const listener = async () => {
+  const listener =  async () => {
     router.routed.disconnect(listener);
 
-    const paths = await tree?.paths;
+    const paths =  await tree?.paths;
     if (paths?.file || paths?.browser) {
       // Restore the model without populating it.
       await browser.model.restore(browser.id, false);
@@ -818,14 +818,14 @@ export function createLauncher(
   commands: CommandRegistry,
   browser: FileBrowser
 ): Promise<MainAreaWidget<Launcher>> {
-  const { model } = browser;
+  const { model } =  browser;
 
   return commands
     .execute('launcher:create', { cwd: model.path })
     .then((launcher: MainAreaWidget<Launcher>) => {
       model.pathChanged.connect(() => {
         if (launcher.content) {
-          launcher.content.cwd = model.path;
+          launcher.content.cwd =  model.path;
         }
       }, launcher);
       return launcher;
@@ -847,19 +847,19 @@ namespace Private {
     factory: IFileBrowserFactory,
     translator: ITranslator
   ): Promise<Contents.IModel> {
-    const trans = translator.load('jupyterlab');
-    const browserForPath = Private.getBrowserForPath(path, factory);
+    const trans =  translator.load('jupyterlab');
+    const browserForPath =  Private.getBrowserForPath(path, factory);
     if (!browserForPath) {
       throw new Error(trans.__('No browser for path'));
     }
-    const { services } = browserForPath.model.manager;
-    const localPath = services.contents.localPath(path);
+    const { services } =  browserForPath.model.manager;
+    const localPath =  services.contents.localPath(path);
 
     await services.ready;
-    const item = await services.contents.get(path, { content: false });
-    const { model } = browserForPath;
+    const item =  await services.contents.get(path, { content: false });
+    const { model } =  browserForPath;
     await model.restored;
-    if (item.type === 'directory') {
+    if (item.type ===  'directory') {
       await model.cd(`/${localPath}`);
     } else {
       await model.cd(`/${PathExt.dirname(localPath)}`);
@@ -875,12 +875,12 @@ namespace Private {
     path: string,
     factory: IFileBrowserFactory
   ): FileBrowser | undefined {
-    const { defaultBrowser: browser, tracker } = factory;
-    const driveName = browser.model.manager.services.contents.driveName(path);
+    const { defaultBrowser: browser, tracker } =  factory;
+    const driveName =  browser.model.manager.services.contents.driveName(path);
 
     if (driveName) {
-      const browserForPath = tracker.find(
-        _path => _path.model.driveName === driveName
+      const browserForPath =  tracker.find(
+        _path => _path.model.driveName ===  driveName
       );
 
       if (!browserForPath) {

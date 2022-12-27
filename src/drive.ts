@@ -12,8 +12,8 @@ export class CS3Contents implements Contents.IDrive {
   protected _fileTypeForContentsModel: (
     model: Partial<Contents.IModel>
   ) => DocumentRegistry.IFileType;
-  protected _fileChanged = new Signal<this, Contents.IChangedArgs>(this);
-  protected _isDisposed = false;
+  protected _fileChanged =  new Signal<this, Contents.IChangedArgs>(this);
+  protected _isDisposed =  false;
   protected _state: IStateDB;
   protected _docManager: IDocumentManager;
   readonly serverSettings: ServerConnection.ISettings;
@@ -24,31 +24,31 @@ export class CS3Contents implements Contents.IDrive {
     docManager: IDocumentManager,
     serverSettings: ServerConnection.ISettings
   ) {
-    this._docRegistry = registry;
-    this._docManager = docManager;
-    this.serverSettings = serverSettings;
+    this._docRegistry =  registry;
+    this._docManager =  docManager;
+    this.serverSettings =  serverSettings;
 
     // Construct a function to make a best-guess IFileType
     // for a given path.
-    this._fileTypeForPath = (path: string): DocumentRegistry.IFileType => {
-      const fileTypes = registry.getFileTypesForPath(path);
+    this._fileTypeForPath =  (path: string): DocumentRegistry.IFileType => {
+      const fileTypes =  registry.getFileTypesForPath(path);
       const fileType:
         | DocumentRegistry.IFileType
-        | undefined = registry.getFileType('text');
+        | undefined =  registry.getFileType('text');
 
-      return fileTypes.length === 0 && fileType !== undefined
+      return fileTypes.length ===  0 && fileType !==  undefined
         ? fileType
         : fileTypes[0];
     };
     // Construct a function to return a best-guess IFileType
     // for a given contents model.
-    this._fileTypeForContentsModel = (
+    this._fileTypeForContentsModel =  (
       model: Partial<Contents.IModel>
     ): DocumentRegistry.IFileType => {
       return registry.getFileTypeForModel(model);
     };
 
-    this._state = stateDB;
+    this._state =  stateDB;
   }
 
   /**
@@ -71,9 +71,9 @@ export class CS3Contents implements Contents.IDrive {
     path: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    const activeTab: string = (await this._state.fetch('activeTab')) as string;
+    const activeTab: string =  (await this._state.fetch('activeTab')) as string;
 
-    if (activeTab === 'fileBrowser' || activeTab === undefined) {
+    if (activeTab ===  'fileBrowser' || activeTab ===  undefined) {
       return await CS3ContainerFiles('filelist', this._state, path, options);
     } else {
       return Promise.resolve({} as Contents.IModel);
@@ -101,7 +101,7 @@ export class CS3Contents implements Contents.IDrive {
     if (this.isDisposed) {
       return;
     }
-    this._isDisposed = true;
+    this._isDisposed =  true;
     Signal.clearData(this);
   }
 
@@ -169,8 +169,8 @@ export class CS3ContentsShareByMe extends CS3Contents {
     path: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    const activeTab: string = (await this._state.fetch('activeTab')) as string;
-    if (activeTab === 'sharesPanel') {
+    const activeTab: string =  (await this._state.fetch('activeTab')) as string;
+    if (activeTab ===  'sharesPanel') {
       return await CS3ContainerFiles('by_me', this._state, path, options);
     } else {
       return Promise.resolve({} as Contents.IModel);
@@ -187,8 +187,8 @@ export class CS3ContentsShareWithMe extends CS3Contents {
     path: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    const activeTab: string = (await this._state.fetch('activeTab')) as string;
-    if (activeTab === 'sharesPanel') {
+    const activeTab: string =  (await this._state.fetch('activeTab')) as string;
+    if (activeTab ===  'sharesPanel') {
       return await CS3ContainerFiles('with_me', this._state, path, options);
     } else {
       return Promise.resolve({} as Contents.IModel);
@@ -199,19 +199,19 @@ export class CS3ContentsShareWithMe extends CS3Contents {
 export async function CS3ContainerFiles(
   readType: string,
   stateDB: IStateDB,
-  path: string | null = null,
-  options: Contents.IFetchOptions = {}
+  path: string | null =  null,
+  options: Contents.IFetchOptions =  {}
 ): Promise<any> {
-  const share = await stateDB.fetch('share');
-  const showHidden: boolean = (await stateDB.fetch('showHidden')) as boolean;
+  const share =  await stateDB.fetch('share');
+  const showHidden: boolean =  (await stateDB.fetch('showHidden')) as boolean;
   let shareType;
-  if (readType !== 'filelist') {
-    shareType = readType;
-  } else if (share !== undefined) {
-    shareType = (share as ReadonlyJSONObject)['shareType'];
+  if (readType !==  'filelist') {
+    shareType =  readType;
+  } else if (share !==  undefined) {
+    shareType =  (share as ReadonlyJSONObject)['shareType'];
   }
 
-  if (path !== '') {
+  if (path !==  '') {
     return await getFileList(path, options, showHidden, stateDB);
   }
 
@@ -232,31 +232,31 @@ async function getFileList(
   showHidden: boolean,
   stateDB: IStateDB
 ): Promise<any> {
-  const { type, format, content } = options;
+  const { type, format, content } =  options;
 
-  let url = '';
-  url += '?content=' + (content ? 1 : 0);
+  let url =  '';
+  url +=  '?content=' + (content ? 1 : 0);
   if (type) {
-    url += '&type=' + type;
+    url +=  '&type=' + type;
   }
-  if (format && type !== 'notebook') {
-    url += '&format=' + format;
+  if (format && type !==  'notebook') {
+    url +=  '&format=' + format;
   }
-  const result: Contents.IModel = await requestAPI(
+  const result: Contents.IModel =  await requestAPI(
     '/api/contents/' + path + '' + url,
     { method: 'get' }
   );
 
   // if it is a directory, count hidden files inside
-  if (Array.isArray(result.content) && result.type === 'directory') {
-    const hiddenFilesNo: number = result.content.filter(
+  if (Array.isArray(result.content) && result.type ===  'directory') {
+    const hiddenFilesNo: number =  result.content.filter(
       (file: { name: string }) => file.name.startsWith('.')
     ).length;
     await stateDB.save('hiddenFilesNo', hiddenFilesNo);
 
     if (!showHidden) {
-      const filteredResult = JSON.parse(JSON.stringify(result));
-      filteredResult.content = (result.content as Array<any>).filter(
+      const filteredResult =  JSON.parse(JSON.stringify(result));
+      filteredResult.content =  (result.content as Array<any>).filter(
         (file: { name: string }) => !file.name.startsWith('.')
       );
       return filteredResult;

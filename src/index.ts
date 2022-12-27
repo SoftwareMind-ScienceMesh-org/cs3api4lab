@@ -54,15 +54,15 @@ import { requestAPI } from './services';
  * The command IDs used by the react-widget plugin.
  */
 namespace CS3CommandIDs {
-  export const info = 'filebrowser:cs3-info';
-  export const shareInfo = 'filebrowser:cs3-share-info';
-  export const createShare = 'filebrowser:cs3-create-share';
+  export const info =  'filebrowser:cs3-info';
+  export const shareInfo =  'filebrowser:cs3-share-info';
+  export const createShare =  'filebrowser:cs3-create-share';
 }
 
 /**
  * The default file browser factory provider.
  */
-const factory: JupyterFrontEndPlugin<IFileBrowserFactory> = {
+const factory: JupyterFrontEndPlugin<IFileBrowserFactory> =  {
   id: 'cs3_test_factory',
   provides: IFileBrowserFactory,
   requires: [IDocumentManager],
@@ -75,20 +75,20 @@ const factory: JupyterFrontEndPlugin<IFileBrowserFactory> = {
     router: IRouter | null,
     tree: JupyterFrontEnd.ITreeResolver | null
   ): any => {
-    const tracker = new WidgetTracker<FileBrowser>({ namespace: 'cs3_test' });
-    const { commands } = app;
+    const tracker =  new WidgetTracker<FileBrowser>({ namespace: 'cs3_test' });
+    const { commands } =  app;
 
-    const createFileBrowser = (
+    const createFileBrowser =  (
       id: string,
-      options: IFileBrowserFactory.IOptions = {}
+      options: IFileBrowserFactory.IOptions =  {}
     ): FileBrowser => {
-      const model = new FilterFileBrowserModel({
+      const model =  new FilterFileBrowserModel({
         auto: options.auto ?? true,
         manager: docManager,
         driveName: options.driveName || '',
         refreshInterval: options.refreshInterval,
         state:
-          options.state === null
+          options.state ===  null
             ? undefined
             : options.state || state || undefined
       });
@@ -97,8 +97,8 @@ const factory: JupyterFrontEndPlugin<IFileBrowserFactory> = {
         void model.refresh();
       });
 
-      const restore = options.restore;
-      const widget = new FileBrowser({ id, model, restore });
+      const restore =  options.restore;
+      const widget =  new FileBrowser({ id, model, restore });
 
       // Track the newly created file browser.
       void tracker.add(widget);
@@ -107,7 +107,7 @@ const factory: JupyterFrontEndPlugin<IFileBrowserFactory> = {
     };
 
     // Manually restore and load the default file browser.
-    const defaultBrowser = createFileBrowser('cs3filebrowser', {
+    const defaultBrowser =  createFileBrowser('cs3filebrowser', {
       auto: true,
       restore: true
     });
@@ -120,14 +120,14 @@ const factory: JupyterFrontEndPlugin<IFileBrowserFactory> = {
 /**
  * Initialization data for the cs3api4lab extension.
  */
-const cs3share: JupyterFrontEndPlugin<void> = {
+const cs3share: JupyterFrontEndPlugin<void> =  {
   id: 'cs3_share',
   autoStart: true,
   requires: [IFileBrowserFactory, ISettingRegistry, ICommandPalette],
   optional: [ILauncher],
   activate: async (app: JupyterFrontEnd, factory: IFileBrowserFactory) => {
-    const { commands } = app;
-    const { tracker } = factory;
+    const { commands } =  app;
+    const { tracker } =  factory;
 
     app.contextMenu.addItem({
       command: CS3CommandIDs.info,
@@ -150,14 +150,14 @@ const cs3share: JupyterFrontEndPlugin<void> = {
     // Add the CS3 share to file browser context menu
     commands.addCommand(CS3CommandIDs.info, {
       execute: () => {
-        const widget = tracker.currentWidget;
-        const dialogTracker = new WidgetTracker<Dialog<any>>({
+        const widget =  tracker.currentWidget;
+        const dialogTracker =  new WidgetTracker<Dialog<any>>({
           namespace: '@jupyterlab/apputils:Dialog'
         });
 
         if (widget) {
           each(widget.selectedItems(), fileInfo => {
-            const dialog = createInfobox(fileInfo, 'info');
+            const dialog =  createInfobox(fileInfo, 'info');
             dialog.launch();
             dialogTracker.add(dialog);
           });
@@ -172,14 +172,14 @@ const cs3share: JupyterFrontEndPlugin<void> = {
     // Add the CS3 share to file browser context menu
     commands.addCommand(CS3CommandIDs.createShare, {
       execute: () => {
-        const widget = tracker.currentWidget;
-        const dialogTracker = new WidgetTracker<Dialog<any>>({
+        const widget =  tracker.currentWidget;
+        const dialogTracker =  new WidgetTracker<Dialog<any>>({
           namespace: '@jupyterlab/apputils:Dialog'
         });
 
         if (widget) {
           each(widget.selectedItems(), fileInfo => {
-            const dialog = createInfobox(fileInfo, 'shares');
+            const dialog =  createInfobox(fileInfo, 'shares');
             dialog.launch();
             dialogTracker.add(dialog);
           });
@@ -197,7 +197,7 @@ const cs3share: JupyterFrontEndPlugin<void> = {
  * The JupyterLab plugin for the CS3api Filebrowser.
  * New filemanager layout version
  */
-const cs3browser: JupyterFrontEndPlugin<void> = {
+const cs3browser: JupyterFrontEndPlugin<void> =  {
   id: 'cs3_api_shares_v2',
   requires: [
     IDocumentManager,
@@ -223,11 +223,11 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
     commandPalette: ICommandPalette | null,
     mainMenu: IMainMenu | null
   ): void {
-    // const browser = factory.defaultBrowser;
-    const { commands } = app;
+    // const browser =  factory.defaultBrowser;
+    const { commands } =  app;
     docManager.services.contents.dispose();
 
-    const cs3Panel = new Cs3Panel(
+    const cs3Panel =  new Cs3Panel(
       'cs3 panel',
       'cs3-panel',
       kernelIcon,
@@ -241,7 +241,7 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
     requestAPI('/api/cs3/user/home_dir', {
       method: 'get'
     }).then(homeDir => {
-      if (homeDir !== '') {
+      if (homeDir !==  '') {
         void stateDB.save('homeDir', homeDir as string);
       }
     });
@@ -249,7 +249,7 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
     //
     // Header
     //
-    const cs3HeaderWidget: ReactWidget = new Cs3HeaderWidget(
+    const cs3HeaderWidget: ReactWidget =  new Cs3HeaderWidget(
       'cs3Api4Lab',
       'cs3-header-widget'
     );
@@ -258,18 +258,18 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
     //
     // CS3 File browser
     //
-    const drive: Contents.IDrive = new CS3Contents(
+    const drive: Contents.IDrive =  new CS3Contents(
       app.docRegistry,
       stateDB,
       docManager,
       app.serviceManager.serverSettings
     );
-    const fileBrowser = factory.createFileBrowser('fileBrowser', {
+    const fileBrowser =  factory.createFileBrowser('fileBrowser', {
       driveName: drive.name
     });
-    fileBrowser.title.label = 'My Files';
-    fileBrowser.title.caption = 'My Files';
-    fileBrowser.title.icon = caseSensitiveIcon;
+    fileBrowser.title.label =  'My Files';
+    fileBrowser.title.caption =  'My Files';
+    fileBrowser.title.icon =  caseSensitiveIcon;
 
     fileBrowser.toolbar.addItem(
       'Share files',
@@ -277,21 +277,21 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
         icon: circleIcon,
         tooltip: 'Share files',
         onClick: () => {
-          const selectedFileList: Contents.IModel[] = toArray(
+          const selectedFileList: Contents.IModel[] =  toArray(
             fileBrowser.selectedItems()
           );
 
-          if (selectedFileList.length <= 0) {
+          if (selectedFileList.length <=  0) {
             alert('select a file');
             return;
           }
 
-          const dialogTracker = new WidgetTracker<Dialog<any>>({
+          const dialogTracker =  new WidgetTracker<Dialog<any>>({
             namespace: '@jupyterlab/apputils:Dialog'
           });
 
           each(fileBrowser.selectedItems(), file => {
-            const dialog = createInfobox(file, 'shares');
+            const dialog =  createInfobox(file, 'shares');
             void dialog.launch();
             void dialogTracker.add(dialog);
           });
@@ -304,7 +304,7 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
     //
     // Bottom
     //
-    const cs3BottomWidget: ReactWidget = new Cs3BottomWidget(
+    const cs3BottomWidget: ReactWidget =  new Cs3BottomWidget(
       'cs3Api Bottom',
       'cs3-bottom-widget',
       {},
@@ -321,23 +321,23 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
     //
     // Share split panel
     //
-    // const splitPanel = new BoxPanel();
-    // splitPanel.id = 'sharesPanel';
-    // splitPanel.title.caption = 'Shares';
-    // splitPanel.title.label = 'Shares';
-    // splitPanel.title.icon = inspectorIcon;
+    // const splitPanel =  new BoxPanel();
+    // splitPanel.id =  'sharesPanel';
+    // splitPanel.title.caption =  'Shares';
+    // splitPanel.title.label =  'Shares';
+    // splitPanel.title.icon =  inspectorIcon;
     // splitPanel.hide();
 
     //
     // ShareByMe
     //
-    const driveShareByMe: Contents.IDrive = new CS3ContentsShareByMe(
+    const driveShareByMe: Contents.IDrive =  new CS3ContentsShareByMe(
       app.docRegistry,
       stateDB,
       docManager,
       app.serviceManager.serverSettings
     );
-    const fileBrowserSharedByMe: FileBrowser = factory.createFileBrowser(
+    const fileBrowserSharedByMe: FileBrowser =  factory.createFileBrowser(
       'fileBrowserSharedByMe',
       {
         driveName: driveShareByMe.name
@@ -349,13 +349,13 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
     //
     // ShareWithMe
     //
-    const driveShareWithMe: Contents.IDrive = new CS3ContentsShareWithMe(
+    const driveShareWithMe: Contents.IDrive =  new CS3ContentsShareWithMe(
       app.docRegistry,
       stateDB,
       docManager,
       app.serviceManager.serverSettings
     );
-    const fileBrowserSharedWithMe: FileBrowser = factory.createFileBrowser(
+    const fileBrowserSharedWithMe: FileBrowser =  factory.createFileBrowser(
       'fileBrowserSharedWithMe',
       {
         driveName: driveShareWithMe.name
@@ -367,7 +367,7 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
     //
     // Projects tab
     //
-    const cs3TabWidget3: ReactWidget = new Cs3TabWidget(
+    const cs3TabWidget3: ReactWidget =  new Cs3TabWidget(
       'Projects',
       newFolderIcon
     );
@@ -418,8 +418,8 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
     /**
      * Copied from packages/filebrowser-extension/src/index.ts:377
      */
-    let navigateToCurrentDirectory = false;
-    let useFuzzyFilter = true;
+    let navigateToCurrentDirectory =  false;
+    let useFuzzyFilter =  true;
 
     /**
      * Copied from packages/filebrowser-extension/src/index.ts:380
@@ -429,34 +429,34 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
       .load('@jupyterlab/filebrowser-extension:browser')
       .then(settings => {
         settings.changed.connect(settings => {
-          navigateToCurrentDirectory = settings.get(
+          navigateToCurrentDirectory =  settings.get(
             'navigateToCurrentDirectory'
           ).composite as boolean;
-          fileBrowser.navigateToCurrentDirectory = navigateToCurrentDirectory;
+          fileBrowser.navigateToCurrentDirectory =  navigateToCurrentDirectory;
         });
-        navigateToCurrentDirectory = settings.get('navigateToCurrentDirectory')
+        navigateToCurrentDirectory =  settings.get('navigateToCurrentDirectory')
           .composite as boolean;
-        fileBrowser.navigateToCurrentDirectory = navigateToCurrentDirectory;
+        fileBrowser.navigateToCurrentDirectory =  navigateToCurrentDirectory;
         settings.changed.connect(settings => {
-          useFuzzyFilter = settings.get('useFuzzyFilter').composite as boolean;
-          fileBrowser.useFuzzyFilter = useFuzzyFilter;
+          useFuzzyFilter =  settings.get('useFuzzyFilter').composite as boolean;
+          fileBrowser.useFuzzyFilter =  useFuzzyFilter;
         });
-        useFuzzyFilter = settings.get('useFuzzyFilter').composite as boolean;
-        fileBrowser.useFuzzyFilter = useFuzzyFilter;
+        useFuzzyFilter =  settings.get('useFuzzyFilter').composite as boolean;
+        fileBrowser.useFuzzyFilter =  useFuzzyFilter;
       });
 
     // Create shares panel
-    const cs3Accordion = new AccordionPanel();
-    cs3Accordion.id = 'sharesPanel';
-    cs3Accordion.title.caption = 'Shares';
-    cs3Accordion.title.label = 'Shares';
-    cs3Accordion.title.icon = inspectorIcon;
+    const cs3Accordion =  new AccordionPanel();
+    cs3Accordion.id =  'sharesPanel';
+    cs3Accordion.title.caption =  'Shares';
+    cs3Accordion.title.label =  'Shares';
+    cs3Accordion.title.icon =  inspectorIcon;
     cs3Accordion.hide();
 
-    const pendingShares = new PendingSharesListWrapper();
-    pendingShares.title.label = 'Pending shares';
-    fileBrowserSharedByMe.title.label = 'Shared by me';
-    fileBrowserSharedWithMe.title.label = 'Shared with me';
+    const pendingShares =  new PendingSharesListWrapper();
+    pendingShares.title.label =  'Pending shares';
+    fileBrowserSharedByMe.title.label =  'Shared by me';
+    fileBrowserSharedWithMe.title.label =  'Shared with me';
 
     // fold accordion widget
     pendingShares.hide();
@@ -487,5 +487,5 @@ const cs3browser: JupyterFrontEndPlugin<void> = {
 /**
  * Export the plugins as default.
  */
-const plugins: JupyterFrontEndPlugin<any>[] = [cs3browser, factory, cs3share];
+const plugins: JupyterFrontEndPlugin<any>[] =  [cs3browser, factory, cs3share];
 export default plugins;

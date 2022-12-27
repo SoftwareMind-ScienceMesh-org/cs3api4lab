@@ -10,12 +10,12 @@ import { ServerConnection } from '@jupyterlab/services';
  * @returns The response body interpreted as JSON
  */
 export async function requestAPI<T>(
-  endPoint = '',
-  init: RequestInit = {}
+  endPoint =  '',
+  init: RequestInit =  {}
 ): Promise<T> {
   // Make request to Jupyter API
-  const settings = ServerConnection.makeSettings();
-  const requestUrl = URLExt.join(
+  const settings =  ServerConnection.makeSettings();
+  const requestUrl =  URLExt.join(
     settings.baseUrl,
     'cs3api4lab', // API Namespace
     endPoint
@@ -23,16 +23,16 @@ export async function requestAPI<T>(
 
   let response: Response;
   try {
-    response = await ServerConnection.makeRequest(requestUrl, init, settings);
+    response =  await ServerConnection.makeRequest(requestUrl, init, settings);
   } catch (error) {
     throw new ServerConnection.NetworkError(error);
   }
 
-  let data: any = await response.text();
+  let data: any =  await response.text();
 
   if (data.length > 0) {
     try {
-      data = JSON.parse(data);
+      data =  JSON.parse(data);
     } catch (error) {
       console.log('Not a JSON response body.', response);
     }

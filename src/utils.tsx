@@ -12,10 +12,10 @@ export function addHomeDirButton(
   stateDB: IStateDB
 ): void {
   if (labShell) {
-    const homeDirButton = new ToolbarButton({
+    const homeDirButton =  new ToolbarButton({
       icon: folderIcon,
       onClick: async (): Promise<any> => {
-        const homeDir = (await stateDB.fetch('homeDir')) as string;
+        const homeDir =  (await stateDB.fetch('homeDir')) as string;
         if (homeDir) {
           void (await fileBrowser.model.cd(homeDir));
         }
@@ -31,11 +31,11 @@ export function addLaunchersButton(
   fileBrowser: FileBrowser,
   labShell: ILabShell
 ): void {
-  const { commands } = app;
-  const { model } = fileBrowser;
+  const { commands } =  app;
+  const { model } =  fileBrowser;
 
   if (labShell) {
-    const launcher = new ToolbarButton({
+    const launcher =  new ToolbarButton({
       icon: addIcon,
       onClick: (): Promise<any> => {
         return commands
@@ -43,7 +43,7 @@ export function addLaunchersButton(
           .then((launcher: MainAreaWidget<Launcher>) => {
             model.pathChanged.connect(() => {
               if (launcher.content) {
-                launcher.content.cwd = model.path;
+                launcher.content.cwd =  model.path;
               }
             }, launcher);
             return launcher;

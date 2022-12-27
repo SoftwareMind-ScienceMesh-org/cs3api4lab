@@ -2,47 +2,47 @@ import { Contents } from '@jupyterlab/services';
 import { IStateDB } from '@jupyterlab/statedb';
 import { FileBrowser } from '@jupyterlab/filebrowser';
 
-export type ShareFormProps = {
+export type ShareFormProps =  {
   getUsers: (query: string) => Promise<Array<UsersRequest>>;
   fileInfo: Contents.IModel;
   getGrantees: () => void;
 };
-export type CreateShareProps = {
+export type CreateShareProps =  {
   fileInfo: Contents.IModel;
   getGrantees: () => void;
 };
-export type MainProps = {
+export type MainProps =  {
   fileInfo: Contents.IModel;
   tabname: string;
 };
-export type MenuProps = {
+export type MenuProps =  {
   tabHandler: (tabname: string) => void;
   tabname: string;
 };
-export type ContentProps = {
+export type ContentProps =  {
   content: Contents.IModel;
   contentType: string;
 };
-export type HeaderProps = {
+export type HeaderProps =  {
   fileInfo: Contents.IModel;
 };
-export type ShareProps = {
+export type ShareProps =  {
   fileInfo: Contents.IModel;
 };
-export type InfoboxProps = {
+export type InfoboxProps =  {
   fileInfo: Contents.IModel;
   tabname: string;
 };
-export type InfoProps = {
+export type InfoProps =  {
   content: Contents.IModel;
 };
 
-export type BottomProps = {
+export type BottomProps =  {
   db: IStateDB;
   browser: FileBrowser;
 };
 
-export type UsersRequest = {
+export type UsersRequest =  {
   display_name: string;
   idp: string;
   opaque_id: string;
@@ -50,7 +50,7 @@ export type UsersRequest = {
   full_name: string;
 };
 
-export type User = {
+export type User =  {
   displayName: string;
   idp: string;
   opaqueId: string;
@@ -58,13 +58,13 @@ export type User = {
   fullName: string;
 };
 
-export type Grantee = {
+export type Grantee =  {
   opaque_id: string;
   permissions: string;
   idp: string;
 };
 
-export type PendingSharesOptions = {
+export type PendingSharesOptions =  {
   id: string;
   title: {
     caption: string;
@@ -72,7 +72,7 @@ export type PendingSharesOptions = {
   };
 };
 
-export type PendingShareProp = {
+export type PendingShareProp =  {
   content: Contents.IModel & {
     owner: string;
     opaque_id: string;
@@ -81,21 +81,21 @@ export type PendingShareProp = {
   declineShare: (pendingShare: any) => Promise<void>;
 };
 
-export type AcceptButtonProps = {
+export type AcceptButtonProps =  {
   content: Contents.IModel & {
     owner: string;
   };
   acceptShare: (pendingShare: any) => Promise<void>;
 };
 
-export type DeclineButtonProps = {
+export type DeclineButtonProps =  {
   content: Contents.IModel & {
     owner: string;
   };
   declineShare: (pendingShare: any) => Promise<void>;
 };
 
-export type PendingSharesContentProps = {
+export type PendingSharesContentProps =  {
   hideWidget: () => void;
   showWidget: () => void;
 };
