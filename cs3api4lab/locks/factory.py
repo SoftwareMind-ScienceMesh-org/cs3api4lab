@@ -6,9 +6,9 @@ class LockApiFactory:
 
     @staticmethod
     def create(log, config): 
-        if config.locks_api ==  'metadata': 
+        if config.locks_api == 'metadata': 
             return Metadata(log, config)
-        elif config.locks_api ==  'cs3': 
+        elif config.locks_api == 'cs3': 
             return Cs3(log, config)
         else: 
             raise NotImplementedError("Lock API implementation not found")

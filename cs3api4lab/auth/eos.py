@@ -12,17 +12,17 @@ class Eos(Oauth):
 
             try: 
                 with open(self.config.eos_file, "r") as file: 
-                    eos_token =  file.read()
+                    eos_token = file.read()
             except IOError as e: 
-                raise IOError(f"Error opening token file {self.config.eos_file} exception:  {e}")
+                raise IOError(f"Error opening token file {self.config.eos_file} exception: {e}")
 
         elif self.config.eos_token: 
-            eos_token =  self.config.eos_token
+            eos_token = self.config.eos_token
         else: 
             raise AttributeError("Config hasn't EOS token or token file.")
 
-        eos_split_token =  eos_token.split(': ')
-        if len(eos_split_token) !=  3 or eos_split_token[0] !=  'oauth2' \
+        eos_split_token = eos_token.split(': ')
+        if len(eos_split_token) != 3 or eos_split_token[0] != 'oauth2' \
                 or self._check_token(eos_split_token[1]) is False: 
             raise self.raise_401_error()
 

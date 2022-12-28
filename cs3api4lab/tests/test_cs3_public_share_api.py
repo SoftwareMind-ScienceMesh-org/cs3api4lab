@@ -7,48 +7,48 @@ from traitlets.config import LoggingConfigurable
 
 @skip
 class TestCs3PublicShareApi(TestCase): 
-    file_path =  '/test.txt'
-    config =  None
-    storage =  None
-    api =  None
+    file_path = '/test.txt'
+    config = None
+    storage = None
+    api = None
 
     def setUp(self): 
-        self.log =  LoggingConfigurable().log
-        self.config =  Cs3ConfigManager.get_config()
-        self.storage =  Cs3FileApi(self.log)
-        self.api =  Cs3PublicShareApi(self.log)
+        self.log = LoggingConfigurable().log
+        self.config = Cs3ConfigManager.get_config()
+        self.storage = Cs3FileApi(self.log)
+        self.api = Cs3PublicShareApi(self.log)
 
     def test_create_public_share(self): 
-        share =  self._create_public_share()
+        share = self._create_public_share()
         assert share['opaque_id'] is not None
         assert share['token'] is not None
         self._delete_public_share(share['opaque_id'])
 
     def test_get_public_share(self): 
         self._create_test_file()
-        share =  self._create_public_share()
-        opaque_id =  share['opaque_id']
-        token =  share['token']
-        share_got =  self.api.get_public_share(opaque_id, token)
-        assert share['opaque_id'] ==  share_got['opaque_id']
-        assert share['token'] ==  share_got['token']
+        share = self._create_public_share()
+        opaque_id = share['opaque_id']
+        token = share['token']
+        share_got = self.api.get_public_share(opaque_id, token)
+        assert share['opaque_id'] == share_got['opaque_id']
+        assert share['token'] == share_got['token']
         self._delete_public_share(share['opaque_id'])
 
     def test_get_public_share_by_token(self): 
         self._create_test_file()
-        share =  self._create_public_share()
-        token =  share['token']
-        share_got =  self.api.get_public_share_by_token(token, 'pass')
-        assert share['opaque_id'] ==  share_got['opaque_id']
-        assert share['token'] ==  share_got['token']
+        share = self._create_public_share()
+        token = share['token']
+        share_got = self.api.get_public_share_by_token(token, 'pass')
+        assert share['opaque_id'] == share_got['opaque_id']
+        assert share['token'] == share_got['token']
         self._delete_public_share(share['opaque_id'])
 
     def test_remove_public_share(self): 
         self._create_test_file()
-        share =  self._create_public_share()
-        token =  share['token']
-        share_got =  self.api.get_public_share_by_token(token, 'pass')
-        assert share['opaque_id'] ==  share_got['opaque_id']
+        share = self._create_public_share()
+        token = share['token']
+        share_got = self.api.get_public_share_by_token(token, 'pass')
+        assert share['opaque_id'] == share_got['opaque_id']
         self.api.remove_public_share(share['opaque_id'])
         try: 
             self.api.get_public_share_by_token(token, '')
@@ -59,60 +59,60 @@ class TestCs3PublicShareApi(TestCase):
 
     def test_update_public_share_date(self): 
         self._create_test_file()
-        share =  self._create_public_share()
-        new_date =  '12-12-2060'
+        share = self._create_public_share()
+        new_date = '12-12-2060'
         self.api.update_public_share(share['opaque_id'],
                                      share['token'],
                                      'exp_date',
                                      new_date)
-        updated_share =  self.api.get_public_share_by_token(share['token'], 'pass')
-        assert updated_share['expiration'] ==  new_date
+        updated_share = self.api.get_public_share_by_token(share['token'], 'pass')
+        assert updated_share['expiration'] == new_date
         self._delete_public_share(share['opaque_id'])
 
     def test_update_public_share_display_name(self): 
         self._create_test_file()
-        share =  self._create_public_share()
-        new_display_name =  'new_name'
+        share = self._create_public_share()
+        new_display_name = 'new_name'
         self.api.update_public_share(share['opaque_id'],
                                      share['token'],
                                      'display_name',
                                      new_display_name)
-        updated_share =  self.api.get_public_share_by_token(share['token'], 'pass')
-        assert updated_share['display_name'] ==  new_display_name
+        updated_share = self.api.get_public_share_by_token(share['token'], 'pass')
+        assert updated_share['display_name'] == new_display_name
         self._delete_public_share(share['opaque_id'])
 
     def test_update_public_share_password(self): 
         self._create_test_file()
-        share =  self._create_public_share()
-        new_password =  'superpassword'
+        share = self._create_public_share()
+        new_password = 'superpassword'
         self.api.update_public_share(share['opaque_id'],
                                      share['token'],
                                      'password',
                                      new_password)
-        updated_share =  self.api.get_public_share_by_token(share['token'], new_password)
-        assert share['opaque_id'] ==  updated_share['opaque_id']
+        updated_share = self.api.get_public_share_by_token(share['token'], new_password)
+        assert share['opaque_id'] == updated_share['opaque_id']
         self._delete_public_share(share['opaque_id'])
 
     def test_update_public_share_permissions(self): 
         self._create_test_file()
-        share =  self._create_public_share()
-        new_perms =  {'add_grant':  True,
-                     'delete':  True}
+        share = self._create_public_share()
+        new_perms = {'add_grant': True,
+                     'delete': True}
         self.api.update_public_share(share['opaque_id'],
                                      share['token'],
                                      'permissions',
                                      new_perms)
-        updated_share =  self.api.get_public_share_by_token(share['token'], 'pass')
+        updated_share = self.api.get_public_share_by_token(share['token'], 'pass')
         assert updated_share['permissions']['add_grant'] is True
         assert updated_share['permissions']['delete'] is True
         self._delete_public_share(share['opaque_id'])
 
     def test_list_public_shares(self): 
         self._create_test_file()
-        share =  self._create_public_share()
-        shares =  self.api.list_public_shares()
+        share = self._create_public_share()
+        shares = self.api.list_public_shares()
         try: 
-            if not list(filter(lambda s:  s['opaque_id'] ==  share['opaque_id'], shares)): 
+            if not list(filter(lambda s: s['opaque_id'] == share['opaque_id'], shares)): 
                 raise Exception("Public share not created")
         finally: 
             self._delete_public_share(share['opaque_id'])

@@ -1,7 +1,7 @@
 import cs3.sharing.ocm.v1beta1.resources_pb2 as sharing_res
 import cs3.storage.provider.v1beta1.resources_pb2 as storage_resources
-from cs3api4lab.common.strings import *
-from cs3api4lab.exception.exceptions import *
+from cs3api4lab.common.strings import Grantee, State, Role
+from cs3api4lab.exception.exceptions import InvalidTypeError
 
 import urllib.parse
 
@@ -10,47 +10,50 @@ class ShareUtils:
 
     @staticmethod
     def map_grantee(grantee_type): 
-        if grantee_type ==  'user': 
+        if grantee_type == 'user': 
             return storage_resources.GranteeType.GRANTEE_TYPE_USER
-        if grantee_type ==  'group': 
+        if grantee_type == 'group': 
             return storage_resources.GranteeType.GRANTEE_TYPE_GROUP
+        raise InvalidTypeError("Unknown grantee type " + grantee_type)
 
     @staticmethod
     def map_grantee_type(share): 
-        if share.grantee.type ==  storage_resources.GranteeType.GRANTEE_TYPE_USER: 
+        if share.grantee.type == storage_resources.GranteeType.GRANTEE_TYPE_USER: 
             return Grantee.USER
-        if share.grantee.type ==  storage_resources.GranteeType.GRANTEE_TYPE_GROUP: 
+        if share.grantee.type == storage_resources.GranteeType.GRANTEE_TYPE_GROUP: 
             return Grantee.GROUP
+        raise InvalidTypeError("Unknown share grantee type " + str(share.grantee.type))
 
     @staticmethod
     def map_state(state): 
         if isinstance(state, str): 
-            state =  str.lower(state)
-            if state ==  State.PENDING: 
+            state = str.lower(state)
+            if state == State.PENDING: 
                 return sharing_res.SHARE_STATE_PENDING
-            elif state ==  State.ACCEPTED: 
+            elif state == State.ACCEPTED: 
                 return sharing_res.SHARE_STATE_ACCEPTED
-            elif state ==  State.REJECTED: 
+            elif state == State.REJECTED: 
                 return sharing_res.SHARE_STATE_REJECTED
-            elif state ==  State.INVALID: 
+            elif state == State.INVALID: 
                 return sharing_res.SHARE_STATE_INVALID
         else: 
-            if state ==  sharing_res.SHARE_STATE_PENDING: 
+            if state == sharing_res.SHARE_STATE_PENDING: 
                 return State.PENDING
-            elif state ==  sharing_res.SHARE_STATE_ACCEPTED: 
+            elif state == sharing_res.SHARE_STATE_ACCEPTED: 
                 return State.ACCEPTED
-            elif state ==  sharing_res.SHARE_STATE_REJECTED: 
+            elif state == sharing_res.SHARE_STATE_REJECTED: 
                 return State.REJECTED
-            elif state ==  sharing_res.SHARE_STATE_INVALID: 
+            elif state == sharing_res.SHARE_STATE_INVALID: 
                 return State.INVALID
+        return State.INVALID
 
     @staticmethod
     def is_accepted(state): 
-        return ShareUtils.map_state(state) ==  State.ACCEPTED
+        return ShareUtils.map_state(state) == State.ACCEPTED
 
     @staticmethod
     def get_resource_permissions(role): 
-        if role ==  Role.VIEWER: 
+        if role == Role.VIEWER: 
             return storage_resources.ResourcePermissions(get_path=True,
                                                          get_quota=True,
                                                          initiate_file_download=True,
@@ -59,7 +62,7 @@ class ShareUtils:
                                                          list_file_versions=True,
                                                          list_recycle=True,
                                                          stat=True)
-        if role ==  Role.EDITOR: 
+        if role == Role.EDITOR: 
             return storage_resources.ResourcePermissions(get_path=True,
                                                          initiate_file_download=True,
                                                          list_grants=True,
@@ -109,10 +112,10 @@ class ShareUtils:
     @staticmethod
     def get_share_info(share): 
         return {
-            "opaque_id":  share.id.opaque_id,
-            "grantee":  {
-                "idp":  share.grantee.user_id.idp,
-                "opaque_id":  share.grantee.user_id.opaque_id,
-                "permissions":  ShareUtils.map_permissions_to_role(share.permissions.permissions)
+            "opaque_id": share.id.opaque_id,
+            "grantee": {
+                "idp": share.grantee.user_id.idp,
+                "opaque_id": share.grantee.user_id.opaque_id,
+                "permissions": ShareUtils.map_permissions_to_role(share.permissions.permissions)
             }
         }

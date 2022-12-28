@@ -3,7 +3,8 @@ import json
 from jupyter_server.base.handlers import APIHandler
 from tornado import gen, web
 from grpc._channel import _InactiveRpcError
-from cs3api4lab.exception.exceptions import *
+from cs3api4lab.exception.exceptions import ParamError, ShareAlreadyExistsError, LockNotFoundError, OCMDisabledError, \
+    InvalidTypeError, ShareNotFoundError
 from cs3api4lab.api.share_api_facade import ShareAPIFacade
 from cs3api4lab.api.cs3_public_share_api import Cs3PublicShareApi
 from cs3api4lab.api.cs3_user_api import Cs3UserApi
@@ -19,7 +20,7 @@ class ShareHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def post(self): 
-        request =  self.get_json_body()
+        request = self.get_json_body()
         try: 
             yield RequestHandler.async_handle_request(self,
                                                       self.share_api.create,
@@ -36,13 +37,13 @@ class ShareHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def delete(self): 
-        share_id =  self.get_query_argument('share_id')
+        share_id = self.get_query_argument('share_id')
         yield RequestHandler.async_handle_request(self, self.share_api.remove, 204, share_id)
 
     @web.authenticated
     @gen.coroutine
     def put(self): 
-        params =  self.get_json_body()
+        params = self.get_json_body()
         try: 
             yield RequestHandler.async_handle_request(self,
                                           self.share_api.update_share,
@@ -72,14 +73,14 @@ class ListReceivedSharesHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self): 
-        status =  self.get_query_argument('status', default=None)
+        status = self.get_query_argument('status', default=None)
 
         yield RequestHandler.async_handle_request(self, self.share_api.list_received, 200, status)
 
     @web.authenticated
     @gen.coroutine
     def put(self): 
-        body =  self.get_json_body()
+        body = self.get_json_body()
         yield RequestHandler.async_handle_request(self, self.share_api.update_received, 200, body["share_id"], body["state"])
 
 
@@ -91,7 +92,7 @@ class ListSharesForFile(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self): 
-        file_path =  self.get_query_argument('file_path')
+        file_path = self.get_query_argument('file_path')
         yield RequestHandler.async_handle_request(self, self.share_api.list_grantees_for_file, 200, file_path)
 
 class HomeDirHandler(APIHandler): 
@@ -112,14 +113,14 @@ class PublicSharesHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self): 
-        token =  self.get_query_argument('token', default=None)
-        opaque_id =  self.get_query_argument('opaque_id')
+        token = self.get_query_argument('token', default=None)
+        opaque_id = self.get_query_argument('opaque_id')
         yield RequestHandler.async_handle_request(self, self.public_share_api.get_public_share, 200, opaque_id, token)
 
     @web.authenticated
     @gen.coroutine
     def post(self): 
-        request =  self.get_json_body()
+        request = self.get_json_body()
         yield RequestHandler.async_handle_request(self,
                                                   self.public_share_api.create_public_share,
                                                   201,
@@ -132,13 +133,13 @@ class PublicSharesHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def delete(self): 
-        opaque_id =  self.get_query_argument('opaque_id')
+        opaque_id = self.get_query_argument('opaque_id')
         yield RequestHandler.async_handle_request(self, self.public_share_api.remove_public_share, 204, opaque_id)
 
     @web.authenticated
     @gen.coroutine
     def put(self): 
-        request =  self.get_json_body()
+        request = self.get_json_body()
         yield RequestHandler.async_handle_request(self, self.public_share_api.update_public_share,
                                                   204,
                                                   request['opaque_id'],
@@ -155,8 +156,8 @@ class GetPublicShareByTokenHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self): 
-        token =  self.get_query_argument('token')
-        password =  self.get_query_argument('password', default='')
+        token = self.get_query_argument('token')
+        password = self.get_query_argument('password', default='')
         yield RequestHandler.async_handle_request(self, self.public_share_api.get_public_share_by_token, 200, token, password)
 
 
@@ -179,8 +180,8 @@ class UserInfoHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self): 
-        idp =  self.get_query_argument('idp')
-        opaque_id =  self.get_query_argument('opaque_id')
+        idp = self.get_query_argument('idp')
+        opaque_id = self.get_query_argument('opaque_id')
         yield RequestHandler.async_handle_request(self, self.user_api.get_user, 200, idp, opaque_id)
 
 class UserInfoClaimHandler(APIHandler): 
@@ -191,8 +192,8 @@ class UserInfoClaimHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self): 
-        claim =  self.get_query_argument('claim')
-        value =  self.get_query_argument('value')
+        claim = self.get_query_argument('claim')
+        value = self.get_query_argument('value')
         yield RequestHandler.async_handle_request(self, self.user_api.get_user_info_by_claim, 200, claim, value)
 
 class UserQueryHandler(APIHandler): 
@@ -203,11 +204,11 @@ class UserQueryHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self): 
-        query =  self.get_query_argument('query')
+        query = self.get_query_argument('query')
         yield RequestHandler.async_handle_request(self, self.user_api.find_users_by_query, 200, query)
 
 def setup_handlers(web_app, url_path): 
-    handlers =  [
+    handlers = [
         (r"/api/cs3/shares", ShareHandler),
         (r"/api/cs3/shares/list", ListSharesHandler),
         (r"/api/cs3/shares/received", ListReceivedSharesHandler),
@@ -222,8 +223,8 @@ def setup_handlers(web_app, url_path):
     ]
 
     for handler in handlers: 
-        pattern =  url_path_join(web_app.settings['base_url'], handler[0])
-        new_handler =  tuple([pattern] + list(handler[1: ]))
+        pattern = url_path_join(web_app.settings['base_url'], handler[0])
+        new_handler = tuple([pattern] + list(handler[1: ]))
         web_app.add_handlers('.*$', [new_handler])
 
 class RequestHandler(APIHandler): 
@@ -231,7 +232,7 @@ class RequestHandler(APIHandler):
     @staticmethod
     def handle_request(self, api_function, success_code, *args): 
         try: 
-            response =  api_function(*args)
+            response = api_function(*args)
         except Exception as err: 
             self.log.error(err)
             RequestHandler.handle_error(self, err)
@@ -241,8 +242,8 @@ class RequestHandler(APIHandler):
     @staticmethod
     async def async_handle_request(self, api_function, success_code, *args): 
         try: 
-            loop =  get_or_create_eventloop()
-            response =  await loop.run_in_executor(None, api_function, *args)
+            loop = get_or_create_eventloop()
+            response = await loop.run_in_executor(None, api_function, *args)
         except Exception as err: 
             self.log.error(err)
             RequestHandler.handle_error(self, err)
@@ -251,9 +252,9 @@ class RequestHandler(APIHandler):
 
     @staticmethod
     def handle_error(self, err): 
-        status =  RequestHandler.get_response_code(err)
-        response =  {
-            'error_message':  '%s:  %s' % (str(status), err.message if hasattr(err, 'message') else str(err))
+        status = RequestHandler.get_response_code(err)
+        response = {
+            'error_message': '%s: %s' % (str(status), err.message if hasattr(err, 'message') else str(err))
         }
         self.set_header('Content-Type', 'application/json')
         self.set_status(status)

@@ -15,7 +15,7 @@ the default managers.
 
 ## Requirements
 
-* JupyterLab >=  3.0
+* JupyterLab >= 3.0
 
 ## Install
 
@@ -144,13 +144,13 @@ Enable CS3 File Content Manager
 Replace in file HOME_FOLDER/.jupyter/jupyter_server_config.py line 
 
 ```
-c.ServerApp.contents_manager_class =  'notebook.services.contents.largefilemanager.LargeFileManager'
+c.ServerApp.contents_manager_class = 'notebook.services.contents.largefilemanager.LargeFileManager'
 ```
 
 to
 
 ```
-c.ServerApp.contents_manager_class =  'cs3api4lab.CS3APIsManager'
+c.ServerApp.contents_manager_class = 'cs3api4lab.CS3APIsManager'
 ```
 ### Disable default file browser
 To disable the default file browser use these commands in the console:

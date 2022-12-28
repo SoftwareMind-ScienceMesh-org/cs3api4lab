@@ -1,15 +1,15 @@
 class State: 
-    PENDING =  'pending'
-    ACCEPTED =  'accepted'
-    REJECTED =  'rejected'
-    INVALID =  'invalid'
+    PENDING = 'pending'
+    ACCEPTED = 'accepted'
+    REJECTED = 'rejected'
+    INVALID = 'invalid'
 
 
 class Role: 
-    VIEWER =  'viewer'
-    EDITOR =  'editor'
+    VIEWER = 'viewer'
+    EDITOR = 'editor'
 
 
 class Grantee: 
-    USER =  'user'
-    GROUP =  'group'
+    USER = 'user'
+    GROUP = 'group'

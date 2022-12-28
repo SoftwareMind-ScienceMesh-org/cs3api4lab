@@ -7,77 +7,77 @@ from traitlets import Unicode, Bool, CInt, Tuple, default
 
 class Config(LoggingConfigurable): 
 
-    reva_host =  Unicode(
+    reva_host = Unicode(
         config=True, help="""Address and port on which the Reva server is listening"""
     )
-    client_id =  Unicode(
+    client_id = Unicode(
         config=True, allow_none=True, help="""Client login to authenticate in Reva"""
     )
-    client_secret =  Unicode(
+    client_secret = Unicode(
         config=True, allow_none=True, help="""Client password to authenticate in Reva"""
     )
-    auth_token_validity =  CInt(
+    auth_token_validity = CInt(
         config=True, help="""The lifetime of the authenticating token"""
     )
-    endpoint =  Unicode(
+    endpoint = Unicode(
         config=True, help="""Endpoint for Reva storage provider"""
     )
-    mount_dir =  Unicode(
+    mount_dir = Unicode(
         config=True, help="""root directory of the filesystem"""
     )
-    home_dir =  Unicode(
+    home_dir = Unicode(
         config=True, help="""Home directory of the user"""
     )
-    root_dir_list =  Tuple(
+    root_dir_list = Tuple(
         config=True, allow_none=True,
         help="""list of root dirs, for example https: //developer.sciencemesh.io/docs/iop/deployment/kubernetes/providers/ root dirs are "/home,/reva"""
     )
-    chunk_size =  CInt(
+    chunk_size = CInt(
         config=True, help="""Size of the downloaded fragment from Reva"""
     )
-    secure_channel =  Bool(
+    secure_channel = Bool(
         config=True, help="""Secure channel flag"""
     )
-    authenticator_class =  Unicode(
+    authenticator_class = Unicode(
         config=True, help="""Authenticator class"""
     )
-    login_type =  Unicode(
+    login_type = Unicode(
         config=True, help="""Reva login type"""
     )
-    locks_expiration_time =  CInt(
+    locks_expiration_time = CInt(
         config=True, help="""File lock lifetime"""
     )
-    client_key =  Unicode(
+    client_key = Unicode(
         config=True, allow_none=True, help="""Private key file path"""
     )
-    client_cert =  Unicode(
+    client_cert = Unicode(
         config=True, allow_none=True, help="""Public key file path (PEM-encoded)"""
     )
-    ca_cert =  Unicode(
+    ca_cert = Unicode(
         config=True, allow_none=True, help="""Certificate authority file path"""
     )
-    enable_ocm =  Bool(
+    enable_ocm = Bool(
         config=True, help="""Flag to enable OCM functionality"""
     )
-    tus_enabled =  Bool(
+    tus_enabled = Bool(
         config=True, help="""Flag to enable TUS"""
     )
-    eos_file =  Unicode(
+    eos_file = Unicode(
         config=True, allow_none=True, help="""EOS file location"""
     )
-    kernel_path =  Unicode(
+    kernel_path = Unicode(
         config=True, help="""Path where the kernel starts"""
     )
-    eos_token =  Unicode(
+    eos_token = Unicode(
         config=True, allow_none=True, help="""EOS token"""
     )
-    oauth_file =  Unicode(
+    oauth_file = Unicode(
         config=True, allow_none=True, help="""Path for OAuth file"""
     )
-    oauth_token =  Unicode(
+    oauth_token = Unicode(
         config=True, allow_none=True, help="""OAuth token"""
     )
-    locks_api =  Unicode(
+    locks_api = Unicode(
         config=True, allow_none=False, help="""Locking API implementation to choose from 'cs3' (cs3apis 
         grpc locks) and 'metadata' (file arbitrary metadata, the default one)""",
     )
@@ -112,9 +112,9 @@ class Config(LoggingConfigurable):
 
     @default("root_dir_list")
     def _root_dir_list_default(self): 
-        root_dir_list =  self._get_config_value("root_dir_list")
+        root_dir_list = self._get_config_value("root_dir_list")
         if len(root_dir_list) > 0 and type(root_dir_list) is str: 
-            root_dir_list =  tuple(dir.strip() for dir in root_dir_list.split(','))
+            root_dir_list = tuple(dir.strip() for dir in root_dir_list.split(','))
         return root_dir_list
 
     @default("chunk_size")
@@ -182,7 +182,7 @@ class Config(LoggingConfigurable):
         return self._get_config_value("locks_api")
 
     def _get_config_value(self, key): 
-        env =  os.getenv("CS3_" + key.upper())
+        env = os.getenv("CS3_" + key.upper())
         if env: 
             return env
         elif self._file_config(key) is not None: 
@@ -192,63 +192,63 @@ class Config(LoggingConfigurable):
         else: 
             return None
 
-    __config_dir =  "jupyter-config"
-    __config_file_name =  'jupyter_cs3_config'
-    __file_config =  None
+    __config_dir = "jupyter-config"
+    __config_file_name = 'jupyter_cs3_config'
+    __file_config = None
 
     def _file_config(self, key): 
         if self.__file_config is None: 
-            config_path =  jupyter_config_path()
+            config_path = jupyter_config_path()
             if self.__config_dir not in config_path: 
                 # add self._config_dir to the front, if set manually
                 config_path.insert(0, os.path.join(os.getcwd(),
                                                    self.__config_dir))  # might be os.path.join(os.getcwd(), 'cs3api4lab', self.__config_dir) depending on the environment setup"
-            cm =  ConfigManager(read_config_path=config_path)
+            cm = ConfigManager(read_config_path=config_path)
             try: 
-                config_file =  cm.get(self.__config_file_name)
-                self.__file_config =  config_file.get("cs3", {})
+                config_file = cm.get(self.__config_file_name)
+                self.__file_config = config_file.get("cs3", {})
             except Exception as e: 
                 self.log.warn("No config files found")
-                self.__file_config =  {}
+                self.__file_config = {}
         return self.__file_config[key] if key in self.__file_config else None
 
-    _default_config =  {
-        "reva_host":  "localhost: 19000",
-        "client_id":  "einstein",
-        "client_secret":  "relativity",
-        "auth_token_validity":  3600,
-        "endpoint":  "/",
-        "mount_dir":  "/home",
-        "home_dir":  "/",
-        "root_dir_list":  ['/home', '/reva'],
-        "chunk_size":  "4194304",
-        "secure_channel":  True,
-        "authenticator_class":  "cs3api4lab.auth.RevaPassword",
-        "login_type":  "basic",
-        "locks_expiration_time":  150,
-        "client_key":  None,
-        "client_cert":  None,
-        "ca_cert":  None,
-        "tus_enabled":  False,
-        "enable_ocm":  False,
-        "kernel_path":  "/",
-        "eos_file":  None,
-        "eos_token":  None,
-        "oauth_file":  None,
-        "oauth_token":  None,
-        "locks_api":  "metadata"
+    _default_config = {
+        "reva_host": "localhost: 19000",
+        "client_id": "einstein",
+        "client_secret": "relativity",
+        "auth_token_validity": 3600,
+        "endpoint": "/",
+        "mount_dir": "/home",
+        "home_dir": "/",
+        "root_dir_list": ['/home', '/reva'],
+        "chunk_size": "4194304",
+        "secure_channel": True,
+        "authenticator_class": "cs3api4lab.auth.RevaPassword",
+        "login_type": "basic",
+        "locks_expiration_time": 150,
+        "client_key": None,
+        "client_cert": None,
+        "ca_cert": None,
+        "tus_enabled": False,
+        "enable_ocm": False,
+        "kernel_path": "/",
+        "eos_file": None,
+        "eos_token": None,
+        "oauth_file": None,
+        "oauth_token": None,
+        "locks_api": "metadata"
     }
 
 
 class Cs3ConfigManager: 
-    __config_instance =  None
+    __config_instance = None
 
     @classmethod
     def get_config(cls): 
         if not cls.__config_instance: 
-            cls.__config_instance =  Config()
+            cls.__config_instance = Config()
         return cls.__config_instance
 
     @classmethod
     def clean(cls): 
-        cls.__config_instance =  None
+        cls.__config_instance = None

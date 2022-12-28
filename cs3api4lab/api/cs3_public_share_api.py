@@ -29,128 +29,130 @@ from cs3api4lab.auth.channel_connector import ChannelConnector
 class Cs3PublicShareApi: 
 
     def __init__(self, log): 
-        self.log =  log
-        self.config =  Cs3ConfigManager().get_config()
-        self.auth =  Auth.get_authenticator(config=self.config, log=self.log)
-        self.file_api =  Cs3FileApi(log)
-        channel =  ChannelConnector().get_channel()
-        auth_interceptor =  check_auth_interceptor.CheckAuthInterceptor(log, self.auth)
-        intercept_channel =  grpc.intercept_channel(channel, auth_interceptor)
-        self.cs3_api =  grpc_gateway.GatewayAPIStub(intercept_channel)
-        self.public_share_api =  link_api_grpc.LinkAPIStub(channel)
+        self.log = log
+        self.config = Cs3ConfigManager().get_config()
+        self.auth = Auth.get_authenticator(config=self.config, log=self.log)
+        self.file_api = Cs3FileApi(log)
+        channel = ChannelConnector().get_channel()
+        auth_interceptor = check_auth_interceptor.CheckAuthInterceptor(log, self.auth)
+        intercept_channel = grpc.intercept_channel(channel, auth_interceptor)
+        self.cs3_api = grpc_gateway.GatewayAPIStub(intercept_channel)
+        self.public_share_api = link_api_grpc.LinkAPIStub(channel)
         return
 
     def create_public_share(self, endpoint, file_path, password, exp_date, permissions): 
-        resource_info =  self._get_resource_info(endpoint, file_path)
-        res_permissions =  self._dict_to_permissions(permissions)
-        public_share_permissions =  link_res.PublicSharePermissions(permissions=res_permissions)
-        exp_timestamp =  self._get_timestamp(exp_date)
-        public_share_grant =  link_res.Grant(permissions=public_share_permissions,
+        resource_info = self._get_resource_info(endpoint, file_path)
+        res_permissions = self._dict_to_permissions(permissions)
+        public_share_permissions = link_res.PublicSharePermissions(permissions=res_permissions)
+        exp_timestamp = self._get_timestamp(exp_date)
+        public_share_grant = link_res.Grant(permissions=public_share_permissions,
                                             password=password,
                                             expiration=exp_timestamp)
-        request =  link_api.CreatePublicShareRequest(resource_info=resource_info, grant=public_share_grant)
-        create_response =  self.public_share_api.CreatePublicShare(request=request,
+        request = link_api.CreatePublicShareRequest(resource_info=resource_info, grant=public_share_grant)
+        create_response = self.public_share_api.CreatePublicShare(request=request,
                                                            metadata=[('x-access-token', self.auth.authenticate())])
-        if create_response.status.code ==  cs3_code.CODE_OK: 
+        if create_response.status.code == cs3_code.CODE_OK: 
             return self._map_public_share(create_response.share)
-        elif create_response.status.code ==  cs3_code.CODE_NOT_FOUND: 
+        elif create_response.status.code == cs3_code.CODE_NOT_FOUND: 
             raise ResourceNotFoundError(f"resource {file_path} not found")
-        elif create_response.status.code ==  cs3_code.CODE_ALREADY_EXISTS: 
-            raise ShareAlreadyExistsError("Error creating share:  "
+        elif create_response.status.code == cs3_code.CODE_ALREADY_EXISTS: 
+            raise ShareAlreadyExistsError("Error creating share: "
                                           + endpoint + file_path)
         else: 
-            self._handle_error(create_response)
+            return self._handle_error(create_response)
 
     def list_public_shares(self): 
-        request =  link_api.ListPublicSharesRequest()
-        response =  self.public_share_api.ListPublicShares(request=request,
+        request = link_api.ListPublicSharesRequest()
+        response = self.public_share_api.ListPublicShares(request=request,
                                                           metadata=[('x-access-token', self.auth.authenticate())])
-        if response.status.code ==  cs3_code.CODE_OK: 
+        if response.status.code == cs3_code.CODE_OK: 
             return list(map(self._map_public_share, response.share))
         else: 
-            self._handle_error(response)
+            return self._handle_error(response)
 
     def get_public_share(self, opaque_id, token): 
-        response =  self._get_public_share_response(opaque_id, token)
+        response = self._get_public_share_response(opaque_id, token)
         return self._map_public_share(response.share)
 
     def _get_public_share_response(self, opaque_id, token): 
-        share_id =  link_res.PublicShareId(opaque_id=opaque_id)
-        public_share_ref =  link_res.PublicShareReference(id=share_id, token=token)
-        request =  link_api.GetPublicShareRequest(ref=public_share_ref)
-        public_share_response =   self.public_share_api.GetPublicShare(request=request,
+        share_id = link_res.PublicShareId(opaque_id=opaque_id)
+        public_share_ref = link_res.PublicShareReference(id=share_id, token=token)
+        request = link_api.GetPublicShareRequest(ref=public_share_ref)
+        public_share_response = self.public_share_api.GetPublicShare(request=request,
                                                     metadata=[('x-access-token', self.auth.authenticate())])
-        if public_share_response.status.code ==  cs3_code.CODE_OK: 
+        if public_share_response.status.code == cs3_code.CODE_OK: 
             return public_share_response
         else: 
-            self._handle_error(public_share_response)
+            return self._handle_error(public_share_response)
 
     def get_public_share_by_token(self, token, password): 
-        request =  link_api.GetPublicShareByTokenRequest(token=token, password=password)
-        response =  self.public_share_api.GetPublicShareByToken(request=request)
-        if response.status.code ==  cs3_code.CODE_OK: 
+        request = link_api.GetPublicShareByTokenRequest(token=token, password=password)
+        response = self.public_share_api.GetPublicShareByToken(request=request)
+        if response.status.code == cs3_code.CODE_OK: 
             return self._map_public_share(response.share)
         else: 
-            self._handle_error(response)
+            return self._handle_error(response)
 
     def update_public_share(self, opaque_id, token, field_type, field_value): 
-        response =  self._get_public_share_response(opaque_id, token)
-        share_id =  link_res.PublicShareId(opaque_id=opaque_id)
-        public_share_ref =  link_res.PublicShareReference(id=share_id)
+        response = self._get_public_share_response(opaque_id, token)
+        share_id = link_res.PublicShareId(opaque_id=opaque_id)
+        public_share_ref = link_res.PublicShareReference(id=share_id)
 
-        if field_type ==  'permissions': 
-            permissions =  self._dict_to_permissions(field_value)
+        if field_type == 'permissions': 
+            permissions = self._dict_to_permissions(field_value)
         else: 
-            permissions =  response.share.permissions.permissions
-        public_share_permissions =  link_res.PublicSharePermissions(permissions=permissions)
+            permissions = response.share.permissions.permissions
+        public_share_permissions = link_res.PublicSharePermissions(permissions=permissions)
 
-        if field_type ==  'password': 
-            public_share_grant =  link_res.Grant(permissions=public_share_permissions,
+        if field_type == 'password': 
+            public_share_grant = link_res.Grant(permissions=public_share_permissions,
                                                 password=field_value)
-        elif field_type ==  'exp_date': 
-            public_share_grant =  link_res.Grant(permissions=public_share_permissions,
+        elif field_type == 'exp_date': 
+            public_share_grant = link_res.Grant(permissions=public_share_permissions,
                                                 expiration=self._get_timestamp(field_value))
         else: 
-            public_share_grant =  link_res.Grant(permissions=public_share_permissions)
+            public_share_grant = link_res.Grant(permissions=public_share_permissions)
 
-        update_type =  self._get_update_type(field_type)
-        if field_type ==  'display_name': 
-            update_info =  link_api.UpdatePublicShareRequest.Update(grant=public_share_grant,
+        update_type = self._get_update_type(field_type)
+        if field_type == 'display_name': 
+            update_info = link_api.UpdatePublicShareRequest.Update(grant=public_share_grant,
                                                                    type=update_type,
                                                                    display_name=field_value)
         else: 
-            update_info =  link_api.UpdatePublicShareRequest.Update(grant=public_share_grant,
+            update_info = link_api.UpdatePublicShareRequest.Update(grant=public_share_grant,
                                                                    type=update_type)
 
-        request =  link_api.UpdatePublicShareRequest(ref=public_share_ref, update=update_info)
-        response =  self.public_share_api.UpdatePublicShare(request=request,
+        request = link_api.UpdatePublicShareRequest(ref=public_share_ref, update=update_info)
+        response = self.public_share_api.UpdatePublicShare(request=request,
                                                            metadata=[('x-access-token', self.auth.authenticate())])
-        if response.status.code ==  cs3_code.CODE_OK: 
+        if response.status.code == cs3_code.CODE_OK: 
             return response.share
-        elif response.status.code ==  cs3_code.CODE_NOT_FOUND: 
+        elif response.status.code == cs3_code.CODE_NOT_FOUND: 
             raise ShareNotFoundError(f"public share {opaque_id} not found")
         else: 
-            self._handle_error(response)
+            return self._handle_error(response)
 
     def remove_public_share(self, opaque_id): 
-        share_id =  link_res.PublicShareId(opaque_id=opaque_id)
-        public_share_ref =  link_res.PublicShareReference(id=share_id)
-        request =  link_api.RemovePublicShareRequest(ref=public_share_ref)
-        response =  self.public_share_api.RemovePublicShare(request=request,
+        share_id = link_res.PublicShareId(opaque_id=opaque_id)
+        public_share_ref = link_res.PublicShareReference(id=share_id)
+        request = link_api.RemovePublicShareRequest(ref=public_share_ref)
+        response = self.public_share_api.RemovePublicShare(request=request,
                                                            metadata=[('x-access-token', self.auth.authenticate())])
-        if response.status.code ==  cs3_code.CODE_NOT_FOUND: 
+        if response.status.code == cs3_code.CODE_NOT_FOUND: 
             raise ShareNotFoundError(f"public share {opaque_id} not found")
-        elif response.status.code !=  cs3_code.CODE_OK: 
-            self._handle_error(response)
+        elif response.status.code != cs3_code.CODE_OK: 
+            return self._handle_error(response)
+        else:
+            return response
 
     def _get_update_type(self, field): 
-        if field ==  'permissions': 
+        if field == 'permissions': 
             return link_api.UpdatePublicShareRequest.Update.Type.TYPE_PERMISSIONS
-        if field ==  'password': 
+        if field == 'password': 
             return link_api.UpdatePublicShareRequest.Update.Type.TYPE_PASSWORD
-        if field ==  'exp_date': 
+        if field == 'exp_date': 
             return link_api.UpdatePublicShareRequest.Update.Type.TYPE_EXPIRATION
-        if field ==  'display_name': 
+        if field == 'display_name': 
             return link_api.UpdatePublicShareRequest.Update.Type.TYPE_DISPLAYNAME
         raise Exception("Invalid update type")
 
@@ -162,23 +164,23 @@ class Cs3PublicShareApi:
 
     def _map_public_share(self, share): 
         return {
-            "opaque_id":  share.id.opaque_id,
-            "token":  share.token,
-            "display_name":  share.display_name,
-            "expiration":  self._seconds_to_date(share.expiration.seconds),
-            "permissions":  self._permissions_to_dict(share),
-            "password_protected":  share.password_protected,
-            "resource_id":  {
-                "storage_id":  share.resource_id.storage_id,
-                "opaque_id":  share.resource_id.opaque_id,
+            "opaque_id": share.id.opaque_id,
+            "token": share.token,
+            "display_name": share.display_name,
+            "expiration": self._seconds_to_date(share.expiration.seconds),
+            "permissions": self._permissions_to_dict(share),
+            "password_protected": share.password_protected,
+            "resource_id": {
+                "storage_id": share.resource_id.storage_id,
+                "opaque_id": share.resource_id.opaque_id,
             },
-            "owner":  {
-                "idp":  share.owner.idp,
-                "opaque_id":  share.owner.opaque_id
+            "owner": {
+                "idp": share.owner.idp,
+                "opaque_id": share.owner.opaque_id
             },
-            "creator":  {
-                "idp":  share.creator.idp,
-                "opaque_id":  share.creator.opaque_id
+            "creator": {
+                "idp": share.creator.idp,
+                "opaque_id": share.creator.opaque_id
             }
         }
 
@@ -226,24 +228,24 @@ class Cs3PublicShareApi:
             update_grant=perms['update_grant'] if 'update_grant' in perms else False)
 
     def _permissions_to_dict(self, share): 
-        perms =  {'add_grant':  share.permissions.permissions.add_grant,
-                 'create_container':  share.permissions.permissions.create_container,
-                 'delete':  share.permissions.permissions.delete,
-                 'get_path':  share.permissions.permissions.get_path,
-                 'get_quota':  share.permissions.permissions.get_quota,
-                 'initiate_file_download':  share.permissions.permissions.initiate_file_download,
-                 'initiate_file_upload':  share.permissions.permissions.initiate_file_upload,
-                 'list_grants':  share.permissions.permissions.list_grants,
-                 'list_container':  share.permissions.permissions.list_container,
-                 'list_file_versions':  share.permissions.permissions.list_file_versions,
-                 'list_recycle':  share.permissions.permissions.list_recycle,
-                 'move':  share.permissions.permissions.move,
-                 'remove_grant':  share.permissions.permissions.remove_grant,
-                 'purge_recycle':  share.permissions.permissions.purge_recycle,
-                 'restore_file_version':  share.permissions.permissions.restore_file_version,
-                 'restore_recycle_item':  share.permissions.permissions.restore_recycle_item,
-                 'stat':  share.permissions.permissions.stat,
-                 'update_grant':  share.permissions.permissions.update_grant}
+        perms = {'add_grant': share.permissions.permissions.add_grant,
+                 'create_container': share.permissions.permissions.create_container,
+                 'delete': share.permissions.permissions.delete,
+                 'get_path': share.permissions.permissions.get_path,
+                 'get_quota': share.permissions.permissions.get_quota,
+                 'initiate_file_download': share.permissions.permissions.initiate_file_download,
+                 'initiate_file_upload': share.permissions.permissions.initiate_file_upload,
+                 'list_grants': share.permissions.permissions.list_grants,
+                 'list_container': share.permissions.permissions.list_container,
+                 'list_file_versions': share.permissions.permissions.list_file_versions,
+                 'list_recycle': share.permissions.permissions.list_recycle,
+                 'move': share.permissions.permissions.move,
+                 'remove_grant': share.permissions.permissions.remove_grant,
+                 'purge_recycle': share.permissions.permissions.purge_recycle,
+                 'restore_file_version': share.permissions.permissions.restore_file_version,
+                 'restore_recycle_item': share.permissions.permissions.restore_recycle_item,
+                 'stat': share.permissions.permissions.stat,
+                 'update_grant': share.permissions.permissions.update_grant}
         return perms
 
     def _get_timestamp(self, exp_date): 
@@ -252,15 +254,14 @@ class Cs3PublicShareApi:
         return cs3_types.Timestamp(seconds=self._date_to_seconds(exp_date), nanos=0)
 
     def _get_resource_info(self, endpoint, file_id): 
-        ref =  FileUtils.get_reference(file_id, endpoint)
-        stat_response =  self.cs3_api.Stat(request=storage_provider.StatRequest(ref=ref),
+        ref = FileUtils.get_reference(file_id, endpoint)
+        stat_response = self.cs3_api.Stat(request=storage_provider.StatRequest(ref=ref),
                                           metadata=[('x-access-token', self.auth.authenticate())])
-        if stat_response.status.code ==  cs3_code.CODE_OK: 
+        if stat_response.status.code == cs3_code.CODE_OK: 
             return stat_response.info
-        elif stat_response.status.code ==  cs3_code.CODE_NOT_FOUND: 
-            raise ResourceNotFoundError("Resource not found")
+        raise Exception("Can't stat %s: %s" % (file_id, str(stat_response)))
 
     def _handle_error(self, response): 
         self.log.error(response)
-        raise Exception("Incorrect server response:  " +
+        raise Exception("Incorrect server response: " +
                         response.status.message)

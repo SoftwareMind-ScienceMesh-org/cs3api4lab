@@ -15,7 +15,7 @@ RUN cd /opt/cs3 && \
     rm -rf /opt/cs3 && \
     fix-permissions "/home/${NB_USER}"
 
-RUN echo "c.ServerApp.contents_manager_class =  'cs3api4lab.CS3APIsManager'" >> /etc/jupyter/jupyter_server_config.py
+RUN echo "c.ServerApp.contents_manager_class = 'cs3api4lab.CS3APIsManager'" >> /etc/jupyter/jupyter_server_config.py
 
 RUN jupyter labextension disable @jupyterlab/filebrowser-extension:browser
 
