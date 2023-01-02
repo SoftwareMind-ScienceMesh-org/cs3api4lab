@@ -1,267 +1,267 @@
-swagger: "2.0"
+swagger:"2.0"
 info:
-  description: "Initial version of share API. Development in progress. Use 'einstein' username."
-  version: "-1.0.0"
-  title: "Share API"
-basePath: "/api/cs3"
+  description:"Initial version of share API. Development in progress. Use 'einstein' username."
+  version:"-1.0.0"
+  title:"Share API"
+basePath:"/api/cs3"
 
 tags:
-- name: "shares"
-  description: "Share operations"
+- name:"shares"
+  description:"Share operations"
 
 paths:
   /shares:
     post:
       tags:
       - "shares"
-      summary: "Creates a share"
-      description: ""
+      summary:"Creates a share"
+      description:""
       produces:
       - "application/json"
       parameters:
-      - in: "body"
-        name: "endpoint"
-        description: "endpoint path, default /"
-        required: true
-      - in: "body"
-        name: "file_path"
-        description: "Path with file name, e.g. /test.yml"
-        required: true
-      - in: "body"
-        name: "grantee"
-        description: "Share receiver's opaque_id"
-        required: true
-      - in: "body"
-        name: "idp"
-        description: "ID provider address"
-        required: true
-      - in: "body"
-        name: "role"
-        description: "role of a share receiver"
-        required: true
+      - in:"body"
+        name:"endpoint"
+        description:"endpoint path, default /"
+        required:true
+      - in:"body"
+        name:"file_path"
+        description:"Path with file name, e.g. /test.yml"
+        required:true
+      - in:"body"
+        name:"grantee"
+        description:"Share receiver's opaque_id"
+        required:true
+      - in:"body"
+        name:"idp"
+        description:"ID provider address"
+        required:true
+      - in:"body"
+        name:"role"
+        description:"role of a share receiver"
+        required:true
         items:
-          type: "string"
+          type:"string"
           enum:
           - "viewer"
           - "editor"
-      - in: "body"
-        name: "grantee_type"
-        description: ""
-        required: true
+      - in:"body"
+        name:"grantee_type"
+        description:""
+        required:true
         items:
-          type: "string"
+          type:"string"
           enum:
           - "user"
           - "group"
       responses:
         "201":
-          description: "Share created"
+          description:"Share created"
         "400":
-          description: "Bad request, invalid type, file not found or missing parameter"
+          description:"Bad request, invalid type, file not found or missing parameter"
         "409":
-          description: "Share already exists"
+          description:"Share already exists"
         "503":
-          description: "IOP service unavailable"
+          description:"IOP service unavailable"
         "500":
-          description: "Unexpected error"
+          description:"Unexpected error"
 
     put:
       tags:
       - "shares"
-      summary: "Updates a share"
-      description: ""
+      summary:"Updates a share"
+      description:""
       produces:
       - "application/json"
       parameters:
-      - in: "body"
-        name: "share_id"
-        description: "ID of a share"
-        required: true
-      - in: "body"
-        name: "role"
-        description: ""
-        required: true
+      - in:"body"
+        name:"share_id"
+        description:"ID of a share"
+        required:true
+      - in:"body"
+        name:"role"
+        description:""
+        required:true
         items:
-          type: "string"
+          type:"string"
           enum:
           - "editor"
           - "viewer"
       responses:
         "204":
-          description: "Share updated"
+          description:"Share updated"
         "400":
-          description: "Bad request, invalid type, file not found or missing parameter"
+          description:"Bad request, invalid type, file not found or missing parameter"
         "404":
-          description: "Share not found"
+          description:"Share not found"
         "503":
-          description: "IOP service unavailable"
+          description:"IOP service unavailable"
         "500":
-          description: "Unexpected error"
+          description:"Unexpected error"
 
     delete:
       tags:
       - "shares"
-      summary: "Deletes a share"
-      description: ""
+      summary:"Deletes a share"
+      description:""
       produces:
       - "application/json"
       parameters:
-      - in: "query"
-        name: "share_id"
-        description: "ID of a share"
-        required: true
+      - in:"query"
+        name:"share_id"
+        description:"ID of a share"
+        required:true
       responses:
         "204":
-          description: "Share deleted"
+          description:"Share deleted"
         "400":
-          description: "Bad request, invalid type, file not found or missing parameter"
+          description:"Bad request, invalid type, file not found or missing parameter"
         "404":
-          description: "Share not found"
+          description:"Share not found"
         "503":
-          description: "IOP service unavailable"
+          description:"IOP service unavailable"
         "500":
-          description: "Unexpected error"
+          description:"Unexpected error"
 
   /shares/list:
     get:
       tags:
       - "shares"
-      summary: "Get all given shares"
-      description: ""
+      summary:"Get all given shares"
+      description:""
       produces:
       - "application/json"
       responses:
         "200":
-          description: "Shares returned"
+          description:"Shares returned"
         "503":
-          description: "IOP service unavailable"
+          description:"IOP service unavailable"
         "500":
-          description: "Unexpected error"
+          description:"Unexpected error"
 
   /shares/file:
     get:
       tags:
         - "shares"
-      summary: "Return grantees for file"
-      description: ""
+      summary:"Return grantees for file"
+      description:""
       produces:
         - "application/json"
       parameters:
-        - in: "query"
-          name: "file_path"
-          description: "Path with file name, e.g. '/home/test.txt'"
-          required: true
+        - in:"query"
+          name:"file_path"
+          description:"Path with file name, e.g. '/home/test.txt'"
+          required:true
       responses:
         "200":
-          description: "Grantees returned"
+          description:"Grantees returned"
         "400":
-          description: "Bad request, invalid type, file not found or missing parameter"
+          description:"Bad request, invalid type, file not found or missing parameter"
         "503":
-          description: "IOP service unavailable"
+          description:"IOP service unavailable"
         "500":
-          description: "Unexpected error"
+          description:"Unexpected error"
 
   /shares/received:
     get:
       tags:
       - "shares"
-      summary: "Get all received shares"
-      description: ""
+      summary:"Get all received shares"
+      description:""
       produces:
       - "application/json"
       responses:
         "200":
-          description: "Received shares returned"
+          description:"Received shares returned"
         "503":
-          description: "IOP service unavailable"
+          description:"IOP service unavailable"
         "500":
-          description: "Unexpected error"
+          description:"Unexpected error"
 
   /public/share:
     get:
       tags:
         - "shares"
-      summary: "Get share by token and password"
-      description: ""
+      summary:"Get share by token and password"
+      description:""
       produces:
         - "application/json"
       responses:
         "200":
-          description: "Share returned"
+          description:"Share returned"
         "503":
-          description: "IOP service unavailable"
+          description:"IOP service unavailable"
         "500":
-          description: "Unexpected error"
+          description:"Unexpected error"
     post:
       tags:
         - "shares"
-      summary: "Creates a public share"
-      description: ""
+      summary:"Creates a public share"
+      description:""
       produces:
         - "application/json"
       parameters:
-        - in: "body"
-          name: "endpoint"
-          description: "endpoint path, default /"
-          required: true
-        - in: "body"
-          name: "file_path"
-          description: "Path with file name, e.g. /test.yml"
-          required: true
-        - in: "body"
-          name: "password"
-          description: "Password to secure a share"
-          required: true
-        - in: "body"
-          name: "exp_date"
-          description: "Share expiration date e.g. 23-12-2022"
-          required: true
-        - in: "body"
-          name: "permissions"
-          description: "Share permissions"
-          required: true
+        - in:"body"
+          name:"endpoint"
+          description:"endpoint path, default /"
+          required:true
+        - in:"body"
+          name:"file_path"
+          description:"Path with file name, e.g. /test.yml"
+          required:true
+        - in:"body"
+          name:"password"
+          description:"Password to secure a share"
+          required:true
+        - in:"body"
+          name:"exp_date"
+          description:"Share expiration date e.g. 23-12-2022"
+          required:true
+        - in:"body"
+          name:"permissions"
+          description:"Share permissions"
+          required:true
           items:
-            type: "string"
+            type:"string"
             enum:
       responses:
         "201":
-          description: "Share created"
+          description:"Share created"
         "400":
-          description: "Bad request, invalid type, file not found or missing parameter"
+          description:"Bad request, invalid type, file not found or missing parameter"
         "409":
-          description: "Share already exists"
+          description:"Share already exists"
         "503":
-          description: "IOP service unavailable"
+          description:"IOP service unavailable"
         "500":
-          description: "Unexpected error"
+          description:"Unexpected error"
 
       put:
         tags:
           - "shares"
-        summary: "Updates a public share"
-        description: ""
+        summary:"Updates a public share"
+        description:""
         produces:
           - "application/json"
         parameters:
-          - in: "body"
-            name: "opaque_id"
-            description: "Opaque ID of a share"
-            required: true
-          - in: "body"
-            name: "token"
-            description: "Share token"
-            required: true
+          - in:"body"
+            name:"opaque_id"
+            description:"Opaque ID of a share"
+            required:true
+          - in:"body"
+            name:"token"
+            description:"Share token"
+            required:true
             items:
-              type: "string"
+              type:"string"
               enum:
                 - "editor"
                 - "viewer"
-          - in: "body"
-              name: "field_type"
-              description: "Field to update"
-              required: true
+          - in:"body"
+              name:"field_type"
+              description:"Field to update"
+              required:true
               items:
-                type: "string"
+                type:"string"
                 enum:
                   - "permissions"
                   - "password"
@@ -269,72 +269,72 @@ paths:
                   - "display_name"
         responses:
           "204":
-            description: "Share updated"
+            description:"Share updated"
           "400":
-            description: "Bad request, invalid type, file not found or missing parameter"
+            description:"Bad request, invalid type, file not found or missing parameter"
           "404":
-            description: "Share not found"
+            description:"Share not found"
           "503":
-            description: "IOP service unavailable"
+            description:"IOP service unavailable"
           "500":
-            description: "Unexpected error"
+            description:"Unexpected error"
 
   /public/shares:
     get:
       tags:
         - "shares"
-      summary: "Get share by token and opaque_id"
-      description: ""
+      summary:"Get share by token and opaque_id"
+      description:""
       produces:
         - "application/json"
       parameters:
-        - in: "query"
-          name: "token"
-          description: "Share token"
-          required: true
-        - in: "query"
-          name: "opaque_id"
-          description: "Share opaque_id"
-          required: true
+        - in:"query"
+          name:"token"
+          description:"Share token"
+          required:true
+        - in:"query"
+          name:"opaque_id"
+          description:"Share opaque_id"
+          required:true
       responses:
         "200":
-          description: "Shares returned"
+          description:"Shares returned"
         "503":
-          description: "IOP service unavailable"
+          description:"IOP service unavailable"
         "500":
-          description: "Unexpected error"
+          description:"Unexpected error"
     delete:
       tags:
         - "shares"
-      summary: "Deletes public share by opaque_id"
-      description: ""
+      summary:"Deletes public share by opaque_id"
+      description:""
       produces:
         - "application/json"
       parameters:
-        - in: "query"
-          name: "opaque_id"
-          description: "Share opaque_id"
-          required: true
+        - in:"query"
+          name:"opaque_id"
+          description:"Share opaque_id"
+          required:true
       responses:
         "201":
-          description: "Shares returned"
+          description:"Shares returned"
         "503":
-          description: "IOP service unavailable"
+          description:"IOP service unavailable"
         "500":
-          description: "Unexpected error"
+          description:"Unexpected error"
 
   /public/shares/list:
     get:
       tags:
         - "shares"
-      summary: "List shares"
-      description: ""
+      summary:"List shares"
+      description:""
       produces:
         - "application/json"
       responses:
         "200":
-          description: "Shares returned"
+          description:"Shares returned"
         "503":
-          description: "IOP service unavailable"
+          description:"IOP service unavailable"
         "500":
-          description: "Unexpected error"
+          description:"Unexpected error"

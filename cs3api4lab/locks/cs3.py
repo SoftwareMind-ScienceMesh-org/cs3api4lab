@@ -13,47 +13,47 @@ import cs3.rpc.v1beta1.code_pb2 as cs3code
 import google.protobuf.json_format as json_format
 
 
-class Cs3(LockBase): 
+class Cs3(LockBase):
 
-    def __init__(self, log, config): 
+    def __init__(self, log, config):
         super().__init__(log, config)
 
-    def handle_locks(self, file_path, endpoint): 
+    def handle_locks(self, file_path, endpoint):
         ref = FileUtils.get_reference(file_path, endpoint)
         lock = self._get_lock(ref)
-        if not lock: 
+        if not lock:
             self._set_lock(ref)
-        elif self._is_lock_mine(lock): 
+        elif self._is_lock_mine(lock):
             self._refresh_lock(ref)
-        else: 
+        else:
             raise FileLockedError("File %s is locked" % file_path)
 
-    def is_valid_external_lock(self, file_path, endpoint): 
+    def is_valid_external_lock(self, file_path, endpoint):
         ref = FileUtils.get_reference(file_path, endpoint)
         lock = self._get_lock(ref)
         return lock and not self._is_lock_mine(lock)
 
-    def _is_lock_mine(self, lock): 
+    def _is_lock_mine(self, lock):
         user = self.get_current_user()
         return lock['user']['idp'] == user.id.idp and lock['user']['opaqueId'] == user.id.opaque_id
 
-    def _get_lock(self, ref): 
+    def _get_lock(self, ref):
         request = storage_api.GetLockRequest(ref=ref)
         lock_response = self.cs3_api.GetLock(request=request, metadata=[('x-access-token', self.auth.authenticate())])
-        if lock_response.status.code == cs3code.CODE_OK: 
+        if lock_response.status.code == cs3code.CODE_OK:
             return json_format.MessageToDict(lock_response.lock)
-        elif lock_response.status.code == cs3code.CODE_NOT_FOUND: 
+        elif lock_response.status.code == cs3code.CODE_NOT_FOUND:
             return None
-        else: 
-            raise IOError("Unable to get lock: %s" % str(lock_response))
+        else:
+            raise IOError("Unable to get lock:%s" % str(lock_response))
 
-    def _unlock(self, ref, lock): 
+    def _unlock(self, ref, lock):
         request = storage_api.UnlockRequest(ref=ref, lock=lock)
         unlock_response = self.cs3_api.Unlock(request=request, metadata=[('x-access-token', self.auth.authenticate())])
-        if unlock_response.status.code != cs3code.CODE_OK: 
-            raise IOError("Unable to unlock: %s" % str(unlock_response))
+        if unlock_response.status.code != cs3code.CODE_OK:
+            raise IOError("Unable to unlock:%s" % str(unlock_response))
 
-    def _set_lock(self, ref): 
+    def _set_lock(self, ref):
         user = self.get_current_user()
         lock = storage_resources.Lock(
             lock_id=self.lock_name,
@@ -63,10 +63,10 @@ class Cs3(LockBase):
         )
         request = storage_api.SetLockRequest(ref=ref, lock=lock)
         lock_response = self.cs3_api.SetLock(request=request, metadata=[('x-access-token', self.auth.authenticate())])
-        if lock_response.status.code != cs3code.CODE_OK: 
-            raise IOError("Unable to set lock: %s" % str(lock_response))
+        if lock_response.status.code != cs3code.CODE_OK:
+            raise IOError("Unable to set lock:%s" % str(lock_response))
 
-    def _refresh_lock(self, ref): 
+    def _refresh_lock(self, ref):
         user = self.get_current_user()
         lock = storage_resources.Lock(
             lock_id=self.lock_name,
@@ -77,7 +77,7 @@ class Cs3(LockBase):
         request = storage_api.RefreshLockRequest(ref=ref, lock=lock)
         refresh_response = self.cs3_api.RefreshLock(request=request,
                                                     metadata=[('x-access-token', self.auth.authenticate())])
-        if refresh_response.status.code != cs3code.CODE_OK: 
-            raise IOError("Unable to refresh lock: %s" % str(refresh_response))
+        if refresh_response.status.code != cs3code.CODE_OK:
+            raise IOError("Unable to refresh lock:%s" % str(refresh_response))
 
 

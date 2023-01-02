@@ -6,186 +6,186 @@ from traitlets.config import LoggingConfigurable
 from cs3api4lab.exception.exceptions import ResourceNotFoundError
 
 
-class TestCs3FileApi(TestCase): 
+class TestCs3FileApi(TestCase):
     client_id = None
     endpoint = None
 
-    def setUp(self): 
+    def setUp(self):
         self.log = LoggingConfigurable().log
         config = Cs3ConfigManager.get_config()
         self.client_id = config.client_id
         self.endpoint = config.endpoint
         self.storage = Cs3FileApi(self.log)
 
-    def test_stat(self): 
+    def test_stat(self):
         file_id = "/test.txt"
         message = "Lorem ipsum dolor sit amet..."
-        try: 
+        try:
             self.storage.write_file(file_id, message, self.endpoint)
             stat_info = self.storage.stat_info(file_id, self.endpoint)
             self.assertIsInstance(stat_info, dict)
             self.assertTrue('mtime' in stat_info, 'Missing mtime from stat output')
             self.assertTrue('size' in stat_info, 'Missing size from stat output')
-        finally: 
+        finally:
             self.storage.remove(file_id, self.endpoint)
 
-    def test_stat_no_file(self): 
-        with self.assertRaises(FileNotFoundError) as cm: 
+    def test_stat_no_file(self):
+        with self.assertRaises(FileNotFoundError) as cm:
             self.storage.stat_info('/hopefullynotexisting', self.endpoint)
         self.assertEqual(cm.exception.args[0], 'path not found when statting, file /hopefullynotexisting')
 
-    def test_read_file(self): 
+    def test_read_file(self):
 
         content_to_write = b'bla\n'
         content_check = 'bla\n'
         file_path = "/test_read.txt"
-        try: 
+        try:
             self.storage.write_file(file_path, content_to_write, self.endpoint)
             content = ''
-            for chunk in self.storage.read_file(file_path, self.endpoint): 
+            for chunk in self.storage.read_file(file_path, self.endpoint):
                 self.assertNotIsInstance(chunk, IOError, 'raised by storage.readfile')
                 content += chunk.decode('utf-8')
             self.assertEqual(content, content_check,
-                             'File ' + file_path + ' should contain the string: ' + content_check)
-        finally: 
+                             'File ' + file_path + ' should contain the string:' + content_check)
+        finally:
             self.storage.remove(file_path, self.endpoint)
 
-    def test_read_file_by_id(self): 
+    def test_read_file_by_id(self):
         content_to_write = b'bla_by_id\n'
         content_to_check = 'bla_by_id\n'
         file_path = "/test_read_by_id.txt"
-        try: 
+        try:
             self.storage.write_file(file_path, content_to_write, self.endpoint)
             stat = self.storage.stat_info(file_path)
             content = ''
-            for chunk in self.storage.read_file(file_path, self.endpoint): 
+            for chunk in self.storage.read_file(file_path, self.endpoint):
                 self.assertNotIsInstance(chunk, IOError, 'raised by storage.readfile')
                 content += chunk.decode('utf-8')
 
             self.assertEqual(stat['inode']['opaque_id'], 'fileid-einstein%2Ftest_read_by_id.txt')
             self.assertEqual(stat['inode']['storage_id'], '123e4567-e89b-12d3-a456-426655440000')
             self.assertEqual(content, content_to_check,
-                             'File ' + file_path + ' should contain the string: ' + content_to_check)
-        finally: 
+                             'File ' + file_path + ' should contain the string:' + content_to_check)
+        finally:
             self.storage.remove(file_path, self.endpoint)
 
-    def test_read_file_by_share_path(self): 
+    def test_read_file_by_share_path(self):
         content_to_write = b'bla_by_share\n'
         content_to_check = 'bla_by_share\n'
         file_path = "/test_read_by_share_path.txt"
-        try: 
+        try:
             self.storage.write_file(file_path, content_to_write, self.endpoint)
             stat = self.storage.stat_info(file_path)
             stat_by_id = self.storage.stat_info(stat['inode']['opaque_id'], stat['inode']['storage_id'])
             content = ''
-            for chunk in self.storage.read_file(file_path, self.endpoint): 
+            for chunk in self.storage.read_file(file_path, self.endpoint):
                 self.assertNotIsInstance(chunk, IOError, 'raised by storage.readfile')
                 content += chunk.decode('utf-8')
             self.assertEqual(stat_by_id['filepath'], '/reva/einstein/test_read_by_share_path.txt')
             self.assertEqual(content, content_to_check,
-                             'File ' + file_path + ' should contain the string: ' + content_to_check)
-        finally: 
+                             'File ' + file_path + ' should contain the string:' + content_to_check)
+        finally:
             self.storage.remove(file_path, self.endpoint)
 
-    def test_read_file_no_file(self): 
+    def test_read_file_no_file(self):
         file_path = "/test_read_no_existing_file.txt"
         content = ''
-        with self.assertRaises(IOError, msg='No such file or directory'): 
-            for chunk in self.storage.read_file(file_path, self.endpoint): 
+        with self.assertRaises(IOError, msg='No such file or directory'):
+            for chunk in self.storage.read_file(file_path, self.endpoint):
                 content += chunk.decode('utf-8')
 
-    def test_write_file(self): 
+    def test_write_file(self):
         buffer = b"Testu form cs3 Api"
         file_id = "/testfile.txt"
-        try: 
+        try:
             self.storage.write_file(file_id, buffer, self.endpoint)
             stat_info = self.storage.stat_info(file_id, self.endpoint)
             self.assertIsInstance(stat_info, dict)
-        finally: 
+        finally:
             self.storage.remove(file_id, self.endpoint)
 
-    def test_write_empty_file(self): 
+    def test_write_empty_file(self):
         buffer = b""
         file_id = "/zero_test_file.txt"
-        try: 
+        try:
             self.storage.write_file(file_id, buffer, self.endpoint)
             stat_info = self.storage.stat_info(file_id, self.endpoint)
             self.assertIsInstance(stat_info, dict)
-        finally: 
+        finally:
             self.storage.remove(file_id, self.endpoint)
 
-    def test_remove_file(self): 
+    def test_remove_file(self):
         file_id = "/file_to_remove.txt"
         buffer = b"ebe5tresbsrdthbrdhvdtr"
-        try: 
+        try:
             self.storage.write_file(file_id, buffer, self.endpoint)
             self.storage.remove(file_id, self.endpoint)
-            with self.assertRaises(IOError): 
+            with self.assertRaises(IOError):
                 self.storage.stat_info(file_id, self.endpoint)
-        except Exception: 
+        except Exception:
             self.storage.remove(file_id, self.endpoint)
 
-    def test_read_directory(self): 
+    def test_read_directory(self):
         file_id = "/"
         read_directory = self.storage.read_directory(file_id, self.endpoint)
         self.assertIsNotNone(read_directory[0])
         self.assertIsNotNone(read_directory[0].path)
 
-    def test_read_directory_no_dir(self): 
-        with self.assertRaises(ResourceNotFoundError) as cm: 
+    def test_read_directory_no_dir(self):
+        with self.assertRaises(ResourceNotFoundError) as cm:
             self.storage.read_directory('/no_such_dir', self.endpoint)
         self.assertEqual(cm.exception.args[0], 'directory /no_such_dir not found')
 
-    def test_move_file(self): 
+    def test_move_file(self):
         src_id = "/file_to_rename.txt"
         buffer = b"ebe5tresbsrdthbrdhvdtr"
         dest_id = "/file_after_rename.txt"
-        try: 
+        try:
             self.storage.remove(dest_id)
         except Exception as e:
-            self.log.warn("Cannot remove %s: %s" % (dest_id, e))
-        try: 
+            self.log.warn("Cannot remove %s:%s" % (dest_id, e))
+        try:
             self.storage.write_file(src_id, buffer, self.endpoint)
             self.storage.move(src_id, dest_id, self.endpoint)
             self.storage.remove(dest_id, self.endpoint)
-            with self.assertRaises(IOError): 
+            with self.assertRaises(IOError):
                 self.storage.stat_info(dest_id, self.endpoint)
-        finally: 
-            try: 
+        finally:
+            try:
                 self.storage.remove(src_id, self.endpoint)
             except Exception as e:
-                self.log.warn("Cannot remove %s: %s" % (src_id, e))
-            try: 
+                self.log.warn("Cannot remove %s:%s" % (src_id, e))
+            try:
                 self.storage.remove(dest_id, self.endpoint)
             except Exception as e:
-                self.log.warn("Cannot remove %s: %s" % (dest_id, e))
+                self.log.warn("Cannot remove %s:%s" % (dest_id, e))
 
-    def test_move_no_file(self): 
+    def test_move_no_file(self):
         src_id = "/no_such_file.txt"
         dest_id = "/file_after_rename.txt"
 
-        with self.assertRaises(IOError) as cm: 
+        with self.assertRaises(IOError) as cm:
             self.storage.move(src_id, dest_id)
-        self.assertIn('error moving: path:"/no_such_file.txt" ', cm.exception.args[0])
+        self.assertIn('error moving:path:"/no_such_file.txt" ', cm.exception.args[0])
 
-    def test_move_file_already_exists(self): 
-        try: 
+    def test_move_file_already_exists(self):
+        try:
             source_path = "/file_to_rename.txt"
             buffer = b"ebe5tresbsrdthbrdhvdtr"
             destination_path = "/file_after_rename.txt"
             self.storage.write_file(source_path, buffer, self.endpoint)
             self.storage.write_file(destination_path, buffer, self.endpoint)
 
-            with self.assertRaises(IOError) as context: 
+            with self.assertRaises(IOError) as context:
                 self.storage.move(source_path, destination_path, self.endpoint)
             self.assertEqual("file already exists", context.exception.args[0])
-        finally: 
-            try: 
+        finally:
+            try:
                 self.storage.remove(source_path, self.endpoint)
             except Exception as e:
-                self.log.warn("Cannot remove %s: %s" % (source_path, e))
-            try: 
+                self.log.warn("Cannot remove %s:%s" % (source_path, e))
+            try:
                 self.storage.remove(destination_path, self.endpoint)
             except Exception as e:
-                self.log.warn("Cannot remove %s: %s" % (destination_path, e))
+                self.log.warn("Cannot remove %s:%s" % (destination_path, e))
 
