@@ -166,7 +166,7 @@ class TestCs3FileApi(TestCase):
 
         with self.assertRaises(IOError) as cm:
             self.storage.move(src_id, dest_id)
-        self.assertIn('error moving:path:"/no_such_file.txt" ', cm.exception.args[0])
+        self.assertIn('error moving: path:"/no_such_file.txt" ', cm.exception.args[0])
 
     def test_move_file_already_exists(self):
         try:

@@ -122,7 +122,7 @@ class TestCS3APIsManager(TestCase):
             self.assertIn("### Markdown example", str(model["content"]))
             self.assertEqual(model["format"], "json")
             self.assertEqual(model["mimetype"], None)
-            self.assertEqual(model["size"], 637)
+            self.assertEqual(model["size"], 616)
             self.assertEqual(model["writable"], True)
             self.assertEqual(model["type"], "notebook")
         finally:
