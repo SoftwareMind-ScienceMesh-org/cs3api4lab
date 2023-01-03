@@ -1,7 +1,7 @@
 import cs3.sharing.ocm.v1beta1.resources_pb2 as sharing_res
 import cs3.storage.provider.v1beta1.resources_pb2 as storage_resources
-from cs3api4lab.common.strings import *
-from cs3api4lab.exception.exceptions import *
+from cs3api4lab.common.strings import Grantee, State, Role
+from cs3api4lab.exception.exceptions import InvalidTypeError
 
 import urllib.parse
 
@@ -14,6 +14,7 @@ class ShareUtils:
             return storage_resources.GranteeType.GRANTEE_TYPE_USER
         if grantee_type == 'group':
             return storage_resources.GranteeType.GRANTEE_TYPE_GROUP
+        raise InvalidTypeError("Unknown grantee type " + grantee_type)
 
     @staticmethod
     def map_grantee_type(share):
@@ -21,6 +22,7 @@ class ShareUtils:
             return Grantee.USER
         if share.grantee.type == storage_resources.GranteeType.GRANTEE_TYPE_GROUP:
             return Grantee.GROUP
+        raise InvalidTypeError("Unknown share grantee type " + str(share.grantee.type))
 
     @staticmethod
     def map_state(state):
@@ -43,6 +45,7 @@ class ShareUtils:
                 return State.REJECTED
             elif state == sharing_res.SHARE_STATE_INVALID:
                 return State.INVALID
+        return State.INVALID
 
     @staticmethod
     def is_accepted(state):
