@@ -22,6 +22,8 @@ from cs3api4lab.utils.model_utils import ModelUtils
 from cs3api4lab.utils.asyncify import asyncify
 from cs3api4lab.api.storage_api import StorageApi
 
+from traitlets.config import HasTraits
+
 
 class CS3APIsManager(ContentsManager):
     cs3_config = None
@@ -31,6 +33,7 @@ class CS3APIsManager(ContentsManager):
 
     def __init__(self, parent, log, **kwargs):
         super().__init__(**kwargs)
+        HasTraits.__init__(self, **kwargs)
         self.cs3_config = Cs3ConfigManager.get_config()
         self.log = log
         self.file_api = Cs3FileApi(self.log)
@@ -172,10 +175,7 @@ class CS3APIsManager(ContentsManager):
                 nb = nbformat.from_dict(model['content'])
                 self.check_and_sign(nb, path)
                 self._save_notebook(path, nb, model['format'])
-
-                # ToDo: Implements save to checkpoint
-                # if not self.checkpoints.list_checkpoints(path):
-                #     self.create_checkpoint(path)
+                # ToDo: Implement creating checkpoint
 
             elif model['type'] == 'file':
                 self._save_file(path, model['content'], model['format'])

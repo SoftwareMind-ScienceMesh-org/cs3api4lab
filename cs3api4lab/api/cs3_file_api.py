@@ -49,7 +49,7 @@ class Cs3FileApi:
         request = cs3sp.GetHomeRequest()
         response = self.cs3_api.GetHome(request)
         return {
-            "path": response.path
+            "path":response.path
         }
 
     def stat_info(self, file_path, endpoint='/'):
@@ -64,16 +64,16 @@ class Cs3FileApi:
             time_end = time.time()
             self.log.info('msg="Invoked stat" fileid="%s" elapsedTimems="%.1f"' % (file_path, (time_end - time_start) * 1000))
             return {
-                'inode': {'storage_id': stat.info.id.storage_id,
-                          'opaque_id': stat.info.id.opaque_id},
-                'filepath': stat.info.path,
-                'userid': stat.info.owner.opaque_id,
-                'size': stat.info.size,
-                'mtime': stat.info.mtime.seconds,
-                'type': stat.info.type,
-                'mime_type': stat.info.mime_type,
-                'idp': stat.info.owner.idp,
-                'permissions': stat.info.permission_set
+                'inode':{'storage_id':stat.info.id.storage_id,
+                          'opaque_id':stat.info.id.opaque_id},
+                'filepath':stat.info.path,
+                'userid':stat.info.owner.opaque_id,
+                'size':stat.info.size,
+                'mtime':stat.info.mtime.seconds,
+                'type':stat.info.type,
+                'mime_type':stat.info.mime_type,
+                'idp':stat.info.owner.idp,
+                'permissions':stat.info.permission_set
             }
         elif stat.status.code == cs3code.CODE_NOT_FOUND:
             self.log.info('msg="Failed stat" fileid="%s" reason="%s"' % (file_path, stat.status.message))
@@ -96,7 +96,7 @@ class Cs3FileApi:
                 self.log.info("File %s locked, opening in read-only mode" % file_path)
                 # todo change writable to false
         else:
-            msg = "%s: %s" % (stat.status.code, stat.status.message)
+            msg = "%s:%s" % (stat.status.code, stat.status.message)
             self.log.error('msg="Error when stating file for read" reason="%s"' % msg)
             raise IOError(msg)
 
@@ -256,5 +256,5 @@ class Cs3FileApi:
 
     def _handle_error(self, response):
         self.log.error(response)
-        raise Exception("Incorrect server response: " +
+        raise Exception("Incorrect server response:" +
                         response.status.message)

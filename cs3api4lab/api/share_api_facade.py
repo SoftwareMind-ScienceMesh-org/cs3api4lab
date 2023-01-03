@@ -5,7 +5,7 @@ import cs3.storage.provider.v1beta1.resources_pb2 as Resources
 
 from cs3api4lab.auth.authenticator import Auth
 from cs3api4lab.api.cs3_file_api import Cs3FileApi
-from cs3api4lab.common.strings import *
+from cs3api4lab.common.strings import Grantee, Role
 from cs3api4lab.config.config_manager import Cs3ConfigManager
 from cs3api4lab.auth.channel_connector import ChannelConnector
 from cs3api4lab.api.cs3_user_api import Cs3UserApi
@@ -93,7 +93,7 @@ class ShareAPIFacade:
             self.share_api.remove(share_id)
         else:
             if self.config.enable_ocm:
-                return self.ocm_share_api.remove(share_id)
+                self.ocm_share_api.remove(share_id)
             else:
                 raise OCMDisabledError('Cannot remove OCM share - OCM functionality is disabled')
 

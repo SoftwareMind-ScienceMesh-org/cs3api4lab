@@ -51,7 +51,7 @@ class TestLocks(ShareTestBase, TestCase):
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
-            for chunk in self.file_api.read_file(self.file_name):
+            for _ in self.file_api.read_file(self.file_name):
                 continue
 
             file_ref = self.storage_api.get_unified_file_ref(self.file_name, '/')
@@ -97,15 +97,17 @@ class TestLocks(ShareTestBase, TestCase):
 
     @skip
     def test_write_dir_file_locked(self):
+        dir_path = '/home/testdir'
         suffix = self.get_random_suffix()
         self.file_name = '/home/testdir/test_locks.txt' + suffix
         shared_name = '/reva/einstein/testdir/test_locks.txt' + suffix
 
         try:
             try:
-                self.file_api.create_directory('/home/testdir')
-            except:
-                pass #ignore already existing directory
+                self.file_api.create_directory()
+            except Exception as e:
+                #ignore already existing directory
+                self.log.warn("Cannot create dir %s:%s" % (dir_path, e))
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 

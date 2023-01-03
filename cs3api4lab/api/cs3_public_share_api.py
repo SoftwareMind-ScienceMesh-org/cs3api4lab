@@ -59,7 +59,7 @@ class Cs3PublicShareApi:
             raise ShareAlreadyExistsError("Error creating share: "
                                           + endpoint + file_path)
         else:
-            self._handle_error(create_response)
+            return self._handle_error(create_response)
 
     def list_public_shares(self):
         request = link_api.ListPublicSharesRequest()
@@ -68,7 +68,7 @@ class Cs3PublicShareApi:
         if response.status.code == cs3_code.CODE_OK:
             return list(map(self._map_public_share, response.share))
         else:
-            self._handle_error(response)
+            return self._handle_error(response)
 
     def get_public_share(self, opaque_id, token):
         response = self._get_public_share_response(opaque_id, token)
@@ -78,12 +78,12 @@ class Cs3PublicShareApi:
         share_id = link_res.PublicShareId(opaque_id=opaque_id)
         public_share_ref = link_res.PublicShareReference(id=share_id, token=token)
         request = link_api.GetPublicShareRequest(ref=public_share_ref)
-        public_share_response =  self.public_share_api.GetPublicShare(request=request,
+        public_share_response = self.public_share_api.GetPublicShare(request=request,
                                                     metadata=[('x-access-token', self.auth.authenticate())])
         if public_share_response.status.code == cs3_code.CODE_OK:
             return public_share_response
         else:
-            self._handle_error(public_share_response)
+            return self._handle_error(public_share_response)
 
     def get_public_share_by_token(self, token, password):
         request = link_api.GetPublicShareByTokenRequest(token=token, password=password)
@@ -91,7 +91,7 @@ class Cs3PublicShareApi:
         if response.status.code == cs3_code.CODE_OK:
             return self._map_public_share(response.share)
         else:
-            self._handle_error(response)
+            return self._handle_error(response)
 
     def update_public_share(self, opaque_id, token, field_type, field_value):
         response = self._get_public_share_response(opaque_id, token)
@@ -130,7 +130,7 @@ class Cs3PublicShareApi:
         elif response.status.code == cs3_code.CODE_NOT_FOUND:
             raise ShareNotFoundError(f"public share {opaque_id} not found")
         else:
-            self._handle_error(response)
+            return self._handle_error(response)
 
     def remove_public_share(self, opaque_id):
         share_id = link_res.PublicShareId(opaque_id=opaque_id)
@@ -141,7 +141,9 @@ class Cs3PublicShareApi:
         if response.status.code == cs3_code.CODE_NOT_FOUND:
             raise ShareNotFoundError(f"public share {opaque_id} not found")
         elif response.status.code != cs3_code.CODE_OK:
-            self._handle_error(response)
+            return self._handle_error(response)
+        else:
+            return response
 
     def _get_update_type(self, field):
         if field == 'permissions':
@@ -257,8 +259,7 @@ class Cs3PublicShareApi:
                                           metadata=[('x-access-token', self.auth.authenticate())])
         if stat_response.status.code == cs3_code.CODE_OK:
             return stat_response.info
-        elif stat_response.status.code == cs3_code.CODE_NOT_FOUND:
-            raise ResourceNotFoundError("Resource not found")
+        raise Exception("Can't stat %s:%s" % (file_id, str(stat_response)))
 
     def _handle_error(self, response):
         self.log.error(response)

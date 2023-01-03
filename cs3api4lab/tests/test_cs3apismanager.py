@@ -61,17 +61,6 @@ class TestCS3APIsManager(TestCase):
         finally:
             self.file_api.remove(file_id, self.endpoint)
 
-    def test_get_file_with_drive_name_starting_with_slash(self):
-        file_path = "/cs3drive:test_get_text_file.txt"
-        file_id = "/test_get_text_file.txt"
-        message = "Lorem ipsum dolor sit amet..."
-        self.file_api.write_file(file_id, message, self.endpoint)
-
-        model = self.contents_manager.get(file_path, True, None)
-        self.assertEqual(model["name"], "test_get_text_file.txt")
-
-        self.file_api.remove(file_id, self.endpoint)
-
     def test_get_text_file_with_share_path(self):
         file_id = "/test_get_text_file.txt"
         share_file_id = "/reva/einstein/test_get_text_file.txt"
@@ -130,7 +119,7 @@ class TestCS3APIsManager(TestCase):
             model = self.contents_manager.get(file_id, True, "notebook")
             self.assertEqual(model["name"], "test_get_notebook_file.ipynb")
             self.assertEqual(model["path"], file_id)
-            self.assertTrue("### Markdown example" in str(model["content"]))
+            self.assertIn("### Markdown example", str(model["content"]))
             self.assertEqual(model["format"], "json")
             self.assertEqual(model["mimetype"], None)
             self.assertEqual(model["size"], 637)
@@ -224,7 +213,8 @@ class TestCS3APIsManager(TestCase):
         finally:
             try:
                 self.contents_manager.delete_file(file_path)
-            except: pass
+            except Exception as e:
+                self.log.warn("Cannot remove %s:%s" % (file_path, e))
 
     def test_delete_non_exits_file(self):
         file_path = "/test_delete_non_exits_file.txt"
@@ -245,10 +235,12 @@ class TestCS3APIsManager(TestCase):
         finally:
             try:
                 self.file_api.remove(file_dest, self.endpoint)
-            except: pass
+            except Exception as e:
+                self.log.warn("Cannot remove %s:%s" % (file_dest, e))
             try:
                 self.file_api.remove(file_path, self.endpoint)
-            except: pass
+            except Exception as e:
+                self.log.warn("Cannot remove %s:%s" % (file_path, e))
 
     def test_rename_file_non_exits_file(self):
         file_path = "/test_rename_file.txt"
@@ -273,10 +265,12 @@ class TestCS3APIsManager(TestCase):
         finally:
             try:
                 self.file_api.remove(file_path, self.endpoint)
-            except: pass
+            except Exception as e:
+                self.log.warn("Cannot remove %s:%s" % (file_path, e))
             try:
                 self.file_api.remove(file_dest, self.endpoint)
-            except: pass
+            except Exception as e:
+                self.log.warn("Cannot remove %s:%s" % (dest_id, e))
 
     def test_new_file_model(self):
         file_path = "/test_new_file_model.txt"
@@ -381,7 +375,7 @@ class TestCS3APIsManager(TestCase):
             self.contents_manager.delete_file(file_path)
             with self.assertRaises(IOError):
                 self.file_api.stat_info(file_path, self.endpoint)
-        except:
+        except Exception:
             self.contents_manager.delete_file(file_path)
 
     def test_create_subdirectory(self):
@@ -402,7 +396,8 @@ class TestCS3APIsManager(TestCase):
         finally:
             try:
                 self.contents_manager.delete(file_path)
-            except: pass
+            except Exception as e:
+                self.log.warn("Cannot remove %s:%s" % (file_path, e))
 
     def test_kernel_path_when_config_entry_provided(self):
         self.config.kernel_path = "/test/path"

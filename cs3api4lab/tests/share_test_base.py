@@ -1,9 +1,17 @@
 import random
 import string
-from cs3api4lab.tests.extensions import *
+
+from cs3api4lab.api.cs3_file_api import Cs3FileApi
+from cs3api4lab.api.cs3_ocm_share_api import Cs3OcmShareApi
+from cs3api4lab.api.cs3_share_api import Cs3ShareApi
+from cs3api4lab.api.share_api_facade import ShareAPIFacade
+from cs3api4lab.api.storage_api import StorageApi
+from cs3api4lab.tests.extensions import ExtCs3FileApi, ExtCs3ShareApi, ExtCs3OcmShareApi, ExtStorageApi, \
+    ExtCs3ShareApiFacade, Cs3ConfigManager, ExtAuthenticator
 from traitlets.config import LoggingConfigurable
 import cs3.rpc.v1beta1.code_pb2 as cs3code
 from collections import namedtuple
+
 
 class ShareTestBase:
     storage_id = '123e4567-e89b-12d3-a456-426655440000'
@@ -88,16 +96,18 @@ class ShareTestBase:
                                        ocm_receiver_idp,
                                        ocm_receiver_idp,
                                        self.storage_id, file_path)
-        if user == 'marie':
+        elif user == 'marie':
             return self.marie_ocm_share_api.create(ocm_receiver_id,
                                                    ocm_receiver_idp,
                                                    ocm_receiver_idp,
                                                    self.storage_id, file_path)
-        if user == 'richard':
+        elif user == 'richard':
             return self.richard_ocm_share_api.create(ocm_receiver_id,
                                                      ocm_receiver_idp,
                                                      ocm_receiver_idp,
                                                      self.storage_id, file_path)
+        else:
+            raise Exception("Invalid user")
 
     def create_share(self, user, receiver_id, receiver_idp, file_path):
         self.create_test_file(user, file_path)
@@ -108,20 +118,22 @@ class ShareTestBase:
                                          receiver_idp,
                                          self.receiver_role,
                                          self.receiver_grantee_type)
-        if user == 'marie':
+        elif user == 'marie':
             return self.marie_share_api.create(self.storage_id,
                                                file_path,
                                                receiver_id,
                                                receiver_idp,
                                                self.receiver_role,
                                                self.receiver_grantee_type)
-        if user == 'richard':
+        elif user == 'richard':
             return self.richard_share_api.create(self.storage_id,
                                                  file_path,
                                                  receiver_id,
                                                  receiver_idp,
                                                  self.receiver_role,
                                                  self.receiver_grantee_type)
+        else:
+            raise Exception("Invalid user")
 
     def create_container_share(self, user, receiver_id, receiver_idp, container_path):
         self.create_test_container(user, container_path)
@@ -132,20 +144,22 @@ class ShareTestBase:
                                          receiver_idp,
                                          self.receiver_role,
                                          self.receiver_grantee_type)
-        if user == 'marie':
+        elif user == 'marie':
             return self.marie_share_api.create(self.storage_id,
                                                container_path,
                                                receiver_id,
                                                receiver_idp,
                                                self.receiver_role,
                                                self.receiver_grantee_type)
-        if user == 'richard':
+        elif user == 'richard':
             return self.richard_share_api.create(self.storage_id,
                                                  container_path,
                                                  receiver_id,
                                                  receiver_idp,
                                                  self.receiver_role,
                                                  self.receiver_grantee_type)
+        else:
+            raise Exception("Invalid user")
 
     def clear_locks_on_file(self, file, endpoint='/'):
         metadata = self.storage_api.get_metadata(file, endpoint)
@@ -156,48 +170,58 @@ class ShareTestBase:
     def remove_test_share(self, user, share_id):
         if user == 'einstein':
             self.share_api.remove(share_id)
-        if user == 'marie':
+        elif user == 'marie':
             self.marie_share_api.remove(share_id)
-        if user == 'richard':
+        elif user == 'richard':
             self.richard_share_api.remove(share_id)
+        else:
+            raise Exception("Invalid user")
 
     def remove_test_ocm_share(self, user, share_id):
         if user == 'einstein':
             self.ocm_api.remove(share_id)
-        if user == 'marie':
+        elif user == 'marie':
             self.marie_ocm_share_api.remove(share_id)
-        if user == 'richard':
+        elif user == 'richard':
             self.richard_ocm_share_api.remove(share_id)
+        else:
+            raise Exception("Invalid user")
 
     def create_test_file(self, user, file_path):
         if user == 'einstein':
             self.file_api.write_file(file_path,
                                      self.content,
                                      self.storage_id)
-        if user == 'marie':
+        elif user == 'marie':
             self.marie_file_api.write_file(file_path,
                                            self.content,
                                            self.storage_id)
-        if user == 'richard':
+        elif user == 'richard':
             self.richard_file_api.write_file(file_path,
                                              self.content,
                                              self.storage_id)
+        else:
+            raise Exception("Invalid user")
 
     def create_test_container(self, user, container_path):
         if user == 'einstein':
             self.file_api.create_directory(container_path)
-        if user == 'marie':
+        elif user == 'marie':
             self.marie_file_api.create_directory(container_path)
-        if user == 'richard':
+        elif user == 'richard':
             self.richard_file_api.create_directory(container_path)
+        else:
+            raise Exception("Invalid user")
 
     def remove_test_file(self, user, file_path):
         if user == 'einstein':
             self.file_api.remove(file_path, self.storage_id)
-        if user == 'marie':
+        elif user == 'marie':
             self.marie_file_api.remove(file_path, self.storage_id)
-        if user == 'richard':
+        elif user == 'richard':
             self.richard_file_api.remove(file_path, self.storage_id)
+        else:
+            raise Exception("Invalid user")
 
     def get_random_suffix(self):
         return '-' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
@@ -218,12 +242,14 @@ class ShareTestBase:
         if user == 'einstein':
             share_api = self.share_api
             storage = self.storage_api
-        if user == 'marie':
+        elif user == 'marie':
             share_api = self.marie_share_api
             storage = self.marie_storage_api
-        if user == 'richard':
+        elif user == 'richard':
             share_api = self.richard_share_api
             storage = self.richard_storage_api
+        else:
+            raise Exception("Incorrect user")
 
         stat = storage.stat(file_path)
         if stat.status.code == cs3code.CODE_NOT_FOUND or stat.status.code == cs3code.CODE_INTERNAL:

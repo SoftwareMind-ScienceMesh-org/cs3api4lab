@@ -19,11 +19,12 @@ from cs3api4lab.api.cs3_file_api import Cs3FileApi
 from cs3api4lab.auth import check_auth_interceptor
 from cs3api4lab.auth.authenticator import Auth
 from cs3api4lab.utils.file_utils import FileUtils
-from cs3api4lab.common.strings import *
+from cs3api4lab.common.strings import State, Grantee, Role
 from cs3api4lab.config.config_manager import Cs3ConfigManager
 import cs3.gateway.v1beta1.gateway_api_pb2_grpc as grpc_gateway
 from cs3api4lab.auth.channel_connector import ChannelConnector
-from cs3api4lab.exception.exceptions import *
+from cs3api4lab.exception.exceptions import ShareError, ShareAlreadyExistsError, ShareNotFoundError
+from cs3api4lab.exception.exceptions import InvalidTypeError, ResourceNotFoundError
 from cs3api4lab.utils.share_utils import ShareUtils
 
 import google.protobuf.field_mask_pb2 as field_masks
@@ -67,7 +68,7 @@ class Cs3ShareApi:
             self.log.error("Share already exists: " + endpoint + file_path + " for " + idp + ":" + grantee)
             raise ShareAlreadyExistsError("Share already exists for file: " + file_path)
         else:
-            self._handle_error(create_response)
+            return self._handle_error(create_response)
 
     def list(self, file_path=None):
         list_request = self._share_filter_by_resource(file_path)
@@ -151,8 +152,8 @@ class Cs3ShareApi:
             self.log.debug(f"Retrieved received shares for user {self.config.client_id}:\n{list_response}")
             return list_response
         else:
-            self.log.error("Error retrieving received shares for user: " + self.config.client_id)
-            self._handle_error(list_response)
+            self.log.error("Error retrieving received shares for user:" + self.config.client_id)
+            return self._handle_error(list_response)
 
     def _share_filter_by_resource(self, path):
         if path is None:
@@ -235,6 +236,7 @@ class Cs3ShareApi:
             return Grantee.USER
         if share.grantee.type == storage_resources.GranteeType.GRANTEE_TYPE_GROUP:
             return Grantee.GROUP
+        raise InvalidTypeError("Incorrect grantee type " + str(share.grantee.type))
 
     def update_received(self, share_id, state=State.ACCEPTED):
         share_state = ShareUtils.map_state(state)
@@ -264,7 +266,7 @@ class Cs3ShareApi:
             self.log.info(update_response)
         else:
             self.log.error("Error updating received share: " + share_id + " with state " + state)
-            self._handle_error(update_response)
+            return self._handle_error(update_response)
         return update_response.share
 
     def _resolve_share_permissions(self, share):
@@ -284,7 +286,7 @@ class Cs3ShareApi:
         elif stat_response.status.code == cs3_code.CODE_NOT_FOUND:
             raise ResourceNotFoundError(f"Resource {file_id} not found")
         else:
-            self._handle_error(stat_response)
+            return self._handle_error(stat_response)
 
     def _get_share_grant(self, grantee_type, share_permissions, idp, grantee):
         user_id = identity_res.UserId(idp=idp, opaque_id=grantee)
