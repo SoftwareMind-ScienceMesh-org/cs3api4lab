@@ -21,8 +21,9 @@ from cs3api4lab.api.share_api_facade import ShareAPIFacade
 from cs3api4lab.utils.model_utils import ModelUtils
 from cs3api4lab.utils.asyncify import asyncify
 from cs3api4lab.api.storage_api import StorageApi
+from cs3api4lab.exception.exceptions import ResourceNotFoundError, ResourceAlreadyExists
+from traitlets.config import HasTraits
 from cs3api4lab.locks.factory import LockApiFactory
-from cs3api4lab.exception.exceptions import ResourceNotFoundError
 
 """
 This class redefines default upstream ContentsManager.
@@ -35,9 +36,11 @@ class CS3APIsManager(ContentsManager):
     cs3_config = None
     log = None
     file_api = None
+    allow_hidden = True
 
     def __init__(self, parent, log, **kwargs):
         super().__init__(**kwargs)
+        HasTraits.__init__(self, **kwargs)
         self.cs3_config = Cs3ConfigManager.get_config()
         self.log = log
         self.file_api = Cs3FileApi(self.log)
@@ -99,15 +102,8 @@ class CS3APIsManager(ContentsManager):
             Whether the file exists.
         """
         path = FileUtils.normalize_path(path)
-        try:
-            file_info = self.file_api.stat_info(path, self.cs3_config.endpoint)
-        except FileNotFoundError:
-            return False
-
-        if file_info['type'] == resource_types.RESOURCE_TYPE_FILE:
-            return True
-
-        return False
+        stat = self.storage_api.stat(path)
+        return stat.status.code == cs3code.CODE_OK and stat.info.type == resource_types.RESOURCE_TYPE_FILE
 
     # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
     def get(self, path, content=True, type=None, format=None):
@@ -115,31 +111,49 @@ class CS3APIsManager(ContentsManager):
         path = FileUtils.normalize_path(path)
         model = None
 
+        file_exists = self.file_exists(path)
+        dir_exists = self.dir_exists(path)
+        self._validate_type_and_format(path, file_exists, dir_exists, type, format)
+        self._validate_exists(file_exists, dir_exists, path)
+
         if type:
-            if type == 'directory' and self._is_dir(path):
+            if type == 'directory' and dir_exists:
                 model = self._dir_model(path, content=content)
-            elif type == 'file' and self.file_exists(path):
+            elif type == 'file' and file_exists:
                 model = self._file_model(path, content=content, format=format)
-            elif type == 'notebook' or (type is None and path.endswith('.ipynb')):
-                try:   #this needs to be fixed/refactored in a separate issue
-                    model = self._notebook_model(path, content=content)
-                except Exception:
-                    self.log.info("Notebook does not exist %s", path)
+            elif type == 'notebook' and self.file_exists:
+                model = self._notebook_model(path, content=content)
         else:
-            if path.endswith('.ipynb'):
-                try:   #this needs to be fixed/refactored in a separate issue
+            if file_exists:
+                if path.endswith('.ipynb'):
                     model = self._notebook_model(path, content=content)
-                except Exception:
-                    self.log.info("Notebook does not exist %s", path)
-            elif self.file_exists(path):
-                model = self._file_model(path, content=content, format=format)
-            elif self._is_dir(path):
+                else:
+                    model = self._file_model(path, content=content, format=format)
+            elif dir_exists:
                 model = self._dir_model(path, content=content)
 
         if model:
             return model
 
         raise web.HTTPError(404, u'Resource %s does not exist' % path)
+
+    def _validate_type_and_format(self, path, file_exists, dir_exists, type, format):
+        error_msg = None
+
+        if type == 'file':
+            if format == 'text' and not path.endswith('.txt') or format == 'notebook' and not path.endswith('.ipynb'):
+                error_msg = 'Incorrect file format'
+
+        if type == 'file' and dir_exists:
+            error_msg = '%s is a directory, not a file' % path
+        if type == 'directory' and file_exists:
+            error_msg = '%s is not a directory' % path
+        if error_msg:
+            raise web.HTTPError(400, error_msg)
+
+    def _validate_exists(self, file_exists, dir_exists, path):
+        if not file_exists and not dir_exists:
+            raise web.HTTPError(404, u'Resource %s does not exist' % path)
 
     @asyncify
     def get_kernel_path(self, path, model=None):
@@ -192,8 +206,9 @@ class CS3APIsManager(ContentsManager):
             if model['type'] == 'notebook':
 
                 nb = nbformat.from_dict(model['content'])
+                format = model['format'] if 'format' in model else 'json'
                 self.check_and_sign(nb, path)
-                self._save_notebook(path, nb, model['format'])
+                self._save_notebook(path, nb, format)
 
                 # ToDo: Implements save to checkpoint
                 # if not self.checkpoints.list_checkpoints(path):
@@ -263,13 +278,14 @@ class CS3APIsManager(ContentsManager):
 
         try:
             self.file_api.move(old_path, new_path, self.cs3_config.endpoint)
+        except ResourceAlreadyExists:
+            raise web.HTTPError(409, u'Resource already exists: %s' % old_path)
         except Exception as e:
             self.log.error(u'Error renaming file: %s %s', old_path, e)
             raise web.HTTPError(500, u'Error renaming file: %s %s' % (old_path, e))
 
     # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
     def new(self, model=None, path=''):
-
         path = path.strip('/')
         path = FileUtils.normalize_path(path)
         # self._check_write_permissions(path)
@@ -279,6 +295,7 @@ class CS3APIsManager(ContentsManager):
 
         if path.endswith('.ipynb'):
             model.setdefault('type', 'notebook')
+            model.setdefault('format', 'json')
         else:
             model.setdefault('type', 'file')
 
@@ -351,13 +368,15 @@ class CS3APIsManager(ContentsManager):
             self.log.info('File % does not exists' % path)
 
         if file_info:
-            model = ModelUtils.update_file_model(ModelUtils.create_empty_file_model(path), file_info)
+            model = ModelUtils.update_file_model(ModelUtils.create_empty_file_model(path),
+                                                 self.cs3_config.mount_dir,
+                                                 file_info)
 
         model['writable'] = self._is_editor(file_info)
         if content:
             content = self._read_file(file_info, format)
             if format is None:
-                format = "text"
+                format = "text" if path.endswith('.txt') else 'base64'
 
             if model['mimetype'] is None:
                 default_mime = {
@@ -377,7 +396,7 @@ class CS3APIsManager(ContentsManager):
     def _notebook_model(self, path, content):
         file_info = self.file_api.stat_info(path, self.cs3_config.endpoint)
 
-        model = ModelUtils.update_file_model(ModelUtils.create_empty_file_model(path), file_info)
+        model = ModelUtils.update_file_model(ModelUtils.create_empty_file_model(path), self.cs3_config.mount_dir, file_info)
         model['type'] = 'notebook'
 
         if content:
@@ -420,7 +439,7 @@ class CS3APIsManager(ContentsManager):
     # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
     def _save_notebook(self, path, nb, format):
 
-        nb_content = nbformat.writes(nb)
+        nb_content = nbformat.writes(nb).encode()
         try:
             self.file_api.write_file(path, nb_content, self.cs3_config.endpoint, format)
 

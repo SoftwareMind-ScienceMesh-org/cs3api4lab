@@ -116,7 +116,7 @@ jobs:
           sleep 3
           if docker logs revad 2>&1 | grep error; then docker restart revad; fi
       - name: Run tests
-        run:  python -m unittest tests/cs3api4lab/tests/${{ matrix.test-files }}
+        run:  python -m pytest --suppress-no-test-exit-code tests/cs3api4lab/tests/${{ matrix.test-files }}
       - name: Reva logs
         if: success() || failure()
         run: |
