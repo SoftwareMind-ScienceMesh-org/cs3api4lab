@@ -4,6 +4,7 @@ from cs3api4lab.config.config_manager import Cs3ConfigManager
 from cs3api4lab.api.cs3_file_api import Cs3FileApi
 from traitlets.config import LoggingConfigurable
 from cs3api4lab.exception.exceptions import ResourceNotFoundError
+import posixpath
 
 
 class TestCs3FileApi(TestCase):
@@ -12,33 +13,33 @@ class TestCs3FileApi(TestCase):
 
     def setUp(self):
         self.log = LoggingConfigurable().log
-        config = Cs3ConfigManager.get_config()
-        self.client_id = config.client_id
-        self.endpoint = config.endpoint
+        self.config = Cs3ConfigManager.get_config()
+        self.client_id = self.config.client_id
+        self.endpoint = self.config.endpoint
         self.storage = Cs3FileApi(self.log)
 
     def test_stat(self):
-        file_id = "/test.txt"
+        file_path = posixpath.join(self.config.mount_dir, "test.txt")
         message = "Lorem ipsum dolor sit amet..."
         try:
-            self.storage.write_file(file_id, message, self.endpoint)
-            stat_info = self.storage.stat_info(file_id, self.endpoint)
+            self.storage.write_file(file_path, message, self.endpoint)
+            stat_info = self.storage.stat_info(file_path, self.endpoint)
             self.assertIsInstance(stat_info, dict)
             self.assertTrue('mtime' in stat_info, 'Missing mtime from stat output')
             self.assertTrue('size' in stat_info, 'Missing size from stat output')
         finally:
-            self.storage.remove(file_id, self.endpoint)
+            self.storage.remove(file_path, self.endpoint)
 
     def test_stat_no_file(self):
+        file_path = posixpath.join(self.config.mount_dir, 'hopefullynotexisting.txt')
         with self.assertRaises(FileNotFoundError) as cm:
-            self.storage.stat_info('/hopefullynotexisting', self.endpoint)
-        self.assertEqual(cm.exception.args[0], 'path not found when statting, file /hopefullynotexisting')
+            self.storage.stat_info(file_path, self.endpoint)
+        self.assertEqual(cm.exception.args[0], 'path not found when statting, file %s' % file_path)
 
     def test_read_file(self):
-
         content_to_write = b'bla\n'
         content_check = 'bla\n'
-        file_path = "/test_read.txt"
+        file_path = posixpath.join(self.config.mount_dir, "test_read.txt")
         try:
             self.storage.write_file(file_path, content_to_write, self.endpoint)
             stat = self.storage.stat_info(file_path, self.endpoint)
@@ -54,7 +55,7 @@ class TestCs3FileApi(TestCase):
     def test_read_file_by_id(self):
         content_to_write = b'bla_by_id\n'
         content_to_check = 'bla_by_id\n'
-        file_path = "/test_read_by_id.txt"
+        file_path = posixpath.join(self.config.mount_dir, "test_read_by_id.txt")
         try:
             self.storage.write_file(file_path, content_to_write, self.endpoint)
             stat = self.storage.stat_info(file_path)
@@ -73,7 +74,7 @@ class TestCs3FileApi(TestCase):
     def test_read_file_by_share_path(self):
         content_to_write = b'bla_by_share\n'
         content_to_check = 'bla_by_share\n'
-        file_path = "/test_read_by_share_path.txt"
+        file_path = posixpath.join(self.config.mount_dir, "test_read_by_share_path.txt")
         try:
             self.storage.write_file(file_path, content_to_write, self.endpoint)
             stat = self.storage.stat_info(file_path)
@@ -90,50 +91,51 @@ class TestCs3FileApi(TestCase):
 
     def test_write_file(self):
         buffer = b"Testu form cs3 Api"
-        file_id = "/testfile.txt"
+        file_path = posixpath.join(self.config.mount_dir, "testfile.txt")
         try:
-            self.storage.write_file(file_id, buffer, self.endpoint)
-            stat_info = self.storage.stat_info(file_id, self.endpoint)
+            self.storage.write_file(file_path, buffer, self.endpoint)
+            stat_info = self.storage.stat_info(file_path, self.endpoint)
             self.assertIsInstance(stat_info, dict)
         finally:
-            self.storage.remove(file_id, self.endpoint)
+            self.storage.remove(file_path, self.endpoint)
 
     def test_write_empty_file(self):
         buffer = b""
-        file_id = "/zero_test_file.txt"
+        file_path = posixpath.join(self.config.mount_dir, "zero_test_file.txt")
         try:
-            self.storage.write_file(file_id, buffer, self.endpoint)
-            stat_info = self.storage.stat_info(file_id, self.endpoint)
+            self.storage.write_file(file_path, buffer, self.endpoint)
+            stat_info = self.storage.stat_info(file_path, self.endpoint)
             self.assertIsInstance(stat_info, dict)
         finally:
-            self.storage.remove(file_id, self.endpoint)
+            self.storage.remove(file_path, self.endpoint)
 
     def test_remove_file(self):
-        file_id = "/file_to_remove.txt"
+        file_path = posixpath.join(self.config.mount_dir, "file_to_remove.txt")
         buffer = b"ebe5tresbsrdthbrdhvdtr"
         try:
-            self.storage.write_file(file_id, buffer, self.endpoint)
-            self.storage.remove(file_id, self.endpoint)
+            self.storage.write_file(file_path, buffer, self.endpoint)
+            self.storage.remove(file_path, self.endpoint)
             with self.assertRaises(IOError):
-                self.storage.stat_info(file_id, self.endpoint)
+                self.storage.stat_info(file_path, self.endpoint)
         except:
-            self.storage.remove(file_id, self.endpoint)
+            self.storage.remove(file_path, self.endpoint)
 
     def test_read_directory(self):
-        file_id = "/"
-        read_directory = self.storage.read_directory(file_id, self.endpoint)
+        dir_path = posixpath.join(self.config.mount_dir, "/")
+        read_directory = self.storage.read_directory(dir_path, self.endpoint)
         self.assertIsNotNone(read_directory[0])
         self.assertIsNotNone(read_directory[0].path)
 
     def test_read_directory_no_dir(self):
+        dir_path = posixpath.join(self.config.mount_dir, 'no_such_dir')
         with self.assertRaises(ResourceNotFoundError) as cm:
-            self.storage.read_directory('/no_such_dir', self.endpoint)
-        self.assertEqual(cm.exception.args[0], 'directory /no_such_dir not found')
+            self.storage.read_directory(dir_path, self.endpoint)
+        self.assertIn('directory %s not found' % dir_path, cm.exception.args[0])
 
     def test_move_file(self):
-        src_id = "/file_to_rename.txt"
+        src_id = posixpath.join(self.config.mount_dir, "file_to_rename.txt")
         buffer = b"ebe5tresbsrdthbrdhvdtr"
-        dest_id = "/file_after_rename.txt"
+        dest_id = posixpath.join(self.config.mount_dir, "file_after_rename.txt")
         try:
             self.storage.remove(dest_id)
         except:
@@ -153,8 +155,8 @@ class TestCs3FileApi(TestCase):
             except: pass
 
     def test_move_no_file(self):
-        src_id = "/no_such_file.txt"
-        dest_id = "/file_after_rename.txt"
+        src_id = posixpath.join(self.config.mount_dir, "no_such_file.txt")
+        dest_id = posixpath.join(self.config.mount_dir, "file_after_rename.txt")
 
         with self.assertRaises(IOError) as cm:
             self.storage.move(src_id, dest_id)
@@ -162,9 +164,9 @@ class TestCs3FileApi(TestCase):
 
     def test_move_file_already_exists(self):
         try:
-            source_path = "/file_to_rename.txt"
+            source_path = posixpath.join(self.config.mount_dir, "file_to_rename.txt")
             buffer = b"ebe5tresbsrdthbrdhvdtr"
-            destination_path = "/file_after_rename.txt"
+            destination_path = posixpath.join(self.config.mount_dir, "file_after_rename.txt")
             self.storage.write_file(source_path, buffer, self.endpoint)
             self.storage.write_file(destination_path, buffer, self.endpoint)
 
