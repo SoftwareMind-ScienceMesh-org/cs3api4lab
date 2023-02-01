@@ -92,18 +92,8 @@ class CS3APIsManager(ContentsManager):
             Whether the file exists.
         """
         path = FileUtils.remove_drives_names(path)
-        parent_path = self._get_parent_path(path)
-        try:
-            cs3_container = self.file_api.read_directory(parent_path, self.cs3_config.endpoint)
-        except Exception as ex:
-            self.log.error(u'Error while reading container: %s %s', path, ex, exc_info=True)
-            raise web.HTTPError(500, u'Unexpected error while reading container: %s %s' % (path, ex))
-
-        for cs3_model in cs3_container:
-            if cs3_model.type == resource_types.RESOURCE_TYPE_FILE and cs3_model.path == path:
-                return True
-
-        return False
+        stat = self.storage_api.stat(path)
+        return stat.status.code == cs3code.CODE_OK and stat.info.type == resource_types.RESOURCE_TYPE_FILE
 
     # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
     def get(self, path, content=True, type=None, format=None):
