@@ -10,7 +10,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
     einstein_idp = 'cernbox.cern.ch'
     richard_id = '932b4540-8d16-481e-8ef4-588e4b6b151c'
     richard_idp = 'example.org'
-    file_path = '/home/test.txt'
+    file_path = '/test.txt'
     share_id = None
     ocm_share_id = None
     ocm_file_name = None
@@ -58,7 +58,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
 
     def test_create(self):
         try:
-            self.file_name = self.file_path + "_test_create"
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + "_test_create")
             self.create_test_file('einstein', self.file_name)
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
@@ -73,7 +73,9 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
 
     def test_create_share_already_exists(self):
         try:
-            self.file_name = self.file_path + "_test_create_share_already_exists"
+            # self.file_name = posixpath.join(self.config.mount_dir, self.file_path + "_test_create_share_already_exists")
+            self.file_name = posixpath.join(self.config.mount_dir, "test_create_share_already_exists")
+            # assert self.file_name.startswith(self.config.mount_dir)
             created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
@@ -94,7 +96,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
                 self.remove_test_file('richard', self.file_name)
 
     def test_create_share_file_doesnt_exist(self):
-        self.file_name = self.file_path + "_test_create_share_file_doesnt_exist"
+        self.file_name = posixpath.join(self.config.mount_dir, self.file_path + "_test_create_share_file_doesnt_exist")
 
         with self.assertRaises(ResourceNotFoundError) as context:
             self.richard_share_api.create(self.storage_id, self.file_name, self.einstein_id, self.einstein_idp,
@@ -110,7 +112,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
         """
 
         try:
-            self.file_name = self.file_path + "_test_get_share"
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + "_test_get_share")
             self.create_test_file('einstein', self.file_name)
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
@@ -152,7 +154,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
         """
 
         try:
-            self.file_name = self.file_path + "_test_remove"
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + "_test_remove")
             self.create_test_file('einstein', self.file_name)
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
@@ -169,14 +171,15 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
 
     @skip('https://github.com/cs3org/reva/issues/2847')
     def test_remove_no_share(self):
+        file_path = posixpath.join(self.config.mount_dir, "no_such_id")
         with self.assertRaises(ShareNotFoundError) as cm:
-            self.share_api.remove("no_such_id")
+            self.share_api.remove(file_path)
         self.assertEqual(cm.exception.args[0], 'path not found when statting, file /hopefullynotexisting')
 
 
     def test_list_received(self):
         try:
-            self.file_name = self.file_path + "_test_list_received"
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + "_test_list_received")
             created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
             self.share_id = created_share['opaque_id']
             share_list = self.share_api.list_received()
@@ -190,7 +193,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
 
     def test_update_received_share(self):
         try:
-            self.file_name = self.file_path + "_test_update_received_share"
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + "_test_update_received_share")
             created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
@@ -212,7 +215,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
 
     def test_read_share(self):
         try:
-            self.file_name = self.file_path + "_test_read_share"
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + "_test_read_share")
             created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
@@ -234,7 +237,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
 
     def test_write_share(self):
         try:
-            self.file_name = self.file_path + "test_write_share"
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + "test_write_share")
             created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
@@ -257,7 +260,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
 
     def test_read_write_file_in_shared_container(self):
         try:
-            self.container_name = '/home/test_container' + "test_read_write_file_in_shared_container"
+            self.container_name = posixpath.join(self.config.mount_dir, "/test_read_write_file_in_shared_container")
             created_share = self.create_container_share('richard', self.einstein_id, self.einstein_idp, self.container_name)
             self.share_id = created_share['opaque_id']
             file_name = '/test.txt' + self.get_random_suffix()
@@ -289,15 +292,15 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
 
     def test_create_file_and_dir_in_shared_container(self):
         try:
-            self.container_name = '/home/test_container' + "_test_create_file_and_dir_in_shared_container"
+            self.container_name = posixpath.join(self.config.mount_dir, "/container_test_create_in_shared_container")
             created_share = self.create_container_share('richard', self.einstein_id, self.einstein_idp, self.container_name)
             self.share_id = created_share['opaque_id']
             self.share_api.update_received(self.share_id, 'ACCEPTED')
 
             inner_container = '/test_container' + "_test_create_file_and_dir_in_shared_container_inner_container"
-            file_name = '/test.txt' + "_test_create_file_and_dir_in_shared_container_file_naem"
+            file_name = '/test.txt' + "_test_create_file_and_dir_in_shared_container_file_name"
 
-            received_container_path = '/home/MyShares/' + self.container_name.split('/')[-1]
+            received_container_path = posixpath.join(self.config.mount_dir, "MyShares", self.container_name.split('/')[-1])
             self.create_test_container('einstein', received_container_path + inner_container)
             self.create_test_file('einstein', received_container_path + inner_container + file_name)
 

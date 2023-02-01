@@ -3,7 +3,7 @@
     "reva_host": "127.0.0.1:19000",
     "auth_token_validity": "3600",
     "endpoint": "/",
-    "mount_dir": "/home",
+    "mount_dir": "/home/test123",
     "home_dir": "",
     "root_dir_list": ["/home", "/reva"],
     "chunk_size": "4194304",
