@@ -260,7 +260,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
 
     def test_read_write_file_in_shared_container(self):
         try:
-            self.container_name = posixpath.join(self.config.mount_dir, "/test_read_write_file_in_shared_container")
+            self.container_name = posixpath.join(self.config.mount_dir, "test_read_write_file_in_shared_container")
             created_share = self.create_container_share('richard', self.einstein_id, self.einstein_idp, self.container_name)
             self.share_id = created_share['opaque_id']
             file_name = '/test.txt' + self.get_random_suffix()
@@ -292,7 +292,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
 
     def test_create_file_and_dir_in_shared_container(self):
         try:
-            self.container_name = posixpath.join(self.config.mount_dir, "/container_test_create_in_shared_container")
+            self.container_name = posixpath.join(self.config.mount_dir, "container_test_create_in_shared_container")
             created_share = self.create_container_share('richard', self.einstein_id, self.einstein_idp, self.container_name)
             self.share_id = created_share['opaque_id']
             self.share_api.update_received(self.share_id, 'ACCEPTED')
@@ -300,7 +300,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
             inner_container = '/test_container' + "_test_create_file_and_dir_in_shared_container_inner_container"
             file_name = '/test.txt' + "_test_create_file_and_dir_in_shared_container_file_name"
 
-            received_container_path = posixpath.join(self.config.mount_dir, "MyShares", self.container_name.split('/')[-1])
+            received_container_path = posixpath.join("/home/MyShares", self.container_name.split('/')[-1])
             self.create_test_container('einstein', received_container_path + inner_container)
             self.create_test_file('einstein', received_container_path + inner_container + file_name)
 

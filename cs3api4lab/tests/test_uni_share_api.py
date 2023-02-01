@@ -10,7 +10,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
     marie_idp = 'cesnet.cz'
     richard_id = '932b4540-8d16-481e-8ef4-588e4b6b151c'
     richard_idp = 'example.org'
-    file_path = '/test.txt'
+    file_path = 'test.txt'
     share_id = None
     ocm_share_id = None
     ocm_file_name = None

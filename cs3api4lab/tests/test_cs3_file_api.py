@@ -19,7 +19,7 @@ class TestCs3FileApi(TestCase):
         self.storage = Cs3FileApi(self.log)
 
     def test_stat(self):
-        file_path = posixpath.join(self.config.mount_dir, "/test.txt")
+        file_path = posixpath.join(self.config.mount_dir, "test.txt")
         message = "Lorem ipsum dolor sit amet..."
         try:
             self.storage.write_file(file_path, message, self.endpoint)
@@ -31,15 +31,15 @@ class TestCs3FileApi(TestCase):
             self.storage.remove(file_path, self.endpoint)
 
     def test_stat_no_file(self):
-        file_path = posixpath.join(self.config.mount_dir, '/hopefullynotexisting.txt')
+        file_path = posixpath.join(self.config.mount_dir, 'hopefullynotexisting.txt')
         with self.assertRaises(FileNotFoundError) as cm:
             self.storage.stat_info(file_path, self.endpoint)
-        self.assertEqual(cm.exception.args[0], 'path not found when statting, file /hopefullynotexisting.txt')
+        self.assertEqual(cm.exception.args[0], 'path not found when statting, file %s' % file_path)
 
     def test_read_file(self):
         content_to_write = b'bla\n'
         content_check = 'bla\n'
-        file_path = posixpath.join(self.config.mount_dir, "/test_read.txt")
+        file_path = posixpath.join(self.config.mount_dir, "test_read.txt")
         try:
             self.storage.write_file(file_path, content_to_write, self.endpoint)
             content = ''
@@ -54,7 +54,7 @@ class TestCs3FileApi(TestCase):
     def test_read_file_by_id(self):
         content_to_write = b'bla_by_id\n'
         content_to_check = 'bla_by_id\n'
-        file_path = posixpath.join(self.config.mount_dir, "/test_read_by_id.txt")
+        file_path = posixpath.join(self.config.mount_dir, "test_read_by_id.txt")
         try:
             self.storage.write_file(file_path, content_to_write, self.endpoint)
             stat = self.storage.stat_info(file_path)
@@ -73,7 +73,7 @@ class TestCs3FileApi(TestCase):
     def test_read_file_by_share_path(self):
         content_to_write = b'bla_by_share\n'
         content_to_check = 'bla_by_share\n'
-        file_path = posixpath.join(self.config.mount_dir, "/test_read_by_share_path.txt")
+        file_path = posixpath.join(self.config.mount_dir, "test_read_by_share_path.txt")
         try:
             self.storage.write_file(file_path, content_to_write, self.endpoint)
             stat = self.storage.stat_info(file_path)
@@ -89,7 +89,7 @@ class TestCs3FileApi(TestCase):
             self.storage.remove(file_path, self.endpoint)
 
     def test_read_file_no_file(self):
-        file_path = posixpath.join(self.config.mount_dir, "/test_read_no_existing_file.txt")
+        file_path = posixpath.join(self.config.mount_dir, "test_read_no_existing_file.txt")
         content = ''
         with self.assertRaises(IOError, msg='No such file or directory'):
             for chunk in self.storage.read_file(file_path, self.endpoint):
@@ -97,7 +97,7 @@ class TestCs3FileApi(TestCase):
 
     def test_write_file(self):
         buffer = b"Testu form cs3 Api"
-        file_path = posixpath.join(self.config.mount_dir, "/testfile.txt")
+        file_path = posixpath.join(self.config.mount_dir, "testfile.txt")
         try:
             self.storage.write_file(file_path, buffer, self.endpoint)
             stat_info = self.storage.stat_info(file_path, self.endpoint)
@@ -107,7 +107,7 @@ class TestCs3FileApi(TestCase):
 
     def test_write_empty_file(self):
         buffer = b""
-        file_path = posixpath.join(self.config.mount_dir, "/zero_test_file.txt")
+        file_path = posixpath.join(self.config.mount_dir, "zero_test_file.txt")
         try:
             self.storage.write_file(file_path, buffer, self.endpoint)
             stat_info = self.storage.stat_info(file_path, self.endpoint)
@@ -116,7 +116,7 @@ class TestCs3FileApi(TestCase):
             self.storage.remove(file_path, self.endpoint)
 
     def test_remove_file(self):
-        file_path = posixpath.join(self.config.mount_dir, "/file_to_remove.txt")
+        file_path = posixpath.join(self.config.mount_dir, "file_to_remove.txt")
         buffer = b"ebe5tresbsrdthbrdhvdtr"
         try:
             self.storage.write_file(file_path, buffer, self.endpoint)
@@ -133,15 +133,15 @@ class TestCs3FileApi(TestCase):
         self.assertIsNotNone(read_directory[0].path)
 
     def test_read_directory_no_dir(self):
-        dir_path = posixpath.join(self.config.mount_dir, '/no_such_dir')
+        dir_path = posixpath.join(self.config.mount_dir, 'no_such_dir')
         with self.assertRaises(ResourceNotFoundError) as cm:
             self.storage.read_directory(dir_path, self.endpoint)
-        self.assertEqual(cm.exception.args[0], 'directory /no_such_dir not found')
+        self.assertIn('directory %s not found' % dir_path, cm.exception.args[0])
 
     def test_move_file(self):
-        src_id = posixpath.join(self.config.mount_dir, "/file_to_rename.txt")
+        src_id = posixpath.join(self.config.mount_dir, "file_to_rename.txt")
         buffer = b"ebe5tresbsrdthbrdhvdtr"
-        dest_id = posixpath.join(self.config.mount_dir, "/file_after_rename.txt")
+        dest_id = posixpath.join(self.config.mount_dir, "file_after_rename.txt")
         try:
             self.storage.remove(dest_id)
         except:
@@ -161,8 +161,8 @@ class TestCs3FileApi(TestCase):
             except: pass
 
     def test_move_no_file(self):
-        src_id = posixpath.join(self.config.mount_dir, "/no_such_file.txt")
-        dest_id = posixpath.join(self.config.mount_dir, "/file_after_rename.txt")
+        src_id = posixpath.join(self.config.mount_dir, "no_such_file.txt")
+        dest_id = posixpath.join(self.config.mount_dir, "file_after_rename.txt")
 
         with self.assertRaises(IOError) as cm:
             self.storage.move(src_id, dest_id)
@@ -170,9 +170,9 @@ class TestCs3FileApi(TestCase):
 
     def test_move_file_already_exists(self):
         try:
-            source_path = posixpath.join(self.config.mount_dir, "/file_to_rename.txt")
+            source_path = posixpath.join(self.config.mount_dir, "file_to_rename.txt")
             buffer = b"ebe5tresbsrdthbrdhvdtr"
-            destination_path = posixpath.join(self.config.mount_dir, "/file_after_rename.txt")
+            destination_path = posixpath.join(self.config.mount_dir, "file_after_rename.txt")
             self.storage.write_file(source_path, buffer, self.endpoint)
             self.storage.write_file(destination_path, buffer, self.endpoint)
 
