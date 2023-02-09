@@ -320,7 +320,7 @@ class CS3APIsManager(ContentsManager):
         try:
             file_info = self.file_api.stat_info(path, self.cs3_config.endpoint)
         except Exception as e:
-            self.log.info('File % does not exists' % path)
+            self.log.info('File %s does not exists' % path)
 
         if file_info:
             model = ModelUtils.update_file_model(ModelUtils.create_empty_file_model(path), file_info)
