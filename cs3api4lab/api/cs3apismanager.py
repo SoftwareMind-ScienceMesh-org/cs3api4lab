@@ -343,19 +343,13 @@ class CS3APIsManager(ContentsManager):
 
     @asyncify
     def _file_model(self, path, content, format):
-        file_info = None
-        model = ModelUtils.create_empty_file_model(path)
-        try:
-            file_info = self.file_api.stat_info(path, self.cs3_config.endpoint)
-        except Exception as e:
-            self.log.info('File % does not exists' % path)
+        stat_info = self.file_api.stat_info(path, self.cs3_config.endpoint)
+        if stat_info:
+            model = ModelUtils.update_file_model(ModelUtils.create_empty_file_model(path), stat_info)
 
-        if file_info:
-            model = ModelUtils.update_file_model(ModelUtils.create_empty_file_model(path), file_info)
-
-        model['writable'] = self._is_editor(file_info)
+        model['writable'] = self._is_editor(stat_info)
         if content:
-            content = self._read_file(file_info, format)
+            content = self._read_file(stat_info, format)
             if format is None:
                 format = "text"
 
