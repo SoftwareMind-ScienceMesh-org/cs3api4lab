@@ -15,8 +15,8 @@ class Authenticator:
     token = None
     cs3_stub = None
 
-    def __init__(self, config=None, log=None):
-        self.config = config
+    def __init__(self, cs3_config=None, log=None):
+        self.cs3_config = cs3_config
         self.log = log
         self.channel = ChannelConnector().get_channel()
         self.cs3_stub = cs3gw_grpc.GatewayAPIStub(self.channel)
@@ -41,13 +41,13 @@ class Authenticator:
 
     def raise_401_error(self):
         if self.log is not None:
-            self.log.error('msg="Failed to authenticate" user="%s"' % self.config.client_id)
+            self.log.error('msg="Failed to authenticate" user="%s"' % self.cs3_config.client_id)
         raise web.HTTPError(401, u'Failed to authenticate user', reason="unauthenticated")
 
     def _auth_in_iop(self, client_secret_or_token, login_type="basic"):
 
         auth_req = cs3gw.AuthenticateRequest(type=login_type,
-                                             client_id=self.config.client_id,
+                                             client_id=self.cs3_config.client_id,
                                              client_secret=client_secret_or_token)
         auth_res = self.cs3_stub.Authenticate(auth_req)
 
@@ -69,18 +69,18 @@ class Auth:
     __auth_instance = None
 
     @classmethod
-    def get_authenticator(cls, config=None, log=None): #singletons should be replaced by dependency injection
+    def get_authenticator(cls, cs3_config=None, log=None): #singletons should be replaced by dependency injection
 
         if cls.__auth_instance is None:
 
-            if config is None:
-                config = Cs3ConfigManager().get_config()
+            if cs3_config is None:
+                cs3_config = Cs3ConfigManager().get_cs3_config()
 
             if log is not None:
-                log.info(f"Authenticate with method {config.authenticator_class}")
+                log.info(f"Authenticate with method {cs3_config.authenticator_class}")
 
-            class_name = config.authenticator_class.split('.')[-1]
-            module_name = config.authenticator_class.split(class_name)[0]
+            class_name = cs3_config.authenticator_class.split('.')[-1]
+            module_name = cs3_config.authenticator_class.split(class_name)[0]
             module_name = module_name.rstrip('.')
 
             if class_name == "Authenticator":
@@ -88,7 +88,7 @@ class Auth:
 
             module = importlib.import_module(module_name)
             clazz = getattr(module, class_name)
-            cls.__auth_instance = clazz(config=config, log=log)
+            cls.__auth_instance = clazz(cs3_config=cs3_config, log=log)
 
         return cls.__auth_instance
 

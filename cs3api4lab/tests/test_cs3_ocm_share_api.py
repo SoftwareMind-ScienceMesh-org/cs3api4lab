@@ -9,7 +9,7 @@ from cs3api4lab.exception.exceptions import ResourceNotFoundError, ShareAlreadyE
 @skip
 class TestCs3OCMShareApi(TestCase):
     api = None
-    config = None
+    cs3_config = None
     share_id = None
 
     receiver_id = 'f7fbf8c8-139b-4376-b307-cf0a8c2d0d9c'
@@ -25,7 +25,7 @@ class TestCs3OCMShareApi(TestCase):
 
     def setUp(self):
         self.log = LoggingConfigurable().log
-        self.config = Cs3ConfigManager.get_config()
+        self.cs3_config = Cs3ConfigManager.get_cs3_config()
         self.storage = Cs3FileApi(self.log)
         self.api = Cs3OcmShareApi(self.log)
 
@@ -43,7 +43,7 @@ class TestCs3OCMShareApi(TestCase):
             self.api.create(self.receiver_id,
                             self.receiver_idp,
                             self.receiver_idp,
-                            self.config.endpoint,
+                            self.cs3_config.endpoint,
                             '/no_such_file',
                             self.receiver_grantee_type,
                             self.receiver_role, True)
@@ -58,7 +58,7 @@ class TestCs3OCMShareApi(TestCase):
                 self.api.create(self.receiver_id,
                                 self.receiver_idp,
                                 self.receiver_idp,
-                                self.config.endpoint,
+                                self.cs3_config.endpoint,
                                 self.file_path,
                                 self.receiver_grantee_type,
                                 self.receiver_role, True)
@@ -118,11 +118,11 @@ class TestCs3OCMShareApi(TestCase):
             print("Error remove file:", e)
 
     def _create_test_share(self, receiver_id='f7fbf8c8-139b-4376-b307-cf0a8c2d0d9c', receiver_idp='cesnet.cz'):
-        file_path = self.config.mount_dir + self.file_path
+        file_path = self.cs3_config.mount_dir + self.file_path
         return self.api.create(receiver_id,
                                receiver_idp,
                                receiver_idp,
-                               self.config.endpoint,
+                               self.cs3_config.endpoint,
                                file_path, self.receiver_grantee_type,
                                self.receiver_role, True)
 
@@ -132,8 +132,8 @@ class TestCs3OCMShareApi(TestCase):
     def _create_test_file(self):
         self.storage.write_file(self.file_path,
                                 "Lorem ipsum dolor sit amet...",
-                                self.config.endpoint)
+                                self.cs3_config.endpoint)
 
     def _remove_test_file(self):
         self.storage.remove(self.file_path,
-                            self.config.endpoint)
+                            self.cs3_config.endpoint)

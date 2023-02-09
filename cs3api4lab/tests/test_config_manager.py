@@ -7,7 +7,7 @@ from cs3api4lab.config.config_manager import Cs3ConfigManager
 
 
 class TestCS3ConfigManager(TestCase):
-    config = {
+    cs3_config = {
         'reva_host': '127.0.0.1:19000',
         'auth_token_validity': 3600,
         'endpoint': '/',
@@ -42,25 +42,25 @@ class TestCS3ConfigManager(TestCase):
 
 
     def test_load_config_file_for_tests(self):
-        configManager = Cs3ConfigManager().get_config()
+        configManager = Cs3ConfigManager().get_cs3_config()
 
-        self.assertEqual(configManager.reva_host, self.config["reva_host"])
-        self.assertEqual(configManager.client_id, self.config["client_id"])
-        self.assertEqual(configManager.client_secret, self.config["client_secret"])
-        self.assertEqual(configManager.auth_token_validity, self.config["auth_token_validity"])
-        self.assertEqual(configManager.endpoint, self.config["endpoint"])
-        self.assertEqual(configManager.mount_dir, self.config["mount_dir"])
-        self.assertEqual(configManager.root_dir_list, self.config["root_dir_list"])
-        self.assertEqual(configManager.chunk_size, self.config["chunk_size"])
-        self.assertEqual(configManager.secure_channel, self.config["secure_channel"])
-        self.assertEqual(configManager.authenticator_class, self.config["authenticator_class"])
-        self.assertEqual(configManager.login_type, self.config["login_type"])
-        self.assertEqual(configManager.locks_expiration_time, int(self.config["locks_expiration_time"]))
-        self.assertEqual(configManager.client_key, self.config["client_key"])
-        self.assertEqual(configManager.client_cert, self.config["client_cert"])
-        self.assertEqual(configManager.ca_cert, self.config["ca_cert"])
-        self.assertEqual(configManager.tus_enabled, self.config["tus_enabled"])
-        self.assertEqual(configManager.enable_ocm, self.config["enable_ocm"])
+        self.assertEqual(configManager.reva_host, self.cs3_config["reva_host"])
+        self.assertEqual(configManager.client_id, self.cs3_config["client_id"])
+        self.assertEqual(configManager.client_secret, self.cs3_config["client_secret"])
+        self.assertEqual(configManager.auth_token_validity, self.cs3_config["auth_token_validity"])
+        self.assertEqual(configManager.endpoint, self.cs3_config["endpoint"])
+        self.assertEqual(configManager.mount_dir, self.cs3_config["mount_dir"])
+        self.assertEqual(configManager.root_dir_list, self.cs3_config["root_dir_list"])
+        self.assertEqual(configManager.chunk_size, self.cs3_config["chunk_size"])
+        self.assertEqual(configManager.secure_channel, self.cs3_config["secure_channel"])
+        self.assertEqual(configManager.authenticator_class, self.cs3_config["authenticator_class"])
+        self.assertEqual(configManager.login_type, self.cs3_config["login_type"])
+        self.assertEqual(configManager.locks_expiration_time, int(self.cs3_config["locks_expiration_time"]))
+        self.assertEqual(configManager.client_key, self.cs3_config["client_key"])
+        self.assertEqual(configManager.client_cert, self.cs3_config["client_cert"])
+        self.assertEqual(configManager.ca_cert, self.cs3_config["ca_cert"])
+        self.assertEqual(configManager.tus_enabled, self.cs3_config["tus_enabled"])
+        self.assertEqual(configManager.enable_ocm, self.cs3_config["enable_ocm"])
         
 
     def test_load_from_environment_variables(self):

@@ -36,12 +36,12 @@ class Cs3ShareApi:
     cs3_api = None
     log = None
     auth = None
-    config = {}
+    cs3_config = {}
 
     def __init__(self, log):
         self.log = log
-        self.config = Cs3ConfigManager().get_config()
-        self.auth = Auth.get_authenticator(config=self.config, log=self.log)
+        self.cs3_config = Cs3ConfigManager().get_cs3_config()
+        self.auth = Auth.get_authenticator(cs3_config=self.cs3_config, log=self.log)
 
         channel = ChannelConnector().get_channel()
         auth_interceptor = check_auth_interceptor.CheckAuthInterceptor(log, self.auth)
@@ -80,9 +80,9 @@ class Cs3ShareApi:
                                                 metadata=[('x-access-token', self.auth.authenticate())])
 
         if self._is_code_ok(list_response):
-            self.log.debug(f"List shares response for user {self.config.client_id}:\n{list_response}")
+            self.log.debug(f"List shares response for user {self.cs3_config.client_id}:\n{list_response}")
         else:
-            self.log.error("Error listing shares response for user: " + self.config.client_id)
+            self.log.error("Error listing shares response for user: " + self.cs3_config.client_id)
             self._handle_error(list_response)
 
         return list_response
@@ -94,10 +94,10 @@ class Cs3ShareApi:
         """
         share_list = self.list()
 
-        file_path = ShareUtils.purify_file_path(file_path, self.config.client_id)
+        file_path = ShareUtils.purify_file_path(file_path, self.cs3_config.client_id)
         shares = []
         for share in share_list.shares:
-            path = ShareUtils.purify_file_path(share.resource_id.opaque_id, self.config.client_id)
+            path = ShareUtils.purify_file_path(share.resource_id.opaque_id, self.cs3_config.client_id)
             if file_path == escape.url_unescape(path):
                 shares.append(ShareUtils.get_share_info(share))
 
@@ -148,7 +148,7 @@ class Cs3ShareApi:
 
     def get_share_received(self, path):
         share_filters = []
-        stat = self.storage_api.stat(path, self.config.endpoint)
+        stat = self.storage_api.stat(path, self.cs3_config.endpoint)
 
         if stat.status.code == cs3_code.CODE_NOT_FOUND or stat.status.code == cs3_code.CODE_INTERNAL:
             return None
@@ -158,7 +158,7 @@ class Cs3ShareApi:
         storage_id = urllib.parse.unquote(stat.info.id.storage_id)
 
         # remove after https://github.com/cs3org/reva/issues/3243 is fixed
-        opaque_id = FileUtils.fix_dev_opaque(opaque_id, self.config.dev_env)
+        opaque_id = FileUtils.fix_dev_opaque(opaque_id, self.cs3_config.dev_env)
 
         resource = storage_resources.ResourceId(
             storage_id=storage_id,
@@ -185,10 +185,10 @@ class Cs3ShareApi:
                                                         metadata=[('x-access-token', self.auth.authenticate())])
 
         if not self._is_code_ok(list_response):
-            self.log.error("Error retrieving received shares for user: " + self.config.client_id)
+            self.log.error("Error retrieving received shares for user: " + self.cs3_config.client_id)
             self._handle_error(list_response)
 
-        self.log.debug(f"Retrieved received shares for user {self.config.client_id}:\n{list_response}")
+        self.log.debug(f"Retrieved received shares for user {self.cs3_config.client_id}:\n{list_response}")
         return list_response
 
     def _share_filter_by_resource(self, path):
@@ -208,7 +208,7 @@ class Cs3ShareApi:
         storage_id = urllib.parse.unquote(file_stat['inode']['storage_id'])
 
         # remove after https://github.com/cs3org/reva/issues/3243 is fixed
-        opaque_id = FileUtils.fix_dev_opaque(opaque_id, self.config.dev_env)
+        opaque_id = FileUtils.fix_dev_opaque(opaque_id, self.cs3_config.dev_env)
 
         resource = storage_resources.ResourceId(
             storage_id=storage_id,
@@ -236,7 +236,7 @@ class Cs3ShareApi:
         storage_id = urllib.parse.unquote(file_stat['inode']['storage_id'])
 
         # remove after https://github.com/cs3org/reva/issues/3243 is fixed
-        opaque_id = FileUtils.fix_dev_opaque(opaque_id, self.config.dev_env)
+        opaque_id = FileUtils.fix_dev_opaque(opaque_id, self.cs3_config.dev_env)
 
         resource = storage_resources.ResourceId(
             storage_id=storage_id,
@@ -283,7 +283,7 @@ class Cs3ShareApi:
             "opaque_id": share.id.opaque_id,
             "id": {
                 "storage_id": share.resource_id.storage_id,
-                "opaque_id": ShareUtils.purify_file_path(share.resource_id.opaque_id, self.config.client_id),
+                "opaque_id": ShareUtils.purify_file_path(share.resource_id.opaque_id, self.cs3_config.client_id),
             },
             "permissions": self._resolve_share_permissions(share),
             "grantee": {

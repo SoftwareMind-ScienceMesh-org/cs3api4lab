@@ -14,14 +14,14 @@ class Cs3UserApi:
     def __init__(self, log):
         channel = ChannelConnector.get_channel()
         self.api = user_api_grpc.UserAPIStub(channel)
-        self.config = Cs3ConfigManager().get_config()
-        self.auth = Auth.get_authenticator(config=self.config, log=log)
+        self.cs3_config = Cs3ConfigManager().get_cs3_config()
+        self.auth = Auth.get_authenticator(cs3_config=self.cs3_config, log=log)
         self.invite_api = iag.InviteAPIStub(channel)
 
     def get_user(self, idp, opaque_id):
         user_info = self.get_user_info(idp, opaque_id)
 
-        if not user_info and self.config.enable_ocm:
+        if not user_info and self.cs3_config.enable_ocm:
             user_info = self.find_accepted_users(opaque_id)
 
         return user_info
@@ -42,7 +42,7 @@ class Cs3UserApi:
         return {}
 
     def find_accepted_users(self, opaque_id):
-        if self.config.enable_ocm:
+        if self.cs3_config.enable_ocm:
             ocm_response = self.invite_api.FindAcceptedUsers(ia.FindAcceptedUsersRequest(filter=opaque_id),
                                                              metadata=[('x-access-token', self.auth.authenticate())])
 
@@ -98,7 +98,7 @@ class Cs3UserApi:
                           "mail": user.mail})
 
         ocm_users = []
-        if self.config.enable_ocm:
+        if self.cs3_config.enable_ocm:
             ocm_response = self.invite_api.FindAcceptedUsers(ia.FindAcceptedUsersRequest(filter=query),
                                                              metadata=[('x-access-token', self.auth.authenticate())])
 

@@ -13,10 +13,10 @@ from cs3api4lab.api.storage_api import StorageApi
 
 class LockBase(ABC):
 
-    def __init__(self, log, config):
+    def __init__(self, log, cs3_config):
         self.user = None
-        self.config = config
-        self.auth = Auth.get_authenticator(config=config, log=log)
+        self.cs3_config = cs3_config
+        self.auth = Auth.get_authenticator(cs3_config=cs3_config, log=log)
         channel = ChannelConnector().get_channel()
         auth_interceptor = check_auth_interceptor.CheckAuthInterceptor(log, self.auth)
         intercept_channel = grpc.intercept_channel(channel, auth_interceptor)
@@ -42,7 +42,7 @@ class LockBase(ABC):
         if self.is_valid_external_lock(stat):
             file_name = stat['filepath'].split('/')[-1]
             file_dir = '/'.join(stat['filepath'].split('/')[0:-1])
-            return self._resolve_directory(file_dir, self.config.endpoint) + self._get_conflict_filename(file_name)
+            return self._resolve_directory(file_dir, self.cs3_config.endpoint) + self._get_conflict_filename(file_name)
         return stat['filepath']
 
     @abstractmethod
@@ -55,7 +55,7 @@ class LockBase(ABC):
         if stat.status.code == cs3code.CODE_OK:
             return dir_path
         else:
-            return self.config.mount_dir + '/'
+            return self.cs3_config.mount_dir + '/'
 
     def _get_conflict_filename(self, file_name):
         file_extension = file_name.split('.')[-1]

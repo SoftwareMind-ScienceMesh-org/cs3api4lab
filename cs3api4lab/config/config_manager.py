@@ -253,7 +253,7 @@ class Cs3ConfigManager:
     __config_instance = None
 
     @classmethod
-    def get_config(cls):
+    def get_cs3_config(cls):
         if not cls.__config_instance:
             cls.__config_instance = Config()
         return cls.__config_instance

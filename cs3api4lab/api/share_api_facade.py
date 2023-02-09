@@ -22,8 +22,8 @@ from cs3api4lab.exception.exceptions import OCMDisabledError
 class ShareAPIFacade:
     def __init__(self, log):
         self.log = log
-        self.config = Cs3ConfigManager().get_config()
-        self.auth = Auth.get_authenticator(config=self.config, log=self.log)
+        self.cs3_config = Cs3ConfigManager().get_cs3_config()
+        self.auth = Auth.get_authenticator(cs3_config=self.cs3_config, log=self.log)
         self.file_api = Cs3FileApi(log)
 
         channel = ChannelConnector().get_channel()
@@ -40,7 +40,7 @@ class ShareAPIFacade:
         """Creates a share or creates an OCM share if the user is not found in local domain"""
         file_path = FileUtils.normalize_path(file_path)
         if self._is_ocm_user(opaque_id, idp):
-            if self.config.enable_ocm:
+            if self.cs3_config.enable_ocm:
                 return self.ocm_share_api.create(opaque_id, idp, idp, endpoint, file_path, grantee_type, role, reshare)
             else:
                 raise OCMDisabledError('Cannot create OCM share - OCM functionality is disabled')
@@ -70,7 +70,7 @@ class ShareAPIFacade:
         if self.is_share(params['share_id']):
             self.share_api.update(params['share_id'], params['role'])
         else:
-            if not self.config.enable_ocm:
+            if not self.cs3_config.enable_ocm:
                 raise OCMDisabledError('Cannot update OCM share - OCM functionality is disabled')
             else:
                 self.ocm_share_api.update(
@@ -85,7 +85,7 @@ class ShareAPIFacade:
            :param state: accepted/rejected/pending/invalid
         """
         if self.is_ocm_received_share(share_id):
-            if self.config.enable_ocm:
+            if self.cs3_config.enable_ocm:
                 result = self.ocm_share_api.update_received(share_id, 'state', state)
             else:
                 raise OCMDisabledError('Cannot update received OCM share - OCM functionality is disabled')
@@ -102,7 +102,7 @@ class ShareAPIFacade:
         if self.is_share(share_id):
             self.share_api.remove(share_id)
         else:
-            if self.config.enable_ocm:
+            if self.cs3_config.enable_ocm:
                 return self.ocm_share_api.remove(share_id)
             else:
                 raise OCMDisabledError('Cannot remove OCM share - OCM functionality is disabled')
@@ -114,7 +114,7 @@ class ShareAPIFacade:
         :rtype: dict
         """
         share_list = self.share_api.list()
-        if self.config.enable_ocm:
+        if self.cs3_config.enable_ocm:
             ocm_share_list = self.ocm_share_api.list()
         else:
             ocm_share_list = None
@@ -141,7 +141,7 @@ class ShareAPIFacade:
         """
 
         share_list = self.share_api.list_received(path)
-        if self.config.enable_ocm:
+        if self.cs3_config.enable_ocm:
             ocm_share_list = self.ocm_share_api.list_received()
         else:
             ocm_share_list = None
@@ -165,7 +165,7 @@ class ShareAPIFacade:
         share_list = self.share_api.list(file_path)
         all_shares_list.extend(share_list.shares)
 
-        if self.config.enable_ocm:
+        if self.cs3_config.enable_ocm:
             ocm_share_list = self.ocm_share_api.list(file_path)
             all_shares_list.extend(ocm_share_list.shares)
 
@@ -201,7 +201,7 @@ class ShareAPIFacade:
 
     def is_ocm_received_share(self, share_id):
         """Checks if share is present on OCM received shares list"""
-        if self.config.enable_ocm:
+        if self.cs3_config.enable_ocm:
             try:
                 # if OCM is not enabled on IOP side this call will fail
                 received_shares = self.ocm_share_api.list_received()

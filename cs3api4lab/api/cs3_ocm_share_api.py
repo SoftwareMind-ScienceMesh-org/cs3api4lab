@@ -35,8 +35,8 @@ class Cs3OcmShareApi:
 
     def __init__(self, log):
         self.log = log
-        self.config = Cs3ConfigManager().get_config()
-        self.auth = Auth.get_authenticator(config=self.config, log=self.log)
+        self.cs3_config = Cs3ConfigManager().get_cs3_config()
+        self.auth = Auth.get_authenticator(cs3_config=self.cs3_config, log=self.log)
         self.file_api = Cs3FileApi(log)
         channel = ChannelConnector().get_channel()
         auth_interceptor = check_auth_interceptor.CheckAuthInterceptor(log, self.auth)

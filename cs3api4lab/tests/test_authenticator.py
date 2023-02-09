@@ -31,7 +31,7 @@ class TestAuthenticator(TestCase):
 
     def test_create_wrong_class(self):
         config_manager = Cs3ConfigManager()
-        config = config_manager.get_config()
+        config = config_manager.get_cs3_config()
         config.authenticator_class = 'cs3api4lab.auth.reva_password.TestPassword'
 
         with self.assertRaises(AttributeError):

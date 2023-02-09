@@ -15,8 +15,8 @@ import google.protobuf.json_format as json_format
 
 class Cs3(LockBase):
 
-    def __init__(self, log, config):
-        super().__init__(log, config)
+    def __init__(self, log, cs3_config):
+        super().__init__(log, cs3_config)
 
     def set_lock(self, stat):
         ref = FileUtils.get_reference(stat['inode']['opaque_id'], stat['inode']['storage_id'])
@@ -75,7 +75,7 @@ class Cs3(LockBase):
             lock_id=self.lock_name,
             type=storage_resources.LOCK_TYPE_WRITE,
             user=id_res.UserId(idp=user.id.idp, opaque_id=user.id.opaque_id, type=user.id.type),
-            expiration=cs3_types.Timestamp(seconds=int(time.time() + self.config.locks_expiration_time))
+            expiration=cs3_types.Timestamp(seconds=int(time.time() + self.cs3_config.locks_expiration_time))
         )
         request = storage_api.SetLockRequest(ref=ref, lock=lock)
         lock_response = self.cs3_api.SetLock(request=request, metadata=[('x-access-token', self.auth.authenticate())])
@@ -88,7 +88,7 @@ class Cs3(LockBase):
             lock_id=self.lock_name,
             type=storage_resources.LOCK_TYPE_WRITE,
             user=id_res.UserId(idp=user.id.idp, opaque_id=user.id.opaque_id, type=user.type),
-            expiration=cs3_types.Timestamp(seconds=int(time.time() + self.config.locks_expiration_time))
+            expiration=cs3_types.Timestamp(seconds=int(time.time() + self.cs3_config.locks_expiration_time))
         )
         request = storage_api.RefreshLockRequest(ref=ref, lock=lock)
         refresh_response = self.cs3_api.RefreshLock(request=request,

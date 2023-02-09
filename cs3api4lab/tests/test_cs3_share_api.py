@@ -21,9 +21,9 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
         '''creates a file and shares it with another user'''
 
         #given
-        user = self.config.client_id
+        user = self.cs3_config.client_id
         share_id = None
-        file_name = posixpath.join(self.config.mount_dir, "test_create_share.txt")
+        file_name = posixpath.join(self.cs3_config.mount_dir, "test_create_share.txt")
         self.remove_share_and_file_by_path(user, file_name)
         try:
             self.create_test_file(user, file_name)
@@ -44,7 +44,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
     def test_create_share_no_file(self):
         '''tries to share a non-existing file'''
         #given
-        file_name = posixpath.join(self.config.mount_dir, "no_such_file.txt")
+        file_name = posixpath.join(self.cs3_config.mount_dir, "no_such_file.txt")
         #when
         with self.assertRaises(ResourceNotFoundError) as cm:
             self.share_api.create(self.storage_id,
@@ -308,7 +308,7 @@ class TestCs3ShareApi(ShareTestBase, TestCase):
             self.create_test_file('einstein', received_container_path + inner_container + file_name)
 
             self.clear_locks_on_file(received_container_path + inner_container + file_name)
-            stat = self.richard_file_api.stat_info(self.container_name + inner_container + file_name, self.config.endpoint)
+            stat = self.richard_file_api.stat_info(self.container_name + inner_container + file_name, self.cs3_config.endpoint)
             content = ''
             for chunk in self.richard_file_api.read_file(stat):
                 content += chunk.decode('utf-8')

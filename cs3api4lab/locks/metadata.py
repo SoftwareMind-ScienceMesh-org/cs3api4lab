@@ -9,10 +9,10 @@ from cs3api4lab.exception.exceptions import FileLockedError
 
 class Metadata(LockBase):
 
-    def __init__(self, log, config):
-        super().__init__(log, config)
+    def __init__(self, log, cs3_config):
+        super().__init__(log, cs3_config)
         self.log = log
-        self.locks_expiration_time = self.config.locks_expiration_time
+        self.locks_expiration_time = self.cs3_config.locks_expiration_time
 
     def set_lock(self, stat):
         if not self.is_file_locked(stat):
