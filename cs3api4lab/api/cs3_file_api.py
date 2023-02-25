@@ -266,3 +266,4 @@ class Cs3FileApi:
         self.log.error(response)
         raise Exception("Incorrect server response: " +
                         response.status.message)
+

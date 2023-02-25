@@ -5,6 +5,8 @@ import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { ISignal, Signal } from '@lumino/signaling';
 import { IStateDB } from '@jupyterlab/statedb';
 import { IDocumentManager } from '@jupyterlab/docmanager';
+import { Dialog, showDialog } from '@jupyterlab/apputils';
+import { ConflictFileResponse } from './types';
 
 export class CS3Contents implements Contents.IDrive {
   protected _docRegistry: DocumentRegistry;
@@ -24,6 +26,7 @@ export class CS3Contents implements Contents.IDrive {
     docManager: IDocumentManager,
     serverSettings: ServerConnection.ISettings
   ) {
+    console.log('initialize drive');
     this._docRegistry = registry;
     this._docManager = docManager;
     this.serverSettings = serverSettings;
@@ -55,7 +58,7 @@ export class CS3Contents implements Contents.IDrive {
    * The name of the drive.
    */
   get name(): string {
-    return '';
+    return 'cs3Files';
   }
 
   /**
@@ -71,9 +74,18 @@ export class CS3Contents implements Contents.IDrive {
     path: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
+    console.log('GET !');
+    console.log('get method', path, options);
     const activeTab: string = (await this._state.fetch('activeTab')) as string;
     if (activeTab === 'cs3filebrowser' || activeTab === undefined) {
-      return await CS3ContainerFiles('filelist', this._state, path, options);
+      console.log('get cs3 files');
+      return await CS3ContainerFiles(
+        'filelist',
+        this._state,
+        path,
+        options,
+        this._docManager
+      );
     } else {
       return Promise.resolve({} as Contents.IModel);
     }
@@ -111,6 +123,7 @@ export class CS3Contents implements Contents.IDrive {
   newUntitled(
     options: Contents.ICreateOptions | undefined
   ): Promise<Contents.IModel> {
+    console.log('new untitled file');
     return this._docManager.services.contents.newUntitled(options);
   }
 
@@ -170,7 +183,13 @@ export class CS3ContentsShareByMe extends CS3Contents {
   ): Promise<Contents.IModel> {
     const activeTab: string = (await this._state.fetch('activeTab')) as string;
     if (activeTab === 'sharesPanel') {
-      return await CS3ContainerFiles('by_me', this._state, path, options);
+      return await CS3ContainerFiles(
+        'by_me',
+        this._state,
+        path,
+        options,
+        this._docManager
+      );
     } else {
       return Promise.resolve({} as Contents.IModel);
     }
@@ -188,7 +207,13 @@ export class CS3ContentsShareWithMe extends CS3Contents {
   ): Promise<Contents.IModel> {
     const activeTab: string = (await this._state.fetch('activeTab')) as string;
     if (activeTab === 'sharesPanel') {
-      return await CS3ContainerFiles('with_me', this._state, path, options);
+      return await CS3ContainerFiles(
+        'with_me',
+        this._state,
+        path,
+        options,
+        this._docManager
+      );
     } else {
       return Promise.resolve({} as Contents.IModel);
     }
@@ -199,8 +224,10 @@ export async function CS3ContainerFiles(
   readType: string,
   stateDB: IStateDB,
   path: string | null = null,
-  options: Contents.IFetchOptions = {}
+  options: Contents.IFetchOptions = {},
+  docManager: IDocumentManager
 ): Promise<any> {
+  console.log('cs3 container files');
   const share = await stateDB.fetch('share');
   const showHidden: boolean = (await stateDB.fetch('showHidden')) as boolean;
   let shareType;
@@ -211,7 +238,8 @@ export async function CS3ContainerFiles(
   }
 
   if (path !== '') {
-    return await getFileList(path, options, showHidden, stateDB);
+    console.log('cs container files');
+    return await getFileList(path, options, showHidden, stateDB, docManager);
   }
 
   switch (shareType) {
@@ -221,15 +249,61 @@ export async function CS3ContainerFiles(
       return await getSharedWithMe();
     case 'filelist':
     default:
-      return await getFileList(path, options, showHidden, stateDB);
+      return await getFileList(path, options, showHidden, stateDB, docManager);
   }
+}
+
+export function openLockedFileDialog(
+  path: string,
+  docManager: IDocumentManager,
+  options?: Contents.IFetchOptions
+): void {
+  console.log('open file dialog', path);
+
+  // if (options?.content === true && options?.type === 'notebook') {
+  showDialog({
+    body: 'this is the body',
+    buttons: [
+      Dialog.okButton({
+        label: 'Stay in preview mode',
+        caption: 'PREVIEW'
+      }),
+      Dialog.okButton({
+        label: 'Create a copy',
+        caption: 'DIFF'
+      })
+    ]
+  }).then(async result => {
+    if (result.button.caption === 'DIFF') {
+      console.log('create a diff file and open');
+      await requestAPI('/api/cs3/locks/create_conflict_file', {
+        method: 'POST',
+        body: JSON.stringify({
+          file_path: path
+        })
+      })
+        .then(async response => {
+          console.log('diff response', response);
+          const diffResponse = response as ConflictFileResponse;
+          if (diffResponse.conflict_file_path) {
+            await docManager.closeFile(path);
+            await docManager.openOrReveal(diffResponse.conflict_file_path);
+          }
+        })
+        .catch(error => {
+          console.log('request failed', error);
+        });
+    }
+  });
+  // }
 }
 
 async function getFileList(
   path: string | null,
   options: Contents.IFetchOptions,
   showHidden: boolean,
-  stateDB: IStateDB
+  stateDB: IStateDB,
+  docManager: IDocumentManager
 ): Promise<any> {
   const { type, format, content } = options;
 
@@ -241,16 +315,20 @@ async function getFileList(
   if (format && type !== 'notebook') {
     url += '&format=' + format;
   }
-  const result: Contents.IModel = await requestAPI(
-    '/api/contents/' + path + '' + url,
-    { method: 'get' }
-  );
+  const result: Contents.IModel & {
+    locked: boolean;
+  } = await requestAPI('/api/contents/' + path + '' + url, { method: 'get' });
+
+  if (path !== null && result.type !== 'directory' && result?.locked) {
+    openLockedFileDialog(path, docManager, options);
+  }
 
   // if it is a directory, count hidden files inside
   if (Array.isArray(result.content) && result.type === 'directory') {
-    const hiddenFilesNo: number = result.content.filter(
-      (file: { name: string }) => file.name.startsWith('.')
-    ).length;
+    const hiddenFilesNo: number =
+      result.content.filter((file: { name: string }) =>
+        file.name.startsWith('.')
+      )?.length || 0;
     await stateDB.save('hiddenFilesNo', hiddenFilesNo);
 
     if (!showHidden) {

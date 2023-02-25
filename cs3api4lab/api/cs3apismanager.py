@@ -1,3 +1,5 @@
+import urllib
+
 import nbformat
 import os
 import posixpath
@@ -123,7 +125,7 @@ class CS3APIsManager(ContentsManager):
             elif type == 'notebook' or (type is None and path.endswith('.ipynb')):
                 try:   #this needs to be fixed/refactored in a separate issue
                     model = self._notebook_model(path, content=content)
-                except Exception:
+                except Exception as e:
                     self.log.info("Notebook does not exist %s", path)
         else:
             if path.endswith('.ipynb'):
@@ -347,6 +349,12 @@ class CS3APIsManager(ContentsManager):
         model = ModelUtils.create_empty_file_model(path)
         try:
             file_info = self.file_api.stat_info(path, self.cs3_config.endpoint)
+
+            # additional request until this issue is resolved https://github.com/cs3org/reva/issues/3243
+            if self.config.dev_env and "/home/" in file_info['filepath']:
+                opaque_id = urllib.parse.unquote(file_info['inode']['opaque_id'])
+                storage_id = urllib.parse.unquote(file_info['inode']['storage_id'])
+                file_info = self.file_api.stat_info(opaque_id, storage_id)
         except Exception as e:
             self.log.info('File % does not exists' % path)
 
@@ -377,9 +385,15 @@ class CS3APIsManager(ContentsManager):
     def _notebook_model(self, path, content):
         file_info = self.file_api.stat_info(path, self.cs3_config.endpoint)
 
+        # additional request until this issue is resolved https://github.com/cs3org/reva/issues/3243
+        if self.config.dev_env and "/home/" in file_info['filepath']:
+            opaque_id = urllib.parse.unquote(file_info['inode']['opaque_id'])
+            storage_id = urllib.parse.unquote(file_info['inode']['storage_id'])
+            file_info = self.file_api.stat_info(opaque_id, storage_id)
+
         model = ModelUtils.update_file_model(ModelUtils.create_empty_file_model(path), file_info)
         model['type'] = 'notebook'
-
+        model['locked'] = self.lock_api.is_file_locked(file_info)
         if content:
             file_content = self._read_file(file_info)
             nb = nbformat.reads(file_content, as_version=4)
@@ -387,6 +401,8 @@ class CS3APIsManager(ContentsManager):
             model['content'] = nb
             model['format'] = 'json'
             self.validate_notebook_model(model)
+
+        model['writable'] = self._is_editor(file_info)
 
         return model
 
@@ -493,3 +509,39 @@ class CS3APIsManager(ContentsManager):
 
     def delete_checkpoint(self, checkpoint_id, path):
         pass
+
+    @asyncify
+    def create_conflict_file(self, path):
+        path_normalized = FileUtils.normalize_path(path)
+        path_normalized = FileUtils.check_and_transform_file_path(path_normalized)
+        notebook_container = path_normalized.split('/')
+        notebook_container.pop(-1)
+        notebook_container = '/'.join(notebook_container) + '/'
+
+        file_info = self.file_api.stat_info(path_normalized, self.config.endpoint)
+        # additional request until this issue is resolved https://github.com/cs3org/reva/issues/3243
+        if self.config.dev_env and "/home/" in file_info['filepath']:
+            opaque_id = urllib.parse.unquote(file_info['inode']['opaque_id'])
+            storage_id = urllib.parse.unquote(file_info['inode']['storage_id'])
+            file_info = self.file_api.stat_info(opaque_id, storage_id)
+
+        conflict_file = self.lock_api.resolve_file_path(path)
+        conflict_file_exists = self.file_exists(conflict_file)
+        conflict_file_created = False
+        if not conflict_file_exists:
+            try:
+                file_content = self._read_file(file_info)
+                conflict_file_path = FileUtils.normalize_path(notebook_container + conflict_file)
+                conflict_file_path = FileUtils.check_and_transform_file_path(conflict_file_path)
+
+                self.file_api.write_file(conflict_file_path, file_content, self.cs3_config.endpoint, None)
+
+                conflict_file_created = True
+            except Exception:
+                self.log.info('Could not create a conflict file from original %s', path)
+
+        return {
+            'conflict_file_path': conflict_file_path,
+            'conflict_file_created': conflict_file_created,
+            'conflict_file_exists': self.file_exists(conflict_file)
+        }

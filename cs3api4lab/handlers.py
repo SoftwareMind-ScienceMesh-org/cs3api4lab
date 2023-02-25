@@ -3,6 +3,7 @@ import json
 from jupyter_server.base.handlers import APIHandler
 from tornado import gen, web
 from grpc._channel import _InactiveRpcError
+
 from cs3api4lab.exception.exceptions import *
 from cs3api4lab.api.share_api_facade import ShareAPIFacade
 from cs3api4lab.api.cs3_public_share_api import Cs3PublicShareApi
@@ -103,6 +104,19 @@ class HomeDirHandler(APIHandler):
     @gen.coroutine
     def get(self):
         yield RequestHandler.async_handle_request(self, self.file_api.get_home_dir, 200)
+
+class LockHandler(APIHandler):
+
+    @property
+    def contents_manager(self):
+        return self.settings["contents_manager"]
+
+    @web.authenticated
+    @gen.coroutine
+    def post(self):
+        request = self.get_json_body()
+        print('REQUEST BODY', request)
+        yield RequestHandler.async_handle_request(self, self.contents_manager.create_conflict_file, 200, request['file_path'])
 
 class PublicSharesHandler(APIHandler):
     @property
@@ -218,7 +232,8 @@ def setup_handlers(web_app, url_path):
         (r"/api/cs3/user", UserInfoHandler),
         (r"/api/cs3/user/claim", UserInfoClaimHandler),
         (r"/api/cs3/user/query", UserQueryHandler),
-        (r"/api/cs3/user/home_dir", HomeDirHandler)
+        (r"/api/cs3/user/home_dir", HomeDirHandler),
+        (r"/api/cs3/locks/create_conflict_file", LockHandler),
     ]
 
     for handler in handlers:
