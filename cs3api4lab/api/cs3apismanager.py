@@ -514,9 +514,10 @@ class CS3APIsManager(ContentsManager):
     def create_conflict_file(self, path):
         path_normalized = FileUtils.normalize_path(path)
         path_normalized = FileUtils.check_and_transform_file_path(path_normalized)
-        notebook_container = path_normalized.split('/')
-        notebook_container.pop(-1)
-        notebook_container = '/'.join(notebook_container) + '/'
+        # notebook_container = path_normalized.split('/')
+        # notebook_container.pop(-1)
+        # notebook_container = '/'.join(notebook_container) + '/'
+        notebook_container = self.cs3_config.home_dir if self.cs3_config.home_dir else self.cs3_config.mount_dir
 
         file_info = self.file_api.stat_info(path_normalized, self.config.endpoint)
         # additional request until this issue is resolved https://github.com/cs3org/reva/issues/3243
@@ -531,7 +532,7 @@ class CS3APIsManager(ContentsManager):
         if not conflict_file_exists:
             try:
                 file_content = self._read_file(file_info)
-                conflict_file_path = FileUtils.normalize_path(notebook_container + conflict_file)
+                conflict_file_path = FileUtils.normalize_path(notebook_container + '/' + conflict_file)
                 conflict_file_path = FileUtils.check_and_transform_file_path(conflict_file_path)
 
                 self.file_api.write_file(conflict_file_path, file_content, self.cs3_config.endpoint, None)
