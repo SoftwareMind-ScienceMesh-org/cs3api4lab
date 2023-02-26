@@ -275,8 +275,10 @@ export function openLockedFileDialog(
         .then(async response => {
           const diffResponse = response as ConflictFileResponse;
           if (diffResponse.conflict_file_path) {
-            await docManager.closeFile(path);
-            await docManager.openOrReveal(diffResponse.conflict_file_path);
+            docManager.openOrReveal(diffResponse.conflict_file_path);
+            await docManager.closeFile('cs3Files:' + path);
+            await docManager.closeFile('cs3driveShareWithMe:' + path);
+            await docManager.closeFile('cs3driveShareByMe:' + path);
           }
         })
         .catch(error => {

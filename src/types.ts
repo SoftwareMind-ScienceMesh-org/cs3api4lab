@@ -101,7 +101,7 @@ export type PendingSharesContentProps = {
 };
 
 export type ConflictFileResponse = {
-  conflict_file_path: string | null;
+  conflict_file_path: string;
   conflic_file_exists: boolean;
   conflict_file_created: boolean;
 };
