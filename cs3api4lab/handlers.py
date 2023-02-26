@@ -115,7 +115,6 @@ class LockHandler(APIHandler):
     @gen.coroutine
     def post(self):
         request = self.get_json_body()
-        print('REQUEST BODY', request)
         yield RequestHandler.async_handle_request(self, self.contents_manager.create_conflict_file, 200, request['file_path'])
 
 class PublicSharesHandler(APIHandler):

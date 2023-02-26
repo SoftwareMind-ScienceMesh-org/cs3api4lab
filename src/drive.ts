@@ -26,7 +26,6 @@ export class CS3Contents implements Contents.IDrive {
     docManager: IDocumentManager,
     serverSettings: ServerConnection.ISettings
   ) {
-    console.log('initialize drive');
     this._docRegistry = registry;
     this._docManager = docManager;
     this.serverSettings = serverSettings;
@@ -74,11 +73,8 @@ export class CS3Contents implements Contents.IDrive {
     path: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    console.log('GET !');
-    console.log('get method', path, options);
     const activeTab: string = (await this._state.fetch('activeTab')) as string;
     if (activeTab === 'cs3filebrowser' || activeTab === undefined) {
-      console.log('get cs3 files');
       return await CS3ContainerFiles(
         'filelist',
         this._state,
@@ -123,7 +119,6 @@ export class CS3Contents implements Contents.IDrive {
   newUntitled(
     options: Contents.ICreateOptions | undefined
   ): Promise<Contents.IModel> {
-    console.log('new untitled file');
     return this._docManager.services.contents.newUntitled(options);
   }
 
@@ -227,7 +222,6 @@ export async function CS3ContainerFiles(
   options: Contents.IFetchOptions = {},
   docManager: IDocumentManager
 ): Promise<any> {
-  console.log('cs3 container files');
   const share = await stateDB.fetch('share');
   const showHidden: boolean = (await stateDB.fetch('showHidden')) as boolean;
   let shareType;
@@ -238,7 +232,6 @@ export async function CS3ContainerFiles(
   }
 
   if (path !== '') {
-    console.log('cs container files');
     return await getFileList(path, options, showHidden, stateDB, docManager);
   }
 

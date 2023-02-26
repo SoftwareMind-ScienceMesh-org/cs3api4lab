@@ -39,15 +39,8 @@ class LockBase(ABC):
         return self.user.user
 
     def resolve_file_path(self, path):
-        # if self.is_valid_external_lock(stat):
         file_name = path.split('/')[-1]
-        file_dir = '/'.join(path.split('/')[0:-1])
-        print('--------------------------------')
-        print('file_dir:', file_dir)
-        print('filename:', file_name)
         return self._get_conflict_filename(file_name)
-        # return self._resolve_directory(file_dir, self.config.endpoint) + '/' + self._get_conflict_filename(file_name)
-        # return stat['filepath']
 
     @abstractmethod
     def is_valid_external_lock(self, stat):
