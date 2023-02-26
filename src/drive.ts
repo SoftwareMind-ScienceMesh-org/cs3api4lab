@@ -255,27 +255,24 @@ export async function CS3ContainerFiles(
 
 export function openLockedFileDialog(
   path: string,
-  docManager: IDocumentManager,
-  options?: Contents.IFetchOptions
+  docManager: IDocumentManager
 ): void {
-  console.log('open file dialog', path);
-
-  // if (options?.content === true && options?.type === 'notebook') {
   showDialog({
-    body: 'this is the body',
+    body: 'This file is currently locked by another person',
     buttons: [
-      Dialog.okButton({
+      Dialog.cancelButton({
         label: 'Stay in preview mode',
-        caption: 'PREVIEW'
+        caption: 'PREVIEW',
+        className: 'jp-preview-button'
       }),
       Dialog.okButton({
         label: 'Create a copy',
-        caption: 'DIFF'
+        caption: 'DIFF',
+        className: 'jp-create-button'
       })
     ]
   }).then(async result => {
     if (result.button.caption === 'DIFF') {
-      console.log('create a diff file and open');
       await requestAPI('/api/cs3/locks/create_conflict_file', {
         method: 'POST',
         body: JSON.stringify({
@@ -283,7 +280,6 @@ export function openLockedFileDialog(
         })
       })
         .then(async response => {
-          console.log('diff response', response);
           const diffResponse = response as ConflictFileResponse;
           if (diffResponse.conflict_file_path) {
             await docManager.closeFile(path);
@@ -295,7 +291,6 @@ export function openLockedFileDialog(
         });
     }
   });
-  // }
 }
 
 async function getFileList(
@@ -320,7 +315,7 @@ async function getFileList(
   } = await requestAPI('/api/contents/' + path + '' + url, { method: 'get' });
 
   if (path !== null && result.type !== 'directory' && result?.locked) {
-    openLockedFileDialog(path, docManager, options);
+    openLockedFileDialog(path, docManager);
   }
 
   // if it is a directory, count hidden files inside
