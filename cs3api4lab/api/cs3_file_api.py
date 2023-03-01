@@ -274,11 +274,7 @@ class Cs3FileApi:
 
         free = quota.total_bytes - quota.used_bytes
         percentage = int ((free / quota.total_bytes ) * 100)
-        print('Quota:', quota)
-        print('Size of:', FileUtils.sizeof(quota.total_bytes))
-        print('Used space:', FileUtils.sizeof(quota.used_bytes))
-        print('Free space:', FileUtils.sizeof(free))
-        print('Percentage: ', percentage)
+
         return {
             'total_usage': FileUtils.sizeof(quota.total_bytes),
             'percentage': percentage

@@ -138,20 +138,13 @@ export const DiskUsage = (): JSX.Element => {
   const [totalUsage, setTotalUsage] = useState('');
   const [percentage, setPercentage] = useState(0);
 
-  console.log('disk usage component');
   const getUsage = async function (): Promise<QuotaUsageResponse> {
-    console.log('get  usage');
     return await requestAPI('/api/cs3/quota', {
       method: 'GET'
     });
   };
 
   getUsage().then(response => {
-    console.log(
-      'get usage response',
-      response.total_usage,
-      response.percentage
-    );
     setTotalUsage(response.total_usage);
     setPercentage(response.percentage);
   });
