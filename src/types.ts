@@ -105,3 +105,8 @@ export type ConflictFileResponse = {
   conflic_file_exists: boolean;
   conflict_file_created: boolean;
 };
+
+export type QuotaUsageResponse = {
+  total_usage: string;
+  percentage: number;
+};

@@ -267,3 +267,19 @@ class Cs3FileApi:
         raise Exception("Incorrect server response: " +
                         response.status.message)
 
+    def get_quota(self):
+        path_ref = FileUtils.get_reference('/', self.config.endpoint)
+        quota_request = cs3sp.GetQuotaRequest(ref=path_ref)
+        quota = self.cs3_api.GetQuota(request=quota_request, metadata=[('x-access-token', self.auth.authenticate())])
+
+        free = quota.total_bytes - quota.used_bytes
+        percentage = int ((free / quota.total_bytes ) * 100)
+        print('Quota:', quota)
+        print('Size of:', FileUtils.sizeof(quota.total_bytes))
+        print('Used space:', FileUtils.sizeof(quota.used_bytes))
+        print('Free space:', FileUtils.sizeof(free))
+        print('Percentage: ', percentage)
+        return {
+            'total_usage': FileUtils.sizeof(quota.total_bytes),
+            'percentage': percentage
+        }

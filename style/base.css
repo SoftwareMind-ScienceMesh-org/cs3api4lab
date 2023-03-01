@@ -9,11 +9,13 @@ jp-bottom-hidden-files {
 .jp-bottom-div
 {
     display: block;
+    float: right;
     text-align: right;
-    width: auto;
+    width: 45%;
     height: 100%;
-    margin-right: 10px;
+    margin-right: 5px;
     margin-top: 5px;
+    font-size: var(--jp-ui-font-size0);
 }
 
 .jp-file-info
@@ -373,4 +375,16 @@ jp-bottom-hidden-files {
 }
 #cs3-panel {
     background-color: var(--jp-layout-color0);
+}
+.jp-bottom-container {
+    display: block;
+}
+.jp-disk-usage {
+    display: block;
+    float: left;
+    width: 50%;
+    text-align: left;
+    font-size: var(--jp-ui-font-size0);
+    margin-top: 5px;
+    margin-left: 5px;
 }

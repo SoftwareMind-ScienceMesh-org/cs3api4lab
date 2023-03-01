@@ -3,11 +3,12 @@ import { ReactWidget } from '@jupyterlab/apputils';
 import * as React from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { IStateDB } from '@jupyterlab/statedb';
-import { BottomProps } from './types';
+import { BottomProps, QuotaUsageResponse } from './types';
 import { useState } from 'react';
 import { FileBrowser } from '@jupyterlab/filebrowser';
 import { IIterator } from '@lumino/algorithm';
 import { ISignal, Signal } from '@lumino/signaling';
+import { requestAPI } from './services';
 
 export class Cs3Panel extends Widget {
   protected header: BoxPanel;
@@ -133,6 +134,34 @@ export class Cs3HeaderWidget extends ReactWidget {
   }
 }
 
+export const DiskUsage = (): JSX.Element => {
+  const [totalUsage, setTotalUsage] = useState('');
+  const [percentage, setPercentage] = useState(0);
+
+  console.log('disk usage component');
+  const getUsage = async function (): Promise<QuotaUsageResponse> {
+    console.log('get  usage');
+    return await requestAPI('/api/cs3/quota', {
+      method: 'GET'
+    });
+  };
+
+  getUsage().then(response => {
+    console.log(
+      'get usage response',
+      response.total_usage,
+      response.percentage
+    );
+    setTotalUsage(response.total_usage);
+    setPercentage(response.percentage);
+  });
+  return (
+    <div className="jp-disk-usage">
+      {percentage}% used space ({totalUsage})
+    </div>
+  );
+};
+
 export const Bottom = (props: BottomProps): JSX.Element => {
   // const [text, setText] = useState('');
   const [hiddenFiles, setHiddenFiles] = useState(0);
@@ -192,7 +221,10 @@ export class Cs3BottomWidget extends ReactWidget {
 
   protected render(): JSX.Element {
     return (
-      <Bottom db={this.bottomProps.db} browser={this.bottomProps.browser} />
+      <div className="jp-bottom-container">
+        <DiskUsage />
+        <Bottom db={this.bottomProps.db} browser={this.bottomProps.browser} />
+      </div>
     );
   }
 }

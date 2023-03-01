@@ -105,6 +105,16 @@ class HomeDirHandler(APIHandler):
     def get(self):
         yield RequestHandler.async_handle_request(self, self.file_api.get_home_dir, 200)
 
+class QuotaHandler(APIHandler):
+    @property
+    def file_api(self):
+        return Cs3FileApi(self.log)
+
+    @web.authenticated
+    @gen.coroutine
+    def get(self):
+        yield RequestHandler.async_handle_request(self, self.file_api.get_quota, 200)
+
 class LockHandler(APIHandler):
 
     @property
@@ -232,6 +242,7 @@ def setup_handlers(web_app, url_path):
         (r"/api/cs3/user/claim", UserInfoClaimHandler),
         (r"/api/cs3/user/query", UserQueryHandler),
         (r"/api/cs3/user/home_dir", HomeDirHandler),
+        (r"/api/cs3/quota", QuotaHandler),
         (r"/api/cs3/locks/create_conflict_file", LockHandler),
     ]
 
