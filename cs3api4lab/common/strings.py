@@ -1,15 +1,18 @@
-class State:
+from enum import Enum
+
+
+class State(Enum):
     PENDING = 'pending'
     ACCEPTED = 'accepted'
     REJECTED = 'rejected'
     INVALID = 'invalid'
 
 
-class Role:
+class Role(Enum):
     VIEWER = 'viewer'
     EDITOR = 'editor'
 
 
-class Grantee:
+class Grantee(Enum):
     USER = 'user'
     GROUP = 'group'

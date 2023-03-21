@@ -3,7 +3,7 @@ import posixpath
 from cs3api4lab.tests.share_test_base import ShareTestBase
 from unittest import TestCase, skip
 from cs3api4lab.exception.exceptions import ShareNotFoundError, ResourceNotFoundError, ShareError
-
+from cs3api4lab.common.strings import State
 
 class TestCs3ShareApi(ShareTestBase, TestCase):
     einstein_id = '4c510ada-c86b-4815-8820-42cdf82c3d51'

@@ -58,6 +58,7 @@ class ShareAPIFacade:
         return role
 
     def update_share(self, params):
+        # todo ref
         """Updates a field of a share
             Paramterers:
                 :param share_id
