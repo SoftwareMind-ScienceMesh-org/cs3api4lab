@@ -37,8 +37,8 @@ class ShareHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def delete(self):
-        RequestValidator.validate_delete_share_request(self.request)
         share_id = self.get_query_argument('share_id')
+        RequestValidator.validate_query_arg(share_id)
         yield RequestHandler.async_handle_request(self, self.share_api.remove, code.NO_CONTENT, share_id)
 
     @web.authenticated
@@ -60,8 +60,7 @@ class ListSharesHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self):
-        RequestValidator.validate_get_shares_request(self.request)
-        filter_duplicates = self.get_query_argument('filter_duplicates') in ['true', '1']
+        filter_duplicates = self.get_query_argument('filter_duplicates', default='true') in ['true', '1']
         yield RequestHandler.async_handle_request(self, self.share_api.list_shares,
                                                   code.OK,
                                                   filter_duplicates)
@@ -75,8 +74,9 @@ class ListReceivedSharesHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self):
-        RequestValidator.validate_get_received_shares_request(self.request)
         status = self.get_query_argument('status', default=None)
+        if status:
+            RequestValidator.validate_share_status(status)
         yield RequestHandler.async_handle_request(self, self.share_api.list_received, code.OK, status)
 
     @web.authenticated
@@ -98,8 +98,8 @@ class ListSharesForFile(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self):
-        RequestValidator.validate_get_shares_for_file_request(self.request)
         file_path = self.get_query_argument('file_path')
+        RequestValidator.validate_query_arg('file_path')
         yield RequestHandler.async_handle_request(self,
                                                   self.share_api.list_grantees_for_file,
                                                   code.OK,
@@ -190,12 +190,15 @@ class UserInfoHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self):
-        RequestValidator.validate_get_user_info_request(self.request)
         idp = self.get_query_argument('idp')
         opaque_id = self.get_query_argument('opaque_id')
+        RequestValidator.validate_query_arg('idp')
+        RequestValidator.validate_query_arg('opaque_id')
         yield RequestHandler.async_handle_request(self, self.user_api.get_user, code.OK, idp, opaque_id)
 
+
 class UserInfoClaimHandler(APIHandler):
+
     @property
     def user_api(self):
         return Cs3UserApi(self.log)
@@ -203,9 +206,10 @@ class UserInfoClaimHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self):
-        RequestValidator.validate_get_user_claim_request(self.request)
         claim = self.get_query_argument('claim')
         value = self.get_query_argument('value')
+        RequestValidator.validate_query_arg('claim')
+        RequestValidator.validate_query_arg('value')
         yield RequestHandler.async_handle_request(self, self.user_api.get_user_info_by_claim, code.OK, claim, value)
 
 class UserQueryHandler(APIHandler):
@@ -217,6 +221,7 @@ class UserQueryHandler(APIHandler):
     @gen.coroutine
     def get(self):
         query = self.get_query_argument('query')
+        RequestValidator.validate_query_arg('query')
         yield RequestHandler.async_handle_request(self, self.user_api.find_users_by_query, code.OK, query)
 
 def setup_handlers(web_app, url_path):
