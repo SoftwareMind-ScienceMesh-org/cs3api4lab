@@ -47,12 +47,12 @@ class TestValidators(TestCase):
 
     def test_validate_get_shares_request(self):
         request = HTTPServerRequest()
-        request.query_arguments = {'filter_duplicates': 'true'}
+        request.query_arguments = {'filter_duplicates': [b'true']}
         RequestValidator.validate_get_shares_request(request)
 
     def test_validate_get_shares_request_fails(self):
         request = HTTPServerRequest()
-        request.query_arguments = {'filter_duplicates': 'fail'}
+        request.query_arguments = {'filter_duplicates': [b'fail']}
         with self.assertRaises(HTTPError) as cm:
             RequestValidator.validate_get_shares_request(request)
         self.assertEqual('Incorrect request: filter_duplicates', cm.exception.log_message)
