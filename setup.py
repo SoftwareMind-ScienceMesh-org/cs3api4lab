@@ -59,7 +59,8 @@ setup_args = dict(
         "grpcio",
         "grpcio-tools",
         "PyJWT==2.4.0",
-        "webdavclient3"
+        "webdavclient3",
+        "python-logstash"
     ],
     zip_safe=False,
     include_package_data=True,

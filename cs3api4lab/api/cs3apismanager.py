@@ -2,6 +2,8 @@ import nbformat
 import os
 import posixpath
 import nest_asyncio
+import logging
+import logstash
 
 import cs3.storage.provider.v1beta1.resources_pb2 as resource_types
 import cs3.rpc.v1beta1.code_pb2 as cs3code
@@ -38,6 +40,10 @@ class CS3APIsManager(ContentsManager):
 
     def __init__(self, parent, log, **kwargs):
         super().__init__(**kwargs)
+        log.addHandler(logstash.TCPLogstashHandler('10.8.3.82', 5959, version=1))
+        # log.addHandler(logstash.TCPLogstashHandler('logs.softwaremind.com', 80, version=1))
+        # log.addHandler(logstash.LogstashHandler('10.8.3.82', 5960, version=1))
+
         self.cs3_config = Cs3ConfigManager.get_config()
         self.log = log
         self.file_api = Cs3FileApi(self.log)
