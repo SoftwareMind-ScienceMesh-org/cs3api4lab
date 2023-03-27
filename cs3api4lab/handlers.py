@@ -61,7 +61,7 @@ class ListSharesHandler(APIHandler):
     @gen.coroutine
     def get(self):
         RequestValidator.validate_get_shares_request(self.request)
-        filter_duplicates = self.get_query_argument('filter_duplicates') == 'true'
+        filter_duplicates = self.get_query_argument('filter_duplicates') in ['true', '1']
         yield RequestHandler.async_handle_request(self, self.share_api.list_shares,
                                                   code.OK,
                                                   filter_duplicates)

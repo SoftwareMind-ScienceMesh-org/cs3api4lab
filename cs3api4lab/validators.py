@@ -14,7 +14,6 @@ class RequestValidator:
         RequestValidator.validate_role(request)
         RequestValidator.validate_grantee_type(request)
 
-
     @staticmethod
     def validate_put_share_request(request):
         RequestValidator.validate_received_share_id(request)
@@ -26,15 +25,16 @@ class RequestValidator:
 
     @staticmethod
     def validate_get_shares_request(request):
-        args = request.get_query_arguments()
+        args = request.query_arguments
         keys = args.keys()
         if 'filter_duplicates' in keys:
-            if args['filter_duplicates'] not in ['true', 'false']:
+            filter_duplicates = args['filter_duplicates'][0].decode('utf-8')
+            if filter_duplicates not in ['true', 'false', '1', '0']:
                 RequestValidator.return_bad_request('filter_duplicates')
 
     @staticmethod
     def validate_get_received_shares_request(request):
-        args = request.get_query_arguments()
+        args = request.query_arguments
         keys = args.keys()
         if 'state' in keys:
             RequestValidator.validate_share_state(args['state'])
@@ -46,13 +46,11 @@ class RequestValidator:
 
     @staticmethod
     def validate_get_shares_for_file_request(request):
-        if 'file_path' not in request.get_query_arguments().keys():
-            RequestValidator.return_bad_request('file_path')
-        RequestValidator.validate_file_path(request['file_path'])
+        RequestValidator.validate_file_path(request.query_arguments)
 
     @staticmethod
     def validate_get_user_info_request(request):
-        args = request.get_query_arguments()
+        args = request.query_arguments
         keys = args.keys()
         if 'idp' not in keys or not args['idp']:
             RequestValidator.return_bad_request('idp')
@@ -61,7 +59,7 @@ class RequestValidator:
 
     @staticmethod
     def validate_get_user_claim_request(request):
-        args = request.get_query_arguments()
+        args = request.query_arguments
         keys = args.keys()
         if 'claim' not in keys or not args['claim']:
             RequestValidator.return_bad_request('claim')
@@ -70,21 +68,23 @@ class RequestValidator:
 
     @staticmethod
     def validate_role(request):
-        if 'role' not in request.keys() or request['role'] not in [r.value for r in Role]:
+        if 'role' not in request.keys() or request['role'] not in [Role.EDITOR, Role.VIEWER]:
             RequestValidator.return_bad_request('role')
 
     @staticmethod
     def validate_grantee_type(request):
-        if 'grantee_type' not in request.keys() or request['grantee_type'] not in [g.value for g in Grantee]:
+        if 'grantee_type' not in request.keys() or request['grantee_type'] not in [Grantee.USER, Grantee.GROUP]:
             RequestValidator.return_bad_request('grantee_type')
 
     @staticmethod
     def validate_grantee(request):
-        return 'grantee' in request.keys() and request['grantee'] != "" and request['grantee'] is not None
+        if 'grantee' not in request.keys() or request['grantee'] == "" or request['grantee'] is None:
+            RequestValidator.return_bad_request('grantee')
 
     @staticmethod
     def validate_file_path(request):
-        return request['file_path'] and request['file_path'] is not None
+        if 'file_path' not in request.keys() or request['file_path'] == "" or request['file_path'] is None:
+            RequestValidator.return_bad_request('file_path')
 
     @staticmethod
     def validate_endpoint(request):
@@ -98,17 +98,17 @@ class RequestValidator:
 
     @staticmethod
     def validate_share_state(state):
-        if state not in [s.value for s in State]:
+        if state not in [State.ACCEPTED, State.PENDING, State.INVALID, State.REJECTED]:
             RequestValidator.return_bad_request('state')
 
     @staticmethod
     def validate_received_share_state(request):
-        if 'state' not in request.keys() or request['state'] not in [s.value for s in State]:
+        if 'state' not in request.keys() or request['state'] not in [State.ACCEPTED, State.PENDING, State.INVALID, State.REJECTED]:
             RequestValidator.return_bad_request('state')
 
     @staticmethod
     def validate_share_id(request):
-        args = request.get_query_arguments()
+        args = request.query_arguments
         keys = args.keys()
         if 'share_id' not in keys or not args['share_id']:
             RequestValidator.return_bad_request('share id')
