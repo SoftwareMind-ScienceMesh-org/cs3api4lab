@@ -47,9 +47,9 @@ class CS3APIsManager(ContentsManager):
         self.cs3_config = Cs3ConfigManager.get_config()
         self.log = log
         self.file_api = Cs3FileApi(self.log)
-        self.share_api = ShareAPIFacade(log)
-        self.storage_api = StorageApi(log)
-        self.lock_api = LockApiFactory.create(log, self.cs3_config)
+        self.share_api = ShareAPIFacade(self.log)
+        self.storage_api = StorageApi(self.log)
+        self.lock_api = LockApiFactory.create(self.log, self.cs3_config)
 
         #line below must be run in order for loop.run_until_complete() to work
         nest_asyncio.apply()

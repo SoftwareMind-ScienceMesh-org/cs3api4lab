@@ -10,16 +10,30 @@ from cs3api4lab.api.cs3_user_api import Cs3UserApi
 from cs3api4lab.api.cs3_file_api import Cs3FileApi
 from jupyter_server.utils import url_path_join
 from cs3api4lab.utils.asyncify import get_or_create_eventloop
+from cs3api4lab.utils.CustomLogger import CustomLogger
+from jupyter_server.base.handlers import log
 
-class ShareHandler(APIHandler):
+class LoggingHandler(APIHandler):
+    @property
+    def log(self):
+        return CustomLogger(log())
+
+class ShareHandler(LoggingHandler):
+    _share_api = None
+
     @property
     def share_api(self):
-        return ShareAPIFacade(self.log)
+        if self._share_api is None:
+            self._share_api = ShareAPIFacade(self.log)
+            return self._share_api
+        else:
+            return self._share_api
 
     @web.authenticated
     @gen.coroutine
     def post(self):
         request = self.get_json_body()
+        self.share_api.log.info("POST /api/cs3/shares")
         try:
             yield RequestHandler.async_handle_request(self,
                                                       self.share_api.create,
@@ -37,12 +51,14 @@ class ShareHandler(APIHandler):
     @gen.coroutine
     def delete(self):
         share_id = self.get_query_argument('share_id')
+        self.share_api.log.info(f"DELETE /api/cs3/shares/{share_id}")
         yield RequestHandler.async_handle_request(self, self.share_api.remove, 204, share_id)
 
     @web.authenticated
     @gen.coroutine
     def put(self):
         params = self.get_json_body()
+        self.share_api.log.info("PUT /api/cs3/shares")
         try:
             yield RequestHandler.async_handle_request(self,
                                           self.share_api.update_share,
@@ -52,26 +68,40 @@ class ShareHandler(APIHandler):
             RequestHandler.handle_error(self, ParamError(err))
 
 
-class ListSharesHandler(APIHandler):
+class ListSharesHandler(LoggingHandler):
+    _share_api = None
+    
     @property
     def share_api(self):
-        return ShareAPIFacade(self.log)
+        if self._share_api is None:
+            self._share_api = ShareAPIFacade(self.log)
+            return self._share_api
+        else:
+            return self._share_api
 
     @web.authenticated
     @gen.coroutine
     def get(self):
+        self.share_api.log.info("GET /api/cs3/shares/list")
         yield RequestHandler.async_handle_request(self, self.share_api.list_shares, 200,
                                                   self.get_query_argument('filter_duplicates', default='false') in ['true', '1'])
 
 
-class ListReceivedSharesHandler(APIHandler):
+class ListReceivedSharesHandler(LoggingHandler):
+    _share_api = None
+
     @property
     def share_api(self):
-        return ShareAPIFacade(self.log)
+        if self._share_api is None:
+            self._share_api = ShareAPIFacade(self.log)
+            return self._share_api
+        else:
+            return self._share_api
 
     @web.authenticated
     @gen.coroutine
     def get(self):
+        self.share_api.log.info("GET /api/cs3/shares/received")
         status = self.get_query_argument('status', default=None)
 
         yield RequestHandler.async_handle_request(self, self.share_api.list_received, 200, status)
@@ -80,21 +110,29 @@ class ListReceivedSharesHandler(APIHandler):
     @gen.coroutine
     def put(self):
         body = self.get_json_body()
+        self.share_api.log.info("PUT /api/cs3/shares/received")
         yield RequestHandler.async_handle_request(self, self.share_api.update_received, 200, body["share_id"], body["state"])
 
 
-class ListSharesForFile(APIHandler):
+class ListSharesForFile(LoggingHandler):
+    _share_api = None
+
     @property
     def share_api(self):
-        return ShareAPIFacade(self.log)
+        if self._share_api is None:
+            self._share_api = ShareAPIFacade(self.log)
+            return self._share_api
+        else:
+            return self._share_api
 
     @web.authenticated
     @gen.coroutine
     def get(self):
+        self.share_api.log.info("GET /api/cs3/shares/file")
         file_path = self.get_query_argument('file_path')
         yield RequestHandler.async_handle_request(self, self.share_api.list_grantees_for_file, 200, file_path)
 
-class HomeDirHandler(APIHandler):
+class HomeDirHandler(LoggingHandler):
     @property
     def file_api(self):
         return Cs3FileApi(self.log)
@@ -104,7 +142,7 @@ class HomeDirHandler(APIHandler):
     def get(self):
         yield RequestHandler.async_handle_request(self, self.file_api.get_home_dir, 200)
 
-class PublicSharesHandler(APIHandler):
+class PublicSharesHandler(LoggingHandler):
     @property
     def public_share_api(self):
         return Cs3PublicShareApi(self.log)
@@ -147,7 +185,7 @@ class PublicSharesHandler(APIHandler):
                                                   request['field_value'])
 
 
-class GetPublicShareByTokenHandler(APIHandler):
+class GetPublicShareByTokenHandler(LoggingHandler):
     @property
     def public_share_api(self):
         return Cs3PublicShareApi(self.log)
@@ -160,7 +198,7 @@ class GetPublicShareByTokenHandler(APIHandler):
         yield RequestHandler.async_handle_request(self, self.public_share_api.get_public_share_by_token, 200, token, password)
 
 
-class ListPublicSharesHandler(APIHandler):
+class ListPublicSharesHandler(LoggingHandler):
     @property
     def public_share_api(self):
         return Cs3PublicShareApi(self.log)
@@ -171,7 +209,7 @@ class ListPublicSharesHandler(APIHandler):
         yield RequestHandler.async_handle_request(self, self.public_share_api.list_public_shares, 200)
 
 
-class UserInfoHandler(APIHandler):
+class UserInfoHandler(LoggingHandler):
     @property
     def user_api(self):
         return Cs3UserApi(self.log)
@@ -183,7 +221,7 @@ class UserInfoHandler(APIHandler):
         opaque_id = self.get_query_argument('opaque_id')
         yield RequestHandler.async_handle_request(self, self.user_api.get_user, 200, idp, opaque_id)
 
-class UserInfoClaimHandler(APIHandler):
+class UserInfoClaimHandler(LoggingHandler):
     @property
     def user_api(self):
         return Cs3UserApi(self.log)
@@ -195,7 +233,7 @@ class UserInfoClaimHandler(APIHandler):
         value = self.get_query_argument('value')
         yield RequestHandler.async_handle_request(self, self.user_api.get_user_info_by_claim, 200, claim, value)
 
-class UserQueryHandler(APIHandler):
+class UserQueryHandler(LoggingHandler):
     @property
     def user_api(self):
         return Cs3UserApi(self.log)
@@ -226,7 +264,7 @@ def setup_handlers(web_app, url_path):
         new_handler = tuple([pattern] + list(handler[1:]))
         web_app.add_handlers('.*$', [new_handler])
 
-class RequestHandler(APIHandler):
+class RequestHandler(LoggingHandler):
 
     @staticmethod
     def handle_request(self, api_function, success_code, *args):
