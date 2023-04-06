@@ -69,16 +69,16 @@ class Cs3OcmShareApi:
                                                 recipient_mesh_provider=provider_info)
         response = self.ocm_share_api.CreateOCMShare(request=request,
                                                      metadata=self._token())
-        if self._is_code_ok(response):
-            self.log.info("OCM share created:\n")
-            return self._map_share(response.share)
-        elif response.status.code == cs3_code.CODE_NOT_FOUND:
+
+        if response.status.code == cs3_code.CODE_NOT_FOUND:
             raise ResourceNotFoundError(f"resource {file_path} not found")
         elif response.status.code == cs3_code.CODE_ALREADY_EXISTS:
-            raise ShareAlreadyExistsError("Error creating share: "
-                                          + endpoint + file_path)
-        else:
+            raise ShareAlreadyExistsError("Error creating share: " + endpoint + file_path)
+        elif not self._is_code_ok(response):
             self._handle_error(response, "Error creating OCM share")
+
+        self.log.info("OCM share created:\n")
+        return self._map_share(response.share)
 
     def remove(self, share_id):
         share_id_obj = sharing_res.ShareId(opaque_id=share_id)
@@ -87,12 +87,11 @@ class Cs3OcmShareApi:
         response = self.ocm_share_api.RemoveOCMShare(request=request,
                                                      metadata=self._token())
 
-        if self._is_code_ok(response):
-            self.log.info("OCM share deleted: " + share_id)
-        elif response.status.code == cs3_code.CODE_NOT_FOUND:
+        if response.status.code == cs3_code.CODE_NOT_FOUND:
             raise ShareNotFoundError(f"ocm share {share_id} not found")
-        else:
+        elif not self._is_code_ok(response):
             self._handle_error(response, "Error removing OCM share")
+        self.log.info("OCM share deleted: " + share_id)
 
     def update(self, share_id, field, value):
         share_id_obj = sharing_res.ShareId(opaque_id=share_id)
@@ -109,13 +108,12 @@ class Cs3OcmShareApi:
 
         response = self.ocm_share_api.UpdateOCMShare(request=request,
                                                      metadata=self._token())
-        if self._is_code_ok(response):
-            self.log.info("OCM share updated:\n" + share_id)
-            return
-        elif response.status.code == cs3_code.CODE_NOT_FOUND:
+        if response.status.code == cs3_code.CODE_NOT_FOUND:
             raise ShareNotFoundError(f"ocm share {share_id} not found")
-        else:
+        elif not self._is_code_ok(response):
             self._handle_error(response, "Error updating OCM share:")
+
+        self.log.info("OCM share updated:\n" + share_id)
 
     def update_received(self, ocm_share_id, field, value):
         share_id_obj = sharing_res.ShareId(opaque_id=ocm_share_id)
@@ -164,6 +162,7 @@ class Cs3OcmShareApi:
             raise ShareNotFoundError(f"ocm share {share_id} not found")
         elif response.status.code != cs3_code.CODE_OK:
             self._handle_error(response)
+
         return self._map_share(response.share)
 
     def get_received_ocm_shares(self, share_id):
@@ -178,6 +177,7 @@ class Cs3OcmShareApi:
                                                             metadata=self._token())
         if not self._is_code_ok(response):
             self._handle_error(response, "Error listing OCM received shares:")
+
         return response
 
     def get_received_share(self, share_id):
