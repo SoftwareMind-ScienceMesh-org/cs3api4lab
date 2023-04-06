@@ -196,7 +196,10 @@ class CS3APIsManager(ContentsManager):
                 nb = nbformat.from_dict(model['content'])
                 self.check_and_sign(nb, path)
                 self._save_notebook(path, nb, model['format'])
-                # ToDo: Implement creating checkpoint
+
+                # ToDo: Implement save to checkpoint
+                # if not self.checkpoints.list_checkpoints(path):
+                #     self.create_checkpoint(path)
 
             elif model['type'] == 'file':
                 self._save_file(path, model['content'], model['format'])

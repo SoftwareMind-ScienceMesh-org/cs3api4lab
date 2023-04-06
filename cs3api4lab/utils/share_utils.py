@@ -48,10 +48,6 @@ class ShareUtils:
         return State.INVALID
 
     @staticmethod
-    def is_accepted(state):
-        return ShareUtils.map_state(state) == State.ACCEPTED
-
-    @staticmethod
     def get_resource_permissions(role):
         if role == Role.VIEWER:
             return storage_resources.ResourcePermissions(get_path=True,
