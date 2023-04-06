@@ -130,7 +130,7 @@ class Cs3OcmShareApi:
             request = ocm_api.UpdateReceivedOCMShareRequest(ref=ref,
                                                             field=ocm_api.UpdateReceivedOCMShareRequest
                                                             .UpdateField(
-                                                                state=ShareUtils.map_state(value)
+                                                                state=ShareUtils.string_to_state(value)
                                                             ))
         else:
             raise ValueError("Unknown field to update")
@@ -242,7 +242,7 @@ class Cs3OcmShareApi:
             }
         }
         if state:
-            response.update({"state": ShareUtils.map_state(state)})
+            response.update({"state": ShareUtils.state_to_string(state)})
 
         return response
 

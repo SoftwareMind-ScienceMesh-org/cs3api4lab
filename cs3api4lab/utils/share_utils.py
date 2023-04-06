@@ -25,27 +25,31 @@ class ShareUtils:
         raise InvalidTypeError("Unknown share grantee type " + str(share.grantee.type))
 
     @staticmethod
-    def map_state(state):
-        if isinstance(state, str):
-            state = str.lower(state)
-            if state == State.PENDING:
-                return sharing_res.SHARE_STATE_PENDING
-            elif state == State.ACCEPTED:
-                return sharing_res.SHARE_STATE_ACCEPTED
-            elif state == State.REJECTED:
-                return sharing_res.SHARE_STATE_REJECTED
-            elif state == State.INVALID:
-                return sharing_res.SHARE_STATE_INVALID
+    def string_to_state(state):
+        state = str.lower(state)
+        if state == State.PENDING:
+            return sharing_res.SHARE_STATE_PENDING
+        elif state == State.ACCEPTED:
+            return sharing_res.SHARE_STATE_ACCEPTED
+        elif state == State.REJECTED:
+            return sharing_res.SHARE_STATE_REJECTED
+        elif state == State.INVALID:
+            return sharing_res.SHARE_STATE_INVALID
         else:
-            if state == sharing_res.SHARE_STATE_PENDING:
-                return State.PENDING
-            elif state == sharing_res.SHARE_STATE_ACCEPTED:
-                return State.ACCEPTED
-            elif state == sharing_res.SHARE_STATE_REJECTED:
-                return State.REJECTED
-            elif state == sharing_res.SHARE_STATE_INVALID:
-                return State.INVALID
-        return State.INVALID
+            raise InvalidTypeError("No such received share state: %s" % state)
+
+    @staticmethod
+    def state_to_string(state):
+        if state == sharing_res.SHARE_STATE_PENDING:
+            return State.PENDING
+        elif state == sharing_res.SHARE_STATE_ACCEPTED:
+            return State.ACCEPTED
+        elif state == sharing_res.SHARE_STATE_REJECTED:
+            return State.REJECTED
+        elif state == sharing_res.SHARE_STATE_INVALID:
+            return State.INVALID
+        else:
+            raise InvalidTypeError("No such share state: %s" % state)
 
     @staticmethod
     def get_resource_permissions(role):

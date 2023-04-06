@@ -254,7 +254,7 @@ class ShareAPIFacade:
                 continue
 
             if received:
-                model['state'] = ShareUtils.map_state(list_response.shares[share_no].state)
+                model['state'] = ShareUtils.state_to_string(list_response.shares[share_no].state)
             model['resource_id'] = {'storage_id': share.resource_id.storage_id,
                                     'opaque_id': share.resource_id.opaque_id}
             respond_model['content'].append(model)

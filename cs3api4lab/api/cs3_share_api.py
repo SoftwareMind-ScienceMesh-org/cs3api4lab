@@ -250,34 +250,6 @@ class Cs3ShareApi:
         ))
         return sharing.ListReceivedSharesRequest(filters=share_filters)
 
-    def _map_received_shares(self, list_res):
-        shares = []
-        for share in list_res.shares:
-            shares.append({
-                "opaque_id": share.share.id.opaque_id,
-                "id": {
-                    "storage_id": share.share.resource_id.storage_id,
-                    "opaque_id": self._purify_file_path(share.share.resource_id.opaque_id),
-                },
-                "permissions": self._resolve_share_permissions(share.share),
-                "grantee": {
-                    "type": share.share.grantee.type,
-                    "opaque_id": share.share.grantee.user_id.opaque_id,
-                    "idp": share.share.grantee.user_id.idp
-                },
-                "owner": {
-                    "idp": share.share.owner.idp,
-                    "opaque_id": share.share.owner.opaque_id
-                },
-                "creator": {
-                    "idp": share.share.creator.idp,
-                    "opaque_id": share.share.creator.opaque_id
-                },
-                "state": ShareUtils.map_state(share.state)
-            })
-
-        return shares
-
     def _map_given_share(self, share):
         share_mapped = {
             "opaque_id": share.id.opaque_id,
@@ -318,7 +290,7 @@ class Cs3ShareApi:
         raise InvalidTypeError("Incorrect grantee type " + str(share.grantee.type))
 
     def update_received(self, share_id, state=State.ACCEPTED):
-        share_state = ShareUtils.map_state(state)
+        share_state = ShareUtils.string_to_state(state)
         list_request = sharing.ListReceivedSharesRequest()
         list_response = self.cs3_api.ListReceivedShares(request=list_request,
                                                         metadata=[('x-access-token', self.auth.authenticate())])
