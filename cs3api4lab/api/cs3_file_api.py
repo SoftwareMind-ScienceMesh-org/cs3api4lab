@@ -208,7 +208,7 @@ class Cs3FileApi:
         out = []
         for info in res.infos:
             if self.config.mount_dir != '/' and len(self.config.mount_dir) > 0 and info.path.startswith(self.config.mount_dir):
-                info.path = info.path.rsplit(self.config.mount_dir)[-1]
+                info.path = FileUtils.remove_mount_dir(info.path, self.config.mount_dir)
             out.append(info)
         return out
 

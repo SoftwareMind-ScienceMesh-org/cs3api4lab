@@ -4,6 +4,7 @@ from tornado import web
 from datetime import datetime
 from IPython.utils import tz
 from cs3api4lab.utils.share_utils import ShareUtils
+from cs3api4lab.utils.file_utils import FileUtils
 
 
 class ModelUtils:
@@ -189,12 +190,12 @@ class ModelUtils:
         return model
 
     @staticmethod
-    def update_file_model(model, stat=None):
+    def update_file_model(model, mount_dir, stat=None):
         if not stat:
             return model
 
         model['name'] = stat['filepath'].rsplit('/', 1)[-1]
-        model['path'] = stat['filepath']
+        model['path'] = FileUtils.remove_mount_dir(stat['filepath'], mount_dir)
         model['size'] = stat['size']
         model['mimetype'] = mimetypes.guess_type(stat['filepath'])[0]
         model['writable'] = True

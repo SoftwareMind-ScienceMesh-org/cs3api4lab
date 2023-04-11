@@ -351,7 +351,9 @@ class CS3APIsManager(ContentsManager):
             self.log.info('File % does not exists' % path)
 
         if file_info:
-            model = ModelUtils.update_file_model(ModelUtils.create_empty_file_model(path), file_info)
+            model = ModelUtils.update_file_model(ModelUtils.create_empty_file_model(path),
+                                                 self.cs3_config.mount_dir,
+                                                 file_info)
 
         model['writable'] = self._is_editor(file_info)
         if content:
@@ -377,7 +379,7 @@ class CS3APIsManager(ContentsManager):
     def _notebook_model(self, path, content):
         file_info = self.file_api.stat_info(path, self.cs3_config.endpoint)
 
-        model = ModelUtils.update_file_model(ModelUtils.create_empty_file_model(path), file_info)
+        model = ModelUtils.update_file_model(ModelUtils.create_empty_file_model(path), self.cs3_config.mount_dir, file_info)
         model['type'] = 'notebook'
 
         if content:
