@@ -1,8 +1,6 @@
 from cs3api4lab.tests.share_test_base import ShareTestBase
-
-from unittest import TestCase
-
-from unittest import skip
+from unittest import TestCase, skip
+import posixpath
 
 
 class TestCs3UniShareApi(ShareTestBase, TestCase):
@@ -12,7 +10,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
     marie_idp = 'cesnet.cz'
     richard_id = '932b4540-8d16-481e-8ef4-588e4b6b151c'
     richard_idp = 'example.org'
-    file_path = '/home/test.txt'
+    file_path = 'test.txt'
     share_id = None
     ocm_share_id = None
     ocm_file_name = None
@@ -20,7 +18,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
 
     def test_create(self):
         try:
-            self.file_name = self.file_path + self.get_random_suffix()
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + self.get_random_suffix())
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
             share_list = self.uni_api.list_shares()
@@ -38,7 +36,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
     @skip
     def test_create_ocm(self):
         try:
-            self.file_name = self.file_path + self.get_random_suffix()
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + self.get_random_suffix())
             self.ocm_file_name = self.file_path + self.get_random_suffix()
             created_ocm_share = self.create_ocm_share('einstein', self.marie_id, self.marie_idp, self.ocm_file_name)
             self.ocm_share_id = created_ocm_share['id']
@@ -62,7 +60,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
         if not self.config.enable_ocm:
             self.skipTest('OCM disabled')
         try:
-            self.file_name = self.file_path + self.get_random_suffix()
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + self.get_random_suffix())
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
@@ -85,7 +83,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
         if not self.config.enable_ocm:
             self.skipTest('OCM disabled')
         try:
-            self.file_name = self.file_path + self.get_random_suffix()
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + self.get_random_suffix())
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
@@ -106,7 +104,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
 
     def test_list_received(self):
         try:
-            self.file_name = self.file_path + self.get_random_suffix()
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + self.get_random_suffix())
             created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
             self.share_id = created_share['opaque_id']
             share_list = self.uni_api.list_received()
@@ -123,7 +121,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
 
     def test_list_received_not_accepted(self):
         try:
-            self.file_name = self.file_path + self.get_random_suffix()
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + self.get_random_suffix())
             created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
@@ -166,7 +164,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
 
     def test_update_received_share(self):
         try:
-            self.file_name = self.file_path + self.get_random_suffix()
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + self.get_random_suffix())
             created_share = self.create_share('richard', self.einstein_id, self.einstein_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
@@ -209,7 +207,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
 
     def test_remove(self):
         try:
-            self.file_name = self.file_path + self.get_random_suffix()
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + self.get_random_suffix())
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
@@ -269,7 +267,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
         try:
             expected_grantee_opaque = '932b4540-8d16-481e-8ef4-588e4b6b151c'
             expected_grantee_idp = 'example.org'
-            self.file_name = self.file_path + self.get_random_suffix()
+            self.file_name = posixpath.join(self.config.mount_dir, self.file_path + self.get_random_suffix())
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
