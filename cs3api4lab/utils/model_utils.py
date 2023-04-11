@@ -132,7 +132,7 @@ class ModelUtils:
                     sub_model['type'] = 'directory'
                     contents.append(sub_model)
                 elif cs3_model.type == resource_types.RESOURCE_TYPE_FILE:
-                    if cs3_model.id.opaque_id.endswith('.ipynb'):
+                    if cs3_model.path.endswith('.ipynb'):
                         contents.append(
                             ModelUtils.convert_container_to_notebook_model(cs3_model, cs3_container)
                         )

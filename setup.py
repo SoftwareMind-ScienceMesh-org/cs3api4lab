@@ -62,12 +62,10 @@ setup_args = dict(
         "webdavclient3",
         "ipykernel",
         "jupyter_events",
-        "pytest-console-scripts",
         "pytest-timeout",
         "pytest_tornasync",
         "pytest-jupyter[server]>=0.4",
         "pytest>=7.0",
-        "pytest-asyncio",
         "pytest-custom_exit_code",
         "requests",
         "pre-commit"

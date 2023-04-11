@@ -102,8 +102,15 @@ class CS3APIsManager(ContentsManager):
             Whether the file exists.
         """
         path = FileUtils.normalize_path(path)
-        stat = self.storage_api.stat(path)
-        return stat.status.code == cs3code.CODE_OK and stat.info.type == resource_types.RESOURCE_TYPE_FILE
+        try:
+            file_info = self.file_api.stat_info(path, self.cs3_config.endpoint)
+        except FileNotFoundError:
+            return False
+
+        if file_info['type'] == resource_types.RESOURCE_TYPE_FILE:
+            return True
+
+        return False
 
     # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
     def get(self, path, content=True, type=None, format=None):
@@ -121,7 +128,7 @@ class CS3APIsManager(ContentsManager):
                 model = self._dir_model(path, content=content)
             elif type == 'file' and file_exists:
                 model = self._file_model(path, content=content, format=format)
-            elif type == 'notebook' and self.file_exists:
+            elif type == 'notebook' and file_exists:
                 model = self._notebook_model(path, content=content)
         else:
             if file_exists:

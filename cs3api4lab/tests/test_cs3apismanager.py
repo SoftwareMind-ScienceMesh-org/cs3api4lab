@@ -2,7 +2,6 @@ from unittest import TestCase
 from tornado import web
 
 import posixpath
-from urllib.parse import urljoin
 
 from cs3api4lab.api.cs3apismanager import CS3APIsManager
 from cs3api4lab.api.cs3_file_api import Cs3FileApi
@@ -10,6 +9,7 @@ from cs3api4lab.config.config_manager import Cs3ConfigManager
 from traitlets.config import LoggingConfigurable
 
 from cs3api4lab.tests.share_test_base import ShareTestBase
+
 
 class TestCS3APIsManager(ShareTestBase,TestCase):
     user_id = None

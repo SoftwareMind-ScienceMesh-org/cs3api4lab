@@ -4,16 +4,8 @@
 import pytest
 from nbformat import writes
 from nbformat.v4 import new_notebook
-
-import posixpath
 from pytest_jupyter.jupyter_server import url_path_join
-
-from traitlets.config import LoggingConfigurable
-
 from ..tests.app import MockExtensionApp
-
-from cs3api4lab.api.cs3_file_api import Cs3FileApi
-from cs3api4lab.config.config_manager import Cs3ConfigManager
 
 pytest_plugins = ["jupyter_server.pytest_plugin"]
 
