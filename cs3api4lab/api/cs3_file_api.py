@@ -31,19 +31,19 @@ class Cs3FileApi:
     log = None
     cs3_api = None
     auth = None
-    config = None
+    cs3_config = None
     lock_api = None
 
     def __init__(self, log):
         self.log = log
-        self.config = Cs3ConfigManager().get_config()
-        self.auth = Auth.get_authenticator(config=self.config, log=self.log)
+        self.cs3_config = Cs3ConfigManager().get_cs3_config()
+        self.auth = Auth.get_authenticator(cs3_config=self.cs3_config, log=self.log)
         channel = ChannelConnector().get_channel()
         auth_interceptor = check_auth_interceptor.CheckAuthInterceptor(log, self.auth)
         intercept_channel = grpc.intercept_channel(channel, auth_interceptor)
         self.cs3_api = cs3gw_grpc.GatewayAPIStub(intercept_channel)
         self.storage_api = StorageApi(log)
-        self.lock_api = LockApiFactory.create(log, self.config)
+        self.lock_api = LockApiFactory.create(log, self.cs3_config)
 
     def mount_point(self):
         """
@@ -91,7 +91,7 @@ class Cs3FileApi:
         """
         if stat:
             # additional request until this issue is resolved https://github.com/cs3org/reva/issues/3243
-            if self.config.dev_env and "/home/" in stat['filepath']:
+            if self.cs3_config.dev_env and "/home/" in stat['filepath']:
                 opaque_id = urllib.parse.unquote(stat['inode']['opaque_id'])
                 storage_id = urllib.parse.unquote(stat['inode']['storage_id'])
                 stat = self.stat_info(opaque_id, storage_id)
@@ -114,9 +114,9 @@ class Cs3FileApi:
             raise IOError(e)
 
         size = len(file_get.content)
-        chunk_size = self.config.chunk_size
+        chunk_size = self.cs3_config.chunk_size
         for i in range(0, size, chunk_size):
-            yield file_get.content[i:i + self.config.chunk_size]
+            yield file_get.content[i:i + self.cs3_config.chunk_size]
 
     def write_file(self, file_path, content, endpoint=None, format=None):
         """
@@ -130,7 +130,7 @@ class Cs3FileApi:
             stat = self.stat_info(file_path, endpoint)
             if stat:
                 # additional request until this issue is resolved https://github.com/cs3org/reva/issues/3243
-                if self.config.dev_env and "/home/" in stat['filepath']:
+                if self.cs3_config.dev_env and "/home/" in stat['filepath']:
                     opaque_id = urllib.parse.unquote(stat['inode']['opaque_id'])
                     storage_id = urllib.parse.unquote(stat['inode']['storage_id'])
                     stat = self.stat_info(opaque_id, storage_id)
@@ -207,8 +207,8 @@ class Cs3FileApi:
 
         out = []
         for info in res.infos:
-            if self.config.mount_dir != '/' and len(self.config.mount_dir) > 0 and info.path.startswith(self.config.mount_dir):
-                info.path = info.path.rsplit(self.config.mount_dir)[-1]
+            if self.cs3_config.mount_dir != '/' and len(self.cs3_config.mount_dir) > 0 and info.path.startswith(self.cs3_config.mount_dir):
+                info.path = info.path.rsplit(self.cs3_config.mount_dir)[-1]
             out.append(info)
         return out
 
@@ -260,7 +260,7 @@ class Cs3FileApi:
             'msg="Invoked create container" filepath="%s" elapsedTimems="%.1f"' % (path, (tend - tstart) * 1000))
 
     def get_home_dir(self):
-        return self.config.home_dir if self.config.home_dir else ""
+        return self.cs3_config.home_dir if self.cs3_config.home_dir else ""
 
     def _handle_error(self, response):
         self.log.error(response)

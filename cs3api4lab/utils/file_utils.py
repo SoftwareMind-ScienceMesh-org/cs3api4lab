@@ -22,7 +22,7 @@ class FileUtils:
 
     @staticmethod
     def check_and_transform_file_path(file_id):
-        config = Cs3ConfigManager().get_config() #note: can cause problems in tests because of the config, it should be passed as an argument
+        config = Cs3ConfigManager().get_cs3_config() #note: can cause problems in tests because of the config, it should be passed as an argument
 
         has_root_dir = file_id.startswith(config.root_dir_list)
 

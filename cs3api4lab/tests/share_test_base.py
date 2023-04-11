@@ -14,12 +14,12 @@ class ShareTestBase:
 
     def setUp(self):
         self.log = LoggingConfigurable().log
-        self.config = Cs3ConfigManager().get_config()
+        self.cs3_config = Cs3ConfigManager().get_cs3_config()
         self.file_api = Cs3FileApi(self.log)
         self.share_api = Cs3ShareApi(self.log)
         self.ocm_api = Cs3OcmShareApi(self.log)
         self.uni_api = ShareAPIFacade(self.log)
-        self.auth = ExtAuthenticator(self.config, self.log)
+        self.auth = ExtAuthenticator(self.cs3_config, self.log)
         self.storage_api = StorageApi(self.log)
 
         marie_ext_config = {
@@ -159,14 +159,14 @@ class ShareTestBase:
     def clear_locks_on_file(self, file, endpoint='/', user=None):
         if user == 'richard':
             stat = self.richard_file_api.stat_info(file, endpoint)
-            if self.config.dev_env and "/home/" in stat['filepath']:
+            if self.cs3_config.dev_env and "/home/" in stat['filepath']:
                 opaque_id = urllib.parse.unquote(stat['inode']['opaque_id'])
                 storage_id = urllib.parse.unquote(stat['inode']['storage_id'])
                 stat = self.richard_file_api.stat_info(opaque_id, storage_id)
             self.richard_storage_api.set_metadata('cs3apis_lock', '', stat)
         else:
             stat = self.file_api.stat_info(file, endpoint)
-            if self.config.dev_env and "/home/" in stat['filepath']:
+            if self.cs3_config.dev_env and "/home/" in stat['filepath']:
                 opaque_id = urllib.parse.unquote(stat['inode']['opaque_id'])
                 storage_id = urllib.parse.unquote(stat['inode']['storage_id'])
                 stat = self.file_api.stat_info(opaque_id, storage_id)

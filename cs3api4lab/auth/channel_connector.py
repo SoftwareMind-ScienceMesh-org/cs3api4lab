@@ -10,7 +10,7 @@ class Channel(LoggingConfigurable):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        config = Cs3ConfigManager.get_config()
+        config = Cs3ConfigManager.get_cs3_config()
         if config.secure_channel:
             try:
 

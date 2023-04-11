@@ -59,7 +59,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
                 self.remove_test_file('einstein', self.file_name)
 
     def test_list_with_filter(self):
-        if not self.config.enable_ocm:
+        if not self.cs3_config.enable_ocm:
             self.skipTest('OCM disabled')
         try:
             self.file_name = self.file_path + self.get_random_suffix()
@@ -82,7 +82,7 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
                 self.remove_test_file('einstein', self.file_name)
 
     def test_list_without_filter(self):
-        if not self.config.enable_ocm:
+        if not self.cs3_config.enable_ocm:
             self.skipTest('OCM disabled')
         try:
             self.file_name = self.file_path + self.get_random_suffix()

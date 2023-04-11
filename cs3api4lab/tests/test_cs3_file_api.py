@@ -12,7 +12,7 @@ class TestCs3FileApi(TestCase):
 
     def setUp(self):
         self.log = LoggingConfigurable().log
-        config = Cs3ConfigManager.get_config()
+        config = Cs3ConfigManager.get_cs3_config()
         self.client_id = config.client_id
         self.endpoint = config.endpoint
         self.storage = Cs3FileApi(self.log)

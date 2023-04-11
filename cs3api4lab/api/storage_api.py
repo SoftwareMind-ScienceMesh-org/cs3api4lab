@@ -22,12 +22,12 @@ class StorageApi:
     log = None
     cs3_api = None
     auth = None
-    config = None
+    cs3_config = None
 
     def __init__(self, log):
         self.log = log
-        self.config = Cs3ConfigManager.get_config()
-        self.auth = Auth.get_authenticator(config=self.config, log=self.log)
+        self.cs3_config = Cs3ConfigManager.get_cs3_config()
+        self.auth = Auth.get_authenticator(cs3_config=self.cs3_config, log=self.log)
         channel = ChannelConnector().get_channel()
         auth_interceptor = check_auth_interceptor.CheckAuthInterceptor(log, self.auth)
         intercept_channel = grpc.intercept_channel(channel, auth_interceptor)
@@ -97,7 +97,7 @@ class StorageApi:
 
     def upload_content(self, file_path, content, content_size, init_file_upload_response):
         protocol = [p for p in init_file_upload_response.protocols if p.protocol == "simple"][0]
-        if self.config.tus_enabled:
+        if self.cs3_config.tus_enabled:
             headers = {
                 'Tus-Resumable': '1.0.0',
                 'File-Path': file_path,

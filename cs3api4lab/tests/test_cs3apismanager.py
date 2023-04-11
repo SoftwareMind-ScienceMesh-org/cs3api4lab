@@ -18,9 +18,9 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
     def setUp(self):
         ShareTestBase.setUp(self)   # this is needed to set up sharing from different accounts than default (einstein)
         self.log = LoggingConfigurable().log
-        self.config = Cs3ConfigManager.get_config()
-        self.user_id = self.config.client_id
-        self.endpoint = self.config.endpoint
+        self.cs3_config = Cs3ConfigManager.get_cs3_config()
+        self.user_id = self.cs3_config.client_id
+        self.endpoint = self.cs3_config.endpoint
         self.file_api = Cs3FileApi(self.log)
         self.contents_manager = CS3APIsManager(None, self.log)
 
@@ -218,7 +218,7 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
         message = "Lorem ipsum dolor sit amet..."
         try:
             self.file_api.write_file(file_path, message, self.endpoint)
-            stat = self.file_api.stat_info(file_path, self.config.endpoint)
+            stat = self.file_api.stat_info(file_path, self.cs3_config.endpoint)
             result = self.contents_manager._is_editor(stat)
             self.assertEqual(result, True, 'Incorrect check if file is editor')
         finally:
@@ -236,7 +236,7 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
         try:
             richards_share = self.create_share('richard', einstein_id, einstein_idp, file_path, 'viewer')
             self.share_id = richards_share['opaque_id']
-            stat = self.file_api.stat_info(remote_path, self.config.endpoint)
+            stat = self.file_api.stat_info(remote_path, self.cs3_config.endpoint)
             result = self.contents_manager._is_editor(stat)
             self.assertEqual(result, False, 'Is editor should be false')
         finally:
@@ -488,7 +488,7 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
             except: pass
 
     def test_kernel_path_when_config_entry_provided(self):
-        self.config.kernel_path = "/test/path"
+        self.cs3_config.kernel_path = "/test/path"
         path = self.contents_manager.get_kernel_path('')
         self.assertEqual(path, "/test/path")
 

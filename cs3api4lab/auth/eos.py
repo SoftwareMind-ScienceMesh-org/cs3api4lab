@@ -3,21 +3,21 @@ from cs3api4lab.auth.oauth import Oauth
 
 class Eos(Oauth):
 
-    def __init__(self, config=None, log=None):
-        super().__init__(config, log)
+    def __init__(self, cs3_config=None, log=None):
+        super().__init__(cs3_config, log)
 
     def _refresh_token_from_file_or_config(self):
 
-        if self.config.eos_file:
+        if self.cs3_config.eos_file:
 
             try:
-                with open(self.config.eos_file, "r") as file:
+                with open(self.cs3_config.eos_file, "r") as file:
                     eos_token = file.read()
             except IOError as e:
-                raise IOError(f"Error opening token file {self.config.eos_file} exception: {e}")
+                raise IOError(f"Error opening token file {self.cs3_config.eos_file} exception: {e}")
 
-        elif self.config.eos_token:
-            eos_token = self.config.eos_token
+        elif self.cs3_config.eos_token:
+            eos_token = self.cs3_config.eos_token
         else:
             raise AttributeError("Config hasn't EOS token or token file.")
 
