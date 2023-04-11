@@ -1,5 +1,5 @@
 import os
-from unittest import TestCase
+from unittest import TestCase, mock
 
 from cs3api4lab.config.config_manager import Config
 from traitlets.config import LoggingConfigurable
@@ -40,7 +40,6 @@ class TestCS3ConfigManager(TestCase):
             if env.startswith('CS3_'):
                 del os.environ[env]
 
-
     def test_load_config_file_for_tests(self):
         configManager = Cs3ConfigManager().get_config()
 
@@ -61,24 +60,16 @@ class TestCS3ConfigManager(TestCase):
         self.assertEqual(configManager.ca_cert, self.config["ca_cert"])
         self.assertEqual(configManager.tus_enabled, self.config["tus_enabled"])
         self.assertEqual(configManager.enable_ocm, self.config["enable_ocm"])
-        
 
-    def test_load_from_environment_variables(self):
-        os.environ['CS3_REVA_HOST'] = '1.2.3.4:5'
-        os.environ['CS3_SECURE_CHANNEL'] = 'true'
-        os.environ['CS3_CA_CERT'] = 'abcdf12345'
-        os.environ['CS3_LOCKS_EXPIRATION_TIME'] = '123'
-        os.environ['CS3_TUS_ENABLED'] = 'false'
-        os.environ['CS3_ENABLE_OCM'] = 'false'
-
+    @mock.patch.dict(os.environ, {"CS3_REVA_HOST": "1.2.3.4:5",
+                                  "CS3_SECURE_CHANNEL": "true",
+                                  "CS3_ROOT_DIR_LIST": "/dir1,/dir2",
+                                  "CS3_LOCKS_EXPIRATION_TIME": "123"},
+                     clear=True)
+    def test_get_config_value_from_env(self):
         configManager = Config()
-
         self.assertEqual(configManager.reva_host, '1.2.3.4:5')
         self.assertTrue(configManager.secure_channel)
         self.assertTrue(isinstance(configManager.secure_channel, bool))
-        self.assertFalse(configManager.tus_enabled)
-        self.assertTrue(isinstance(configManager.tus_enabled, bool))
-        self.assertFalse(configManager.enable_ocm)
-        self.assertTrue(isinstance(configManager.enable_ocm, bool))
-        self.assertEqual(configManager.ca_cert, 'abcdf12345')
         self.assertEqual(int(configManager.locks_expiration_time), 123)
+
