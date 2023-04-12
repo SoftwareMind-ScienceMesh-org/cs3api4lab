@@ -1,6 +1,7 @@
 from unittest import TestCase
-
 from tornado import web
+
+import posixpath
 
 from cs3api4lab.api.cs3apismanager import CS3APIsManager
 from cs3api4lab.api.cs3_file_api import Cs3FileApi
@@ -8,6 +9,7 @@ from cs3api4lab.config.config_manager import Cs3ConfigManager
 from traitlets.config import LoggingConfigurable
 
 from cs3api4lab.tests.share_test_base import ShareTestBase
+
 
 class TestCS3APIsManager(ShareTestBase,TestCase):
     user_id = None
@@ -26,13 +28,16 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
 
 
     def test_get_text_file(self):
-        file_id = "/home/test_get_text_file.txt"
+        file_name = "test_get_text_file.txt"
+        file_path = posixpath.join(self.config.mount_dir, file_name)
+        file_model_path = posixpath.join("/", file_name)
+
         message = "Lorem ipsum dolor sit amet..."
         try:
-            self.file_api.write_file(file_id, message, self.endpoint)
-            model = self.contents_manager.get(file_id, True, 'file')
+            self.file_api.write_file(file_path, message, self.endpoint)
+            model = self.contents_manager.get(file_model_path, True, 'file')
             self.assertEqual(model["name"], "test_get_text_file.txt")
-            self.assertEqual(model["path"], file_id)
+            self.assertEqual(model["path"], file_model_path)
             self.assertEqual(model["content"], message)
             self.assertEqual(model["format"], "text")
             self.assertEqual(model["mimetype"], "text/plain")
@@ -40,16 +45,19 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
             self.assertEqual(model["writable"], True)
             self.assertEqual(model["type"], "file")
         finally:
-            self.file_api.remove(file_id, self.endpoint)
+            self.file_api.remove(file_path, self.endpoint)
 
     def test_get_text_file_without_type(self):
-        file_id = "/home/test_get_text_file_no_type.txt"
+        file_name = "test_get_text_file_no_type.txt"
+        file_path = posixpath.join(self.config.mount_dir, file_name)
+        file_model_path = posixpath.join("/", file_name)
+
         message = "Lorem ipsum dolor sit amet..."
         try:
-            self.file_api.write_file(file_id, message, self.endpoint)
-            model = self.contents_manager.get(file_id, True, None)
-            self.assertEqual(model["name"], "test_get_text_file_no_type.txt")
-            self.assertEqual(model["path"], file_id)
+            self.file_api.write_file(file_path, message, self.endpoint)
+            model = self.contents_manager.get(file_model_path, True, None)
+            self.assertEqual(model["name"], file_name)
+            self.assertEqual(model["path"], file_model_path)
             self.assertEqual(model["content"], message)
             self.assertEqual(model["format"], "text")
             self.assertEqual(model["mimetype"], "text/plain")
@@ -57,7 +65,7 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
             self.assertEqual(model["writable"], True)
             self.assertEqual(model["type"], "file")
         finally:
-            self.file_api.remove(file_id, self.endpoint)
+            self.file_api.remove(file_path, self.endpoint)
 
     def test_get_text_file_with_share_path(self):
         file_id = "/test_get_text_file.txt"
@@ -78,7 +86,9 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
             self.file_api.remove(file_id, self.endpoint)
 
     def test_get_notebook_file(self):
-        file_id = "/home/test_get_notebook_file.ipynb"
+        file_name = "test_get_notebook_file.ipynb"
+        file_path = posixpath.join(self.config.mount_dir, file_name)
+        file_model_path = posixpath.join("/", file_name)
         buffer = b'{\
 					"cells": [\
 						{\
@@ -113,10 +123,10 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
 					}'
 
         try:
-            self.file_api.write_file(file_id, buffer, self.endpoint)
-            model = self.contents_manager.get(file_id, True, "notebook")
-            self.assertEqual(model["name"], "test_get_notebook_file.ipynb")
-            self.assertEqual(model["path"], file_id)
+            self.file_api.write_file(file_path, buffer, self.endpoint)
+            model = self.contents_manager.get(file_name, True, "notebook")
+            self.assertEqual(model["name"], file_name)
+            self.assertEqual(model["path"], file_model_path)
             self.assertTrue("### Markdown example" in str(model["content"]))
             self.assertEqual(model["format"], "json")
             self.assertEqual(model["mimetype"], None)
@@ -124,19 +134,22 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
             self.assertEqual(model["writable"], True)
             self.assertEqual(model["type"], "notebook")
         finally:
-            self.file_api.remove(file_id, self.endpoint)
+            self.file_api.remove(file_path, self.endpoint)
 
     def test_save_text_model(self):
-        file_id = "/home/test_save_text_model.txt"
+        file_name = "test_save_text_model.txt"
+        file_path = posixpath.join(self.config.mount_dir, file_name)
+        file_model_path = posixpath.join("/", file_name)
+
         model = {
             "type": "file",
             "format": "text",
             "content": "Test content",
         }
         try:
-            save_model = self.contents_manager.save(model, file_id)
+            save_model = self.contents_manager.save(model, file_path)
             self.assertEqual(save_model["name"], "test_save_text_model.txt")
-            self.assertEqual(save_model["path"], file_id)
+            self.assertEqual(save_model["path"], file_model_path)
             self.assertEqual(save_model["content"], None)
             self.assertEqual(save_model["format"], None)
             self.assertEqual(save_model["mimetype"], "text/plain")
@@ -144,15 +157,18 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
             self.assertEqual(save_model["writable"], True)
             self.assertEqual(save_model["type"], "file")
         finally:
-            self.file_api.remove(file_id, self.endpoint)
+            self.file_api.remove(file_path, self.endpoint)
 
     def test_save_notebook_model(self):
-        file_id = "/home/test_save_notebook_model.ipynb"
+        file_name = "test_save_notebook_model.ipynb"
+        file_path = posixpath.join(self.config.mount_dir, file_name)
+        file_model_path = posixpath.join("/", file_name)
+
         model = self._create_notebook_model()
         try:
-            save_model = self.contents_manager.save(model, file_id)
+            save_model = self.contents_manager.save(model, file_path)
             self.assertEqual(save_model["name"], "test_save_notebook_model.ipynb")
-            self.assertEqual(save_model["path"], file_id)
+            self.assertEqual(save_model["path"], file_model_path)
             self.assertEqual(save_model["content"], None)
             self.assertEqual(save_model["format"], None)
             self.assertEqual(save_model["mimetype"], None)
@@ -160,7 +176,7 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
             self.assertEqual(save_model["writable"], True)
             self.assertEqual(save_model["type"], "notebook")
         finally:
-            self.file_api.remove(file_id, self.endpoint)
+            self.file_api.remove(file_path, self.endpoint)
 
     def _create_notebook_model(self):
         model = {
@@ -214,7 +230,9 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
             except: pass
 
     def test_is_editor(self):
-        file_path  = '/home/test_is_editor_file.txt'
+        file_name = "test_is_editor_file.txt"
+        file_path = posixpath.join(self.config.mount_dir, file_name)
+
         message = "Lorem ipsum dolor sit amet..."
         try:
             self.file_api.write_file(file_path, message, self.endpoint)
@@ -228,8 +246,10 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
                 pass
 
     def test_is_editor_shared_as_viewer(self):
-        self.content  = "Lorem ipsum dolor sit amet..."
-        file_path  = '/home/test_is_editor_file.txt'
+        self.content = "Lorem ipsum dolor sit amet..."
+        file_name = "test_is_editor_file.txt"
+        file_path = posixpath.join(self.config.mount_dir, file_name)
+
         remote_path = '/reva/richard/test_is_editor_file.txt'
         einstein_id = '4c510ada-c86b-4815-8820-42cdf82c3d51'
         einstein_idp = 'cernbox.cern.ch'
@@ -291,7 +311,7 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
 
             with self.assertRaises(web.HTTPError) as context:
                 self.contents_manager.rename_file(file_path, file_dest)
-            self.assertEqual('Error renaming file: /test_rename_file.txt file already exists',
+            self.assertEqual('Resource already exists: /test_rename_file.txt',
                              context.exception.log_message)
         finally:
             try:
@@ -304,7 +324,9 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
                 pass   #we don't need any actions here
 
     def test_new_file_model(self):
-        file_path = "/home/test_new_file_model.txt"
+        file_name = "test_new_file_model.txt"
+        file_path = posixpath.join(self.config.mount_dir, file_name)
+        file_model_path = posixpath.join("/", file_name)
         model = {
             "type": "file",
             "format": "text",
@@ -313,8 +335,8 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
         try:
             self.contents_manager.new(model, file_path)
             model = self.contents_manager.get(file_path, True, 'file')
-            self.assertEqual(model["name"], "test_new_file_model.txt")
-            self.assertEqual(model["path"], file_path)
+            self.assertEqual(model["name"], file_name)
+            self.assertEqual(model["path"], file_model_path)
             self.assertEqual(model["content"], "Test content")
             self.assertEqual(model["format"], "text")
             self.assertEqual(model["mimetype"], "text/plain")
@@ -325,12 +347,15 @@ class TestCS3APIsManager(ShareTestBase,TestCase):
             self.file_api.remove(file_path, self.endpoint)
 
     def test_new_notebook_model(self):
-        file_path = "/home/test_new_notebook_model.ipynb"
+        file_name = "test_new_notebook_model.ipynb"
+        file_path = posixpath.join(self.config.mount_dir, file_name)
+        file_model_path = posixpath.join("/", file_name)
+
         model = self._create_notebook_model()
         try:
             save_model = self.contents_manager.new(model, file_path)
-            self.assertEqual(save_model["name"], "test_new_notebook_model.ipynb")
-            self.assertEqual(save_model["path"], file_path)
+            self.assertEqual(save_model["name"], file_name)
+            self.assertEqual(save_model["path"], file_model_path)
             self.assertEqual(save_model["content"], None)
             self.assertEqual(save_model["format"], None)
             self.assertEqual(save_model["mimetype"], None)

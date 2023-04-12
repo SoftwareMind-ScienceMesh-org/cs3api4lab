@@ -4,6 +4,7 @@ from tornado import web
 from datetime import datetime
 from IPython.utils import tz
 from cs3api4lab.utils.share_utils import ShareUtils
+from cs3api4lab.utils.file_utils import FileUtils
 
 
 class ModelUtils:
@@ -131,7 +132,7 @@ class ModelUtils:
                     sub_model['type'] = 'directory'
                     contents.append(sub_model)
                 elif cs3_model.type == resource_types.RESOURCE_TYPE_FILE:
-                    if type == 'notebook' or (type is None and path.endswith('.ipynb')):
+                    if cs3_model.path.endswith('.ipynb'):
                         contents.append(
                             ModelUtils.convert_container_to_notebook_model(cs3_model, cs3_container)
                         )

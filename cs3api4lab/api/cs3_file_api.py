@@ -16,7 +16,7 @@ import cs3.rpc.v1beta1.code_pb2 as cs3code
 import cs3.storage.provider.v1beta1.provider_api_pb2 as cs3sp
 from google.protobuf.json_format import MessageToDict
 
-from cs3api4lab.exception.exceptions import ResourceNotFoundError, FileLockedError
+from cs3api4lab.exception.exceptions import ResourceNotFoundError, ResourceAlreadyExists
 
 from cs3api4lab.utils.file_utils import FileUtils
 from cs3api4lab.api.storage_api import StorageApi
@@ -118,7 +118,7 @@ class Cs3FileApi:
         for i in range(0, size, chunk_size):
             yield file_get.content[i:i + self.config.chunk_size]
 
-    def write_file(self, file_path, content, endpoint=None, format=None):
+    def write_file(self, file_path, content, endpoint='/', format=None):
         """
         Write a file using the given userid as access token. The entire content is written
         and any pre-existing file is deleted (or moved to the previous version if supported).
@@ -208,7 +208,7 @@ class Cs3FileApi:
         out = []
         for info in res.infos:
             if self.config.mount_dir != '/' and len(self.config.mount_dir) > 0 and info.path.startswith(self.config.mount_dir):
-                info.path = info.path.rsplit(self.config.mount_dir)[-1]
+                info.path = FileUtils.remove_mount_dir(info.path)
             out.append(info)
         return out
 
@@ -225,7 +225,7 @@ class Cs3FileApi:
         if stat.status.code == cs3code.CODE_OK:
             self.log.error('msg="Failed to move" source="%s" destination="%s" reason="%s"' % (
                 source_path, destination_path, "file already exists"))
-            raise IOError("file already exists")
+            raise ResourceAlreadyExists("file already exists")
 
         req = cs3sp.MoveRequest(source=src_reference, destination=dest_reference)
         res = self.cs3_api.Move(request=req, metadata=[('x-access-token', self.auth.authenticate())])
@@ -242,7 +242,7 @@ class Cs3FileApi:
         self.log.debug('msg="Invoked move" source="%s" destination="%s" elapsedTimems="%.1f"' % (
             source_path, destination_path, (tend - tstart) * 1000))
 
-    def create_directory(self, path, endpoint=None):
+    def create_directory(self, path, endpoint='/'):
         """
         Create a directory.
         """

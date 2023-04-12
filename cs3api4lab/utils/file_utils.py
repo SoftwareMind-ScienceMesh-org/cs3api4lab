@@ -50,6 +50,11 @@ class FileUtils:
         return path
 
     @staticmethod
+    def remove_mount_dir(path):
+        mount_dir = Cs3ConfigManager.get_config().mount_dir
+        return path.rsplit(mount_dir)[-1]
+
+    @staticmethod
     def fix_dev_opaque(opaque_id, dev_env):  # remove after https://github.com/cs3org/reva/issues/3243 is fixed
         if dev_env:
             opaque_id = opaque_id.replace('fileid-/', 'fileid-').replace('+', ' ')

@@ -59,7 +59,16 @@ setup_args = dict(
         "grpcio",
         "grpcio-tools",
         "PyJWT==2.4.0",
-        "webdavclient3"
+        "webdavclient3",
+        "ipykernel",
+        "jupyter_events",
+        "pytest-timeout",
+        "pytest_tornasync",
+        "pytest-jupyter[server]>=0.4",
+        "pytest>=7.0",
+        "pytest-custom_exit_code",
+        "requests",
+        "pre-commit"
     ],
     zip_safe=False,
     include_package_data=True,

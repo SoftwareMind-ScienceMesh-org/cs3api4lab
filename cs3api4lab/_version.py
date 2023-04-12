@@ -16,6 +16,7 @@ def _fetchVersion():
                     .replace("-rc.", "rc")
                 )
         except FileNotFoundError:
+            # file might have been deleted during tests
             pass
 
     raise FileNotFoundError(f"Could not find package.json under dir {HERE}")

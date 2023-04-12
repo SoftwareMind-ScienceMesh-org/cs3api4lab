@@ -3,7 +3,7 @@ from unittest import TestCase
 from cs3api4lab.config.config_manager import Cs3ConfigManager
 from cs3api4lab.api.cs3_file_api import Cs3FileApi
 from traitlets.config import LoggingConfigurable
-from cs3api4lab.exception.exceptions import ResourceNotFoundError
+from cs3api4lab.exception.exceptions import ResourceNotFoundError, ResourceAlreadyExists
 
 
 class TestCs3FileApi(TestCase):
@@ -168,7 +168,7 @@ class TestCs3FileApi(TestCase):
             self.storage.write_file(source_path, buffer, self.endpoint)
             self.storage.write_file(destination_path, buffer, self.endpoint)
 
-            with self.assertRaises(IOError) as context:
+            with self.assertRaises(ResourceAlreadyExists) as context:
                 self.storage.move(source_path, destination_path, self.endpoint)
             self.assertEqual("file already exists", context.exception.args[0])
         finally:
