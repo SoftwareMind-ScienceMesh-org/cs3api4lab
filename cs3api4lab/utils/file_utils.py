@@ -50,7 +50,8 @@ class FileUtils:
         return path
 
     @staticmethod
-    def remove_mount_dir(path, mount_dir):
+    def remove_mount_dir(path):
+        mount_dir = Cs3ConfigManager.get_config().mount_dir
         return path.rsplit(mount_dir)[-1]
 
     @staticmethod

@@ -190,12 +190,12 @@ class ModelUtils:
         return model
 
     @staticmethod
-    def update_file_model(model, mount_dir, stat=None):
+    def update_file_model(model, stat=None):
         if not stat:
             return model
 
         model['name'] = stat['filepath'].rsplit('/', 1)[-1]
-        model['path'] = FileUtils.remove_mount_dir(stat['filepath'], mount_dir)
+        model['path'] = stat['filepath']
         model['size'] = stat['size']
         model['mimetype'] = mimetypes.guess_type(stat['filepath'])[0]
         model['writable'] = True
