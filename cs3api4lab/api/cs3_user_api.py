@@ -7,11 +7,11 @@ from cs3api4lab.auth.channel_connector import ChannelConnector
 from cs3api4lab.auth.authenticator import Auth
 from cs3api4lab.config.config_manager import Cs3ConfigManager
 import cs3.rpc.v1beta1.code_pb2 as cs3_code
+from cs3api4lab.api.cs3_base import Cs3Base
 
-
-class Cs3UserApi:
-
+class Cs3UserApi(Cs3Base):
     def __init__(self, log):
+        super().__init__(log)
         channel = ChannelConnector.get_channel()
         self.api = user_api_grpc.UserAPIStub(channel)
         self.config = Cs3ConfigManager().get_config()

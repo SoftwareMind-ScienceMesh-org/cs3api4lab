@@ -25,25 +25,20 @@ from cs3api4lab.auth.authenticator import Auth
 from cs3api4lab.auth.channel_connector import ChannelConnector
 from cs3api4lab.config.config_manager import Cs3ConfigManager
 from cs3api4lab.locks.factory import LockApiFactory
+from cs3api4lab.utils.custom_logger import CustomLogger
+from cs3api4lab.api.cs3_base import Cs3Base
 
-
-class Cs3FileApi:
-    log = None
-    cs3_api = None
-    auth = None
-    config = None
-    lock_api = None
-
+class Cs3FileApi(Cs3Base):
     def __init__(self, log):
-        self.log = log
+        super().__init__(log)
         self.config = Cs3ConfigManager().get_config()
         self.auth = Auth.get_authenticator(config=self.config, log=self.log)
         channel = ChannelConnector().get_channel()
-        auth_interceptor = check_auth_interceptor.CheckAuthInterceptor(log, self.auth)
+        auth_interceptor = check_auth_interceptor.CheckAuthInterceptor(self.log, self.auth)
         intercept_channel = grpc.intercept_channel(channel, auth_interceptor)
         self.cs3_api = cs3gw_grpc.GatewayAPIStub(intercept_channel)
-        self.storage_api = StorageApi(log)
-        self.lock_api = LockApiFactory.create(log, self.config)
+        self.storage_api = StorageApi(self.log)
+        self.lock_api = LockApiFactory.create(self.log, self.config)
 
     def mount_point(self):
         """
@@ -89,6 +84,7 @@ class Cs3FileApi:
         """
         Read a file using the given userid as access token.
         """
+        time_start = time.time()
         if stat:
             # additional request until this issue is resolved https://github.com/cs3org/reva/issues/3243
             if self.config.dev_env and "/home/" in stat['filepath']:
@@ -98,6 +94,9 @@ class Cs3FileApi:
 
             try:
                 self.lock_api.set_lock(stat)
+                time_end = time.time()
+                self.log.info('msg="Created lock" filepath="%s" elapsedTimems="%.1f"' % (
+                stat['filepath'], (time_end - time_start) * 1000))
             except IOError:
                 self.log.error('msg="File is locked, opening in read-only mode" filepath="%s" reason="%s"' % (stat['filepath'], "file locked"))
 
@@ -107,6 +106,9 @@ class Cs3FileApi:
             raise IOError('Error when stating file')
 
         init_file_download = self.storage_api.init_file_download(stat['filepath'], endpoint)
+        time_end = time.time()
+        self.log.info('msg="Initialized download" filepath="%s" elapsedTimems="%.1f"' % (
+            stat['filepath'], (time_end - time_start) * 1000))
         try:
             file_get = self.storage_api.download_content(init_file_download)
         except requests.exceptions.RequestException as e:

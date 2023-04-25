@@ -9,11 +9,12 @@ from cs3api4lab.auth import check_auth_interceptor
 from cs3api4lab.auth.authenticator import Auth
 from cs3api4lab.auth.channel_connector import ChannelConnector
 from cs3api4lab.api.storage_api import StorageApi
+from cs3api4lab.api.cs3_base import Cs3Base
 
-
-class LockBase(ABC):
+class LockBase(ABC, Cs3Base):
 
     def __init__(self, log, config):
+        super().__init__(log)
         self.user = None
         self.config = config
         self.auth = Auth.get_authenticator(config=config, log=log)

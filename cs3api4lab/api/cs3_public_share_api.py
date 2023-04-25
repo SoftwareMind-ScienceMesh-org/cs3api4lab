@@ -24,12 +24,12 @@ from cs3api4lab.utils.file_utils import FileUtils
 from cs3api4lab.config.config_manager import Cs3ConfigManager
 import cs3.gateway.v1beta1.gateway_api_pb2_grpc as grpc_gateway
 from cs3api4lab.auth.channel_connector import ChannelConnector
+from cs3api4lab.api.cs3_base import Cs3Base
 
 
-class Cs3PublicShareApi:
-
+class Cs3PublicShareApi(Cs3Base):
     def __init__(self, log):
-        self.log = log
+        super().__init__(log)
         self.config = Cs3ConfigManager().get_config()
         self.auth = Auth.get_authenticator(config=self.config, log=self.log)
         self.file_api = Cs3FileApi(log)

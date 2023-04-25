@@ -16,16 +16,11 @@ from cs3api4lab.config.config_manager import Cs3ConfigManager
 
 from cs3api4lab.utils.file_utils import FileUtils
 from cs3api4lab.auth.authenticator import Auth
+from cs3api4lab.api.cs3_base import Cs3Base
 
-
-class StorageApi:
-    log = None
-    cs3_api = None
-    auth = None
-    config = None
-
+class StorageApi(Cs3Base):
     def __init__(self, log):
-        self.log = log
+        super().__init__(log)
         self.config = Cs3ConfigManager.get_config()
         self.auth = Auth.get_authenticator(config=self.config, log=self.log)
         channel = ChannelConnector().get_channel()
@@ -86,12 +81,12 @@ class StorageApi:
             ('x-access-token', self.auth.authenticate())])
 
         if init_file_upload_res.status.code != cs3code.CODE_OK:
-            self.log.debug('msg="Failed to initiateFileUpload on write" file_path="%s" reason="%s"' % \
-                           (file_path, init_file_upload_res.status.message))
+            # self.log.debug('msg="Failed to initiateFileUpload on write" file_path="%s" reason="%s"' % \
+            #                (file_path, init_file_upload_res.status.message))
             raise IOError(init_file_upload_res.status.message)
 
-        self.log.debug(
-            'msg="writefile: InitiateFileUploadRes returned" protocols="%s"' % init_file_upload_res.protocols)
+        # self.log.debug(
+        #     'msg="writefile: InitiateFileUploadRes returned" protocols="%s"' % init_file_upload_res.protocols)
 
         return init_file_upload_res
 

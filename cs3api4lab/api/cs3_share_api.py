@@ -28,18 +28,14 @@ import cs3.gateway.v1beta1.gateway_api_pb2_grpc as grpc_gateway
 from cs3api4lab.auth.channel_connector import ChannelConnector
 from cs3api4lab.exception.exceptions import *
 from cs3api4lab.utils.share_utils import ShareUtils
+from cs3api4lab.api.cs3_base import Cs3Base
 
 import google.protobuf.field_mask_pb2 as field_masks
 
 
-class Cs3ShareApi:
-    cs3_api = None
-    log = None
-    auth = None
-    config = {}
-
+class Cs3ShareApi(Cs3Base):
     def __init__(self, log):
-        self.log = log
+        super().__init__(log)
         self.config = Cs3ConfigManager().get_config()
         self.auth = Auth.get_authenticator(config=self.config, log=self.log)
 

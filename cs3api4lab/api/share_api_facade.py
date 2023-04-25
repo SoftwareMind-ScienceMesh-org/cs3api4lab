@@ -18,10 +18,11 @@ from cs3api4lab.utils.model_utils import ModelUtils
 from cs3api4lab.utils.file_utils import FileUtils
 from cs3api4lab.api.storage_api import StorageApi
 from cs3api4lab.exception.exceptions import OCMDisabledError
+from cs3api4lab.api.cs3_base import Cs3Base
 
-class ShareAPIFacade:
+class ShareAPIFacade(Cs3Base):
     def __init__(self, log):
-        self.log = log
+        super().__init__(log)
         self.config = Cs3ConfigManager().get_config()
         self.auth = Auth.get_authenticator(config=self.config, log=self.log)
         self.file_api = Cs3FileApi(log)

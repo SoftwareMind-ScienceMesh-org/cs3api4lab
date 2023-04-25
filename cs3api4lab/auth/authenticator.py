@@ -9,15 +9,15 @@ from tornado import web
 import cs3.gateway.v1beta1.gateway_api_pb2 as cs3gw
 import cs3.gateway.v1beta1.gateway_api_pb2_grpc as cs3gw_grpc
 from cs3api4lab.auth.channel_connector import ChannelConnector
+from cs3api4lab.api.cs3_base import Cs3Base
 
-
-class Authenticator:
+class Authenticator(Cs3Base):
     token = None
     cs3_stub = None
 
     def __init__(self, config=None, log=None):
+        super().__init__(log)
         self.config = config
-        self.log = log
         self.channel = ChannelConnector().get_channel()
         self.cs3_stub = cs3gw_grpc.GatewayAPIStub(self.channel)
 

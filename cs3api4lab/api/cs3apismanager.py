@@ -25,6 +25,7 @@ from cs3api4lab.utils.asyncify import asyncify
 from cs3api4lab.api.storage_api import StorageApi
 from cs3api4lab.locks.factory import LockApiFactory
 from cs3api4lab.exception.exceptions import ResourceNotFoundError
+from cs3api4lab.utils.custom_logger import CustomLogger
 
 """
 This class redefines default upstream ContentsManager.
@@ -35,6 +36,7 @@ bound to the endpoint rules defined in ContentsManager.
 """
 class CS3APIsManager(ContentsManager):
     cs3_config = None
+    pure_log = None
     log = None
     file_api = None
 
@@ -46,15 +48,27 @@ class CS3APIsManager(ContentsManager):
 
         self.cs3_config = Cs3ConfigManager.get_config()
         self.log = log
+        self.pure_log = log
         self.file_api = Cs3FileApi(self.log)
-        self.share_api = ShareAPIFacade(self.log)
+        self.share_api_facade = ShareAPIFacade(self.log)
         self.storage_api = StorageApi(self.log)
         self.lock_api = LockApiFactory.create(self.log, self.cs3_config)
 
         #line below must be run in order for loop.run_until_complete() to work
         nest_asyncio.apply()
 
+    def init_new_session(func):
+        def wrapper(self, *args, **kwargs):
+            self.log = CustomLogger(self.pure_log)
+            self.file_api.log = self.log
+            self.share_api_facade.log = self.log
+            self.storage_api.log = self.log
+            self.lock_api.log = self.log
+            return func(self, *args, **kwargs)
+        return wrapper
+
     # _is_dir is already async, so no need to asyncify this
+    @init_new_session
     def dir_exists(self, path):
         """Does a directory exist at the given path?
         Like os.path.isdir
@@ -71,6 +85,7 @@ class CS3APIsManager(ContentsManager):
         path = FileUtils.normalize_path(path)
         return self._is_dir(path)
 
+    @init_new_session
     @asyncify
     def is_hidden(self, path):
         """Is path a hidden directory or file?
@@ -90,6 +105,7 @@ class CS3APIsManager(ContentsManager):
             return True
         return False
 
+    @init_new_session
     @asyncify
     def file_exists(self, path=''):
         """Does a file exist at the given path?
@@ -116,6 +132,7 @@ class CS3APIsManager(ContentsManager):
         return False
 
     # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
+    @init_new_session
     def get(self, path, content=True, type=None, format=None):
         """Get a file, notebook or directory model."""
         path = FileUtils.normalize_path(path)
@@ -129,8 +146,8 @@ class CS3APIsManager(ContentsManager):
             elif type == 'notebook' or (type is None and path.endswith('.ipynb')):
                 try:   #this needs to be fixed/refactored in a separate issue
                     model = self._notebook_model(path, content=content)
-                except Exception:
-                    self.log.info("Notebook does not exist %s", path)
+                except Exception as ex:
+                    self.log.error("Notebook does not exist %s, ex: %s", path, ex)
         else:
             if path.endswith('.ipynb'):
                 try:   #this needs to be fixed/refactored in a separate issue
@@ -147,6 +164,7 @@ class CS3APIsManager(ContentsManager):
 
         raise web.HTTPError(404, u'Resource %s does not exist' % path)
 
+    @init_new_session
     @asyncify
     def get_kernel_path(self, path, model=None):
         """
@@ -176,6 +194,7 @@ class CS3APIsManager(ContentsManager):
         return parent_dir
 
     # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
+    @init_new_session
     def save(self, model, path):
         """
         Save a file or directory model to path.
@@ -239,6 +258,7 @@ class CS3APIsManager(ContentsManager):
 
         return model
 
+    @init_new_session
     @asyncify
     def delete_file(self, path):
         """Delete the file or directory at path."""
@@ -254,6 +274,7 @@ class CS3APIsManager(ContentsManager):
             self.log.error(u'Unknown error delete file: %s %s', path, e, exc_info=True)
             raise web.HTTPError(500, u'Unknown error delete file: %s %s' % (path, e))
 
+    @init_new_session
     @asyncify
     def rename_file(self, old_path, new_path):
         """Rename a file or directory."""
@@ -274,6 +295,7 @@ class CS3APIsManager(ContentsManager):
             raise web.HTTPError(500, u'Error renaming file: %s %s' % (old_path, e))
 
     # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
+    @init_new_session
     def new(self, model=None, path=''):
 
         path = path.strip('/')
@@ -463,7 +485,7 @@ class CS3APIsManager(ContentsManager):
             is_editor = False
 
         # check if file is shared with me
-        role = self.share_api.get_share_received_role(file_info['filepath'])
+        role = self.share_api_facade.get_share_received_role(file_info['filepath'])
         if is_editor and role and role == Role.VIEWER:
             is_editor = False
 

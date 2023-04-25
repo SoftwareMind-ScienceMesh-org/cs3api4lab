@@ -10,7 +10,7 @@ from cs3api4lab.api.cs3_user_api import Cs3UserApi
 from cs3api4lab.api.cs3_file_api import Cs3FileApi
 from jupyter_server.utils import url_path_join
 from cs3api4lab.utils.asyncify import get_or_create_eventloop
-from cs3api4lab.utils.CustomLogger import CustomLogger
+from cs3api4lab.utils.custom_logger import CustomLogger
 from jupyter_server.base.handlers import log
 
 class LoggingHandler(APIHandler):
