@@ -22,7 +22,7 @@ class Cs3Base:
         self._log = log
 
         if self.auth:
-            if (self.auth.log):
+            if self.auth.log:
                 self.auth.log = log
         if self.file_api:
             self.file_api.log = log

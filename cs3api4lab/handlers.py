@@ -14,9 +14,14 @@ from cs3api4lab.utils.custom_logger import CustomLogger
 from jupyter_server.base.handlers import log
 
 class LoggingHandler(APIHandler):
+    _logger = None
     @property
     def log(self):
-        return CustomLogger(log())
+        if self._logger is None:
+            self._logger = CustomLogger(log())
+            return self._logger
+        else:
+            return self._logger
 
 class ShareHandler(LoggingHandler):
     _share_api = None
@@ -128,28 +133,42 @@ class ListSharesForFile(LoggingHandler):
     @web.authenticated
     @gen.coroutine
     def get(self):
-        self.share_api.log.info("GET /api/cs3/shares/file")
         file_path = self.get_query_argument('file_path')
+        self.share_api.log.info(f"GET /api/cs3/shares/file/{file_path}")
         yield RequestHandler.async_handle_request(self, self.share_api.list_grantees_for_file, 200, file_path)
 
 class HomeDirHandler(LoggingHandler):
+    _file_api = None
+
     @property
     def file_api(self):
-        return Cs3FileApi(self.log)
+        if self._file_api is None:
+            self._file_api = Cs3FileApi(self.log)
+            return self._file_api
+        else:
+            return self._file_api
 
     @web.authenticated
     @gen.coroutine
     def get(self):
+        self.file_api.log.info("GET /api/cs3/user/home_dir")
         yield RequestHandler.async_handle_request(self, self.file_api.get_home_dir, 200)
 
 class PublicSharesHandler(LoggingHandler):
+    _public_share_api = None
+
     @property
     def public_share_api(self):
-        return Cs3PublicShareApi(self.log)
+        if self._public_share_api is None:
+            self._public_share_api = Cs3PublicShareApi(self.log)
+            return self._public_share_api
+        else:
+            return self._public_share_api
 
     @web.authenticated
     @gen.coroutine
     def get(self):
+        self.public_share_api.log.info("GET /api/cs3/public/shares")
         token = self.get_query_argument('token', default=None)
         opaque_id = self.get_query_argument('opaque_id')
         yield RequestHandler.async_handle_request(self, self.public_share_api.get_public_share, 200, opaque_id, token)
@@ -157,6 +176,7 @@ class PublicSharesHandler(LoggingHandler):
     @web.authenticated
     @gen.coroutine
     def post(self):
+        self.public_share_api.log.info("POST /api/cs3/public/shares")
         request = self.get_json_body()
         yield RequestHandler.async_handle_request(self,
                                                   self.public_share_api.create_public_share,
@@ -171,11 +191,13 @@ class PublicSharesHandler(LoggingHandler):
     @gen.coroutine
     def delete(self):
         opaque_id = self.get_query_argument('opaque_id')
+        self.public_share_api.log.info(f"DELETE /api/cs3/public/shares/{opaque_id}")
         yield RequestHandler.async_handle_request(self, self.public_share_api.remove_public_share, 204, opaque_id)
 
     @web.authenticated
     @gen.coroutine
     def put(self):
+        self.public_share_api.log.info("PUT /api/cs3/public/shares")
         request = self.get_json_body()
         yield RequestHandler.async_handle_request(self, self.public_share_api.update_public_share,
                                                   204,
@@ -186,61 +208,96 @@ class PublicSharesHandler(LoggingHandler):
 
 
 class GetPublicShareByTokenHandler(LoggingHandler):
+    _public_share_api = None
+
     @property
     def public_share_api(self):
-        return Cs3PublicShareApi(self.log)
+        if self._public_share_api is None:
+            self._public_share_api = Cs3PublicShareApi(self.log)
+            return self._public_share_api
+        else:
+            return self._public_share_api
 
     @web.authenticated
     @gen.coroutine
     def get(self):
+        self.public_share_api.log.info("GET /api/cs3/public/share")
         token = self.get_query_argument('token')
         password = self.get_query_argument('password', default='')
         yield RequestHandler.async_handle_request(self, self.public_share_api.get_public_share_by_token, 200, token, password)
 
 
 class ListPublicSharesHandler(LoggingHandler):
+    _public_share_api = None
+
     @property
     def public_share_api(self):
-        return Cs3PublicShareApi(self.log)
+        if self._public_share_api is None:
+            self._public_share_api = Cs3PublicShareApi(self.log)
+            return self._public_share_api
+        else:
+            return self._public_share_api
 
     @web.authenticated
     @gen.coroutine
     def get(self):
+        self.public_share_api.log.info("GET /api/cs3/public/shares/list")
         yield RequestHandler.async_handle_request(self, self.public_share_api.list_public_shares, 200)
 
 
 class UserInfoHandler(LoggingHandler):
+    _user_api = None
+
     @property
     def user_api(self):
-        return Cs3UserApi(self.log)
+        if self._user_api is None:
+            self._user_api = Cs3UserApi(self.log)
+            return self._user_api
+        else:
+            return self._user_api
 
     @web.authenticated
     @gen.coroutine
     def get(self):
+        self.user_api.log.info("GET /api/cs3/user")
         idp = self.get_query_argument('idp')
         opaque_id = self.get_query_argument('opaque_id')
         yield RequestHandler.async_handle_request(self, self.user_api.get_user, 200, idp, opaque_id)
 
 class UserInfoClaimHandler(LoggingHandler):
+    _user_api = None
+
     @property
     def user_api(self):
-        return Cs3UserApi(self.log)
+        if self._user_api is None:
+            self._user_api = Cs3UserApi(self.log)
+            return self._user_api
+        else:
+            return self._user_api
 
     @web.authenticated
     @gen.coroutine
     def get(self):
+        self.user_api.log.info("GET /api/cs3/user/claim")
         claim = self.get_query_argument('claim')
         value = self.get_query_argument('value')
         yield RequestHandler.async_handle_request(self, self.user_api.get_user_info_by_claim, 200, claim, value)
 
 class UserQueryHandler(LoggingHandler):
+    _user_api = None
+
     @property
     def user_api(self):
-        return Cs3UserApi(self.log)
+        if self._user_api is None:
+            self._user_api = Cs3UserApi(self.log)
+            return self._user_api
+        else:
+            return self._user_api
 
     @web.authenticated
     @gen.coroutine
     def get(self):
+        self.user_api.log.info("GET /api/cs3/user/query")
         query = self.get_query_argument('query')
         yield RequestHandler.async_handle_request(self, self.user_api.find_users_by_query, 200, query)
 

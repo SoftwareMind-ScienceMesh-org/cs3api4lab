@@ -2,6 +2,7 @@ import urllib.parse
 
 import grpc
 import requests
+import time
 
 import cs3.storage.provider.v1beta1.resources_pb2 as storage_provider
 import cs3.types.v1beta1.types_pb2 as types
@@ -28,6 +29,9 @@ class StorageApi(Cs3Base):
         intercept_channel = grpc.intercept_channel(channel, auth_interceptor)
         self.cs3_api = cs3gw_grpc.GatewayAPIStub(intercept_channel)
         return
+
+    def logStandardized(self, msg, file_path, time_start):
+        self.log.debug('msg="%s" filepath="%s" elapsedTimems="%.1f"' % (msg, file_path, (time.time() - time_start) * 1000))
 
     def get_unified_file_ref(self, file_path, endpoint):
         stat = self.stat(file_path, endpoint)
@@ -61,6 +65,8 @@ class StorageApi(Cs3Base):
             metadata=self._get_token())
 
         if set_metadata_response.status.code != cs3code.CODE_OK:
+            self.log.error('msg="Unable to set metadata" file_path="%s" reason="%s"' % \
+                           (file_path, set_metadata_response.status.message))
             raise Exception('Unable to set metadata for: ' + stat['filepath'] + ' ' + str(set_metadata_response.status))
 
     def get_metadata(self, file_path, endpoint):
@@ -72,6 +78,7 @@ class StorageApi(Cs3Base):
         return None
 
     def init_file_upload(self, file_path, endpoint, content_size):
+        time_start = time.time()
         reference = FileUtils.get_reference(file_path, endpoint)
         meta_data = types.Opaque(
             map={"Upload-Length": types.OpaqueEntry(decoder="plain", value=str.encode(content_size))})
@@ -81,12 +88,11 @@ class StorageApi(Cs3Base):
             ('x-access-token', self.auth.authenticate())])
 
         if init_file_upload_res.status.code != cs3code.CODE_OK:
-            # self.log.debug('msg="Failed to initiateFileUpload on write" file_path="%s" reason="%s"' % \
-            #                (file_path, init_file_upload_res.status.message))
+            self.log.error('msg="Failed to initiateFileUpload on write" file_path="%s" reason="%s"' % \
+                           (file_path, init_file_upload_res.status.message))
             raise IOError(init_file_upload_res.status.message)
 
-        # self.log.debug(
-        #     'msg="writefile: InitiateFileUploadRes returned" protocols="%s"' % init_file_upload_res.protocols)
+        self.logStandardized(f"writefile: InitiateFileUploadRes returned protocols={init_file_upload_res.protocols}", file_path, time_start)
 
         return init_file_upload_res
 
@@ -111,6 +117,7 @@ class StorageApi(Cs3Base):
         return put_res
 
     def init_file_download(self, file_path, endpoint):
+        time_start = time.time()
         reference = FileUtils.get_reference(file_path, endpoint)
         req = cs3sp.InitiateFileDownloadRequest(ref=reference)
 
@@ -118,16 +125,16 @@ class StorageApi(Cs3Base):
             ('x-access-token', self.auth.authenticate())])
 
         if init_file_download_response.status.code == cs3code.CODE_NOT_FOUND:
-            self.log.info('msg="File not found on read" filepath="%s"' % file_path)
+            self.log.error('msg="File not found on read" filepath="%s" reason="%s"' % file_path, init_file_download_response.status.message)
             raise IOError('No such file or directory')
 
         elif init_file_download_response.status.code != cs3code.CODE_OK:
-            self.log.debug('msg="Failed to initiateFileDownload on read" filepath="%s" reason="%s"' % file_path,
+            self.log.error('msg="Failed to initiateFileDownload on read" filepath="%s" reason="%s"' % file_path,
                            init_file_download_response.status.message)
             raise IOError(init_file_download_response.status.message)
 
-        self.log.debug(
-            'msg="readfile: InitiateFileDownloadRes returned" protocols="%s"' % init_file_download_response.protocols)
+        self.logStandardized(f"readfile: InitiateFileDownloadRes returned protocols={init_file_download_response.protocols}",
+                             file_path, time_start)
 
         return init_file_download_response
 

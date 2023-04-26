@@ -40,6 +40,9 @@ class Cs3FileApi(Cs3Base):
         self.storage_api = StorageApi(self.log)
         self.lock_api = LockApiFactory.create(self.log, self.config)
 
+    def logStandardized(self, msg, filepath, time_start):
+        self.log.debug('msg="%s" filepath="%s" elapsedTimems="%.1f"' % (msg, filepath, (time.time() - time_start) * 1000))
+
     def mount_point(self):
         """
         This returns current mount point for the user
@@ -60,7 +63,7 @@ class Cs3FileApi(Cs3Base):
         stat = self.storage_api.stat(file_path, endpoint)
         if stat.status.code == cs3code.CODE_OK:
             time_end = time.time()
-            self.log.info('msg="Invoked stat" filepath="%s" elapsedTimems="%.1f"' % (file_path, (time_end - time_start) * 1000))
+            self.log.debug('msg="Invoked stat" filepath="%s" elapsedTimems="%.1f"' % (file_path, (time_end - time_start) * 1000))
             return {
                 'inode': {'storage_id': stat.info.id.storage_id,
                           'opaque_id': stat.info.id.opaque_id},
@@ -97,6 +100,7 @@ class Cs3FileApi(Cs3Base):
                 time_end = time.time()
                 self.log.info('msg="Created lock" filepath="%s" elapsedTimems="%.1f"' % (
                 stat['filepath'], (time_end - time_start) * 1000))
+                time_start = time.time()
             except IOError:
                 self.log.error('msg="File is locked, opening in read-only mode" filepath="%s" reason="%s"' % (stat['filepath'], "file locked"))
 
@@ -109,6 +113,7 @@ class Cs3FileApi(Cs3Base):
         time_end = time.time()
         self.log.info('msg="Initialized download" filepath="%s" elapsedTimems="%.1f"' % (
             stat['filepath'], (time_end - time_start) * 1000))
+        time_start = time.time()
         try:
             file_get = self.storage_api.download_content(init_file_download)
         except requests.exceptions.RequestException as e:
@@ -126,7 +131,6 @@ class Cs3FileApi(Cs3Base):
         and any pre-existing file is deleted (or moved to the previous version if supported).
         """
         time_start = time.time()
-
         stat = None
         try:
             stat = self.stat_info(file_path, endpoint)
@@ -147,7 +151,7 @@ class Cs3FileApi(Cs3Base):
 
         content_size = FileUtils.calculate_content_size(content, format)
         init_file_upload = self.storage_api.init_file_upload(file_path, endpoint, content_size)
-
+        time_start = time.time()
         try:
             upload_response = self.storage_api.upload_content(file_path, content, content_size, init_file_upload)
 
@@ -178,11 +182,11 @@ class Cs3FileApi(Cs3Base):
         res = self.cs3_api.Delete(request=req, metadata=[('x-access-token', self.auth.authenticate())])
 
         if res.status.code == cs3code.CODE_NOT_FOUND:
-            self.log.info('msg="File or folder not found on remove" filepath="%s" reason="%s"' % (file_path, "not found"))
+            self.log.error('msg="File or folder not found on remove" filepath="%s" reason="%s"' % (file_path, "not found"))
             raise FileNotFoundError('No such file or directory')
 
         if res.status.code != cs3code.CODE_OK:
-            self.log.warning('msg="Failed to remove file or folder" filepath="%s" reason="%s"' % (file_path, res))
+            self.log.error('msg="Failed to remove file or folder" filepath="%s" reason="%s"' % (file_path, res))
             raise IOError(res.status.message)
 
         self.log.debug('msg="Invoked remove" result="%s"' % res)
@@ -200,7 +204,7 @@ class Cs3FileApi(Cs3Base):
             raise ResourceNotFoundError(f"directory {path} not found")
 
         if res.status.code != cs3code.CODE_OK:
-            self.log.warning('msg="Failed to read container" filepath="%s" reason="%s"' % (path, res.status.message))
+            self.log.error('msg="Failed to read container" filepath="%s" reason="%s"' % (path, res.status.message))
             raise IOError(res.status.message)
 
         tend = time.time()
@@ -254,7 +258,7 @@ class Cs3FileApi(Cs3Base):
         res = self.cs3_api.CreateContainer(request=req, metadata=[('x-access-token', self.auth.authenticate())])
 
         if res.status.code != cs3code.CODE_OK:
-            self.log.warning('msg="Failed to create container" filepath="%s" reason="%s"' % (path, res.status.message))
+            self.log.error('msg="Failed to create container" filepath="%s" reason="%s"' % (path, res.status.message))
             raise IOError(res.status.message)
 
         tend = time.time()

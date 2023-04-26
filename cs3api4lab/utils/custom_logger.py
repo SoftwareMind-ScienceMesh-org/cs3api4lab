@@ -1,3 +1,14 @@
+# import uuid
+# import logging
+#
+# class CustomLogger(logging.LoggerAdapter):
+#     def __init__(self, logger):
+#         traceId = str(uuid.uuid4())
+#         super(CustomLogger, self).__init__(logger, {"traceId": traceId})
+#
+#     def process(self, msg, kwargs):
+#         return f'traceId="{self.extra["traceId"]} {msg}', kwargs
+
 import uuid
 
 class CustomLogger():
@@ -22,8 +33,3 @@ class CustomLogger():
 
     def exception(self, msg, *args, exc_info=True, **kwargs):
         self.log.error(f'traceId="{self.traceId}" {msg}', *args, exc_info=exc_info, **kwargs)
-
-    # def _log(self, level, msg, args, exc_info=None, extra=None, stack_info=False, stacklevel=1):
-    #     trace_id = str(uuid.uuid4())
-    #     msg = f'traceId="{trace_id}" - {msg}'
-    #     super()._log(level, msg, args, exc_info, extra, stack_info, stacklevel)
