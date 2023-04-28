@@ -44,6 +44,7 @@ class ShareAPIFacade(Cs3Base):
             if self.config.enable_ocm:
                 return self.ocm_share_api.create(opaque_id, idp, idp, endpoint, file_path, grantee_type, role, reshare)
             else:
+                self.log.error("Cannot create OCM share", file_path=file_path, reason="OCM functionality is disabled")
                 raise OCMDisabledError('Cannot create OCM share - OCM functionality is disabled')
         else:
             return self.share_api.create(endpoint, file_path, opaque_id, idp, role, grantee_type)
@@ -72,6 +73,7 @@ class ShareAPIFacade(Cs3Base):
             self.share_api.update(params['share_id'], params['role'])
         else:
             if not self.config.enable_ocm:
+                self.log.error("Cannot update OCM share", file_path=params['share_id'], reason="OCM functionality is disabled")
                 raise OCMDisabledError('Cannot update OCM share - OCM functionality is disabled')
             else:
                 self.ocm_share_api.update(
@@ -89,6 +91,7 @@ class ShareAPIFacade(Cs3Base):
             if self.config.enable_ocm:
                 result = self.ocm_share_api.update_received(share_id, 'state', state)
             else:
+                self.log.error("Cannot update received OCM share", file_path=share_id, reason="OCM functionality is disabled")
                 raise OCMDisabledError('Cannot update received OCM share - OCM functionality is disabled')
         else:
             result = self.share_api.update_received(share_id, state)
@@ -106,6 +109,7 @@ class ShareAPIFacade(Cs3Base):
             if self.config.enable_ocm:
                 return self.ocm_share_api.remove(share_id)
             else:
+                self.log.error("Cannot remove OCM share", file_path=share_id, reason="OCM functionality is disabled")
                 raise OCMDisabledError('Cannot remove OCM share - OCM functionality is disabled')
 
     def list_shares(self, filter_duplicates=False):
@@ -210,7 +214,7 @@ class ShareAPIFacade(Cs3Base):
                     if share_id == share.share.id.opaque_id:
                         return True
             except Exception as e:
-                self.log.error("Error checking OCM " + str(e))
+                self.log.error("Error checking OCM", file_path=share_id, reason=str(e))
         return False
 
     def map_shares(self, share_list, ocm_share_list, received=False):
@@ -251,7 +255,7 @@ class ShareAPIFacade(Cs3Base):
                 model['writable'] = True if ShareUtils.map_permissions_to_role(
                     share.permissions.permissions) == 'editor' else False
             except Exception as e:
-                self.log.error("Unable to map share " + share.resource_id.opaque_id + ", " + e.__str__())
+                self.log.error("Unable to map share", file_path=share.resource_id.opaque_id, reason=str(e))
                 continue
 
             if received:

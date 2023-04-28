@@ -18,6 +18,7 @@ from cs3api4lab.config.config_manager import Cs3ConfigManager
 from cs3api4lab.utils.file_utils import FileUtils
 from cs3api4lab.auth.authenticator import Auth
 from cs3api4lab.api.cs3_base import Cs3Base
+from cs3api4lab.utils.custom_logger import CustomLogger
 
 class StorageApi(Cs3Base):
     def __init__(self, log):
@@ -29,9 +30,6 @@ class StorageApi(Cs3Base):
         intercept_channel = grpc.intercept_channel(channel, auth_interceptor)
         self.cs3_api = cs3gw_grpc.GatewayAPIStub(intercept_channel)
         return
-
-    def logStandardized(self, msg, file_path, time_start):
-        self.log.debug('msg="%s" filepath="%s" elapsedTimems="%.1f"' % (msg, file_path, (time.time() - time_start) * 1000))
 
     def get_unified_file_ref(self, file_path, endpoint):
         stat = self.stat(file_path, endpoint)
@@ -65,9 +63,8 @@ class StorageApi(Cs3Base):
             metadata=self._get_token())
 
         if set_metadata_response.status.code != cs3code.CODE_OK:
-            self.log.error('msg="Unable to set metadata" file_path="%s" reason="%s"' % \
-                           (file_path, set_metadata_response.status.message))
-            raise Exception('Unable to set metadata for: ' + stat['filepath'] + ' ' + str(set_metadata_response.status))
+            self.log.error('Unable to set metadata', file_path=stat['filepath'], reason=set_metadata_response.status.message)
+            raise Exception(f'Unable to set metadata for: {stat["filepath"]} {str(set_metadata_response.status)}')
 
     def get_metadata(self, file_path, endpoint):
         ref = self.get_unified_file_ref(file_path, endpoint)
@@ -88,11 +85,11 @@ class StorageApi(Cs3Base):
             ('x-access-token', self.auth.authenticate())])
 
         if init_file_upload_res.status.code != cs3code.CODE_OK:
-            self.log.error('msg="Failed to initiateFileUpload on write" file_path="%s" reason="%s"' % \
-                           (file_path, init_file_upload_res.status.message))
+            self.log.error('Failed to initiateFileUpload on write', file_path=file_path, reason=init_file_upload_res.status.message)
             raise IOError(init_file_upload_res.status.message)
 
-        self.logStandardized(f"writefile: InitiateFileUploadRes returned protocols={init_file_upload_res.protocols}", file_path, time_start)
+        self.log.debug(f"writefile: InitiateFileUploadRes returned protocols={init_file_upload_res.protocols}", file_path=file_path,
+                      elapsed_timems=CustomLogger.get_timems(time_start))
 
         return init_file_upload_res
 
@@ -125,16 +122,15 @@ class StorageApi(Cs3Base):
             ('x-access-token', self.auth.authenticate())])
 
         if init_file_download_response.status.code == cs3code.CODE_NOT_FOUND:
-            self.log.error('msg="File not found on read" filepath="%s" reason="%s"' % file_path, init_file_download_response.status.message)
+            self.log.error('File not found on read',  file_path=file_path, reason=init_file_download_response.status.message)
             raise IOError('No such file or directory')
 
         elif init_file_download_response.status.code != cs3code.CODE_OK:
-            self.log.error('msg="Failed to initiateFileDownload on read" filepath="%s" reason="%s"' % file_path,
-                           init_file_download_response.status.message)
+            self.log.error('Failed to initiateFileDownload on read', file_path=file_path, reason=init_file_download_response.status.message)
             raise IOError(init_file_download_response.status.message)
 
-        self.logStandardized(f"readfile: InitiateFileDownloadRes returned protocols={init_file_download_response.protocols}",
-                             file_path, time_start)
+        self.log.debug(f"readfile: InitiateFileDownloadRes returned protocols={init_file_download_response.protocols}",
+                      file_path=file_path, elapsed_timems=CustomLogger.get_timems(time_start))
 
         return init_file_download_response
 

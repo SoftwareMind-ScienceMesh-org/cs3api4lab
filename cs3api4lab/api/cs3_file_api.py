@@ -40,9 +40,6 @@ class Cs3FileApi(Cs3Base):
         self.storage_api = StorageApi(self.log)
         self.lock_api = LockApiFactory.create(self.log, self.config)
 
-    def logStandardized(self, msg, filepath, time_start):
-        self.log.debug('msg="%s" filepath="%s" elapsedTimems="%.1f"' % (msg, filepath, (time.time() - time_start) * 1000))
-
     def mount_point(self):
         """
         This returns current mount point for the user
@@ -62,8 +59,7 @@ class Cs3FileApi(Cs3Base):
         time_start = time.time()
         stat = self.storage_api.stat(file_path, endpoint)
         if stat.status.code == cs3code.CODE_OK:
-            time_end = time.time()
-            self.log.debug('msg="Invoked stat" filepath="%s" elapsedTimems="%.1f"' % (file_path, (time_end - time_start) * 1000))
+            self.log.debug("Invoked stat", file_path=file_path, elapsed_timems=(CustomLogger.get_timems(time_start)))
             return {
                 'inode': {'storage_id': stat.info.id.storage_id,
                           'opaque_id': stat.info.id.opaque_id},
@@ -78,7 +74,7 @@ class Cs3FileApi(Cs3Base):
                 'arbitrary_metadata': MessageToDict(stat.info.arbitrary_metadata),
             }
         elif stat.status.code == cs3code.CODE_NOT_FOUND:
-            self.log.error('msg="Failed stat" filepath="%s" reason="%s"' % (file_path, stat.status.message))
+            self.log.error('msg="Failed stat" file_path="%s" reason="%s"' % (file_path, stat.status.message))
             raise FileNotFoundError(stat.status.message + ", file " + file_path)
         else:
             self._handle_error(stat)
@@ -97,27 +93,26 @@ class Cs3FileApi(Cs3Base):
 
             try:
                 self.lock_api.set_lock(stat)
-                time_end = time.time()
-                self.log.info('msg="Created lock" filepath="%s" elapsedTimems="%.1f"' % (
-                stat['filepath'], (time_end - time_start) * 1000))
+                self.log.info('msg="Created lock" file_path="%s" elapsedTimems="%.1f"' % (
+                stat['filepath'], (time.time() - time_start) * 1000))
                 time_start = time.time()
             except IOError:
-                self.log.error('msg="File is locked, opening in read-only mode" filepath="%s" reason="%s"' % (stat['filepath'], "file locked"))
+                self.log.error('msg="File is locked, opening in read-only mode" file_path="%s" reason="%s"' % (stat['filepath'], "file locked"))
 
         else:
             msg = "%s: %s" % (stat.status.code, stat.status.message)
-            self.log.error('msg="Error when stating file for read" filepath="%s" reason="%s"' % ("", msg))
+            self.log.error('msg="Error when stating file for read" file_path="%s" reason="%s"' % ("", msg))
             raise IOError('Error when stating file')
 
         init_file_download = self.storage_api.init_file_download(stat['filepath'], endpoint)
         time_end = time.time()
-        self.log.info('msg="Initialized download" filepath="%s" elapsedTimems="%.1f"' % (
+        self.log.info('msg="Initialized download" file_path="%s" elapsedTimems="%.1f"' % (
             stat['filepath'], (time_end - time_start) * 1000))
         time_start = time.time()
         try:
             file_get = self.storage_api.download_content(init_file_download)
         except requests.exceptions.RequestException as e:
-            self.log.error('msg="Exception when downloading file from Reva" filepath="%s" reason="%s"' % (stat['filepath'], e))
+            self.log.error('msg="Exception when downloading file from Reva" file_path="%s" reason="%s"' % (stat['filepath'], e))
             raise IOError(e)
 
         size = len(file_get.content)
@@ -143,7 +138,7 @@ class Cs3FileApi(Cs3Base):
 
                 # file_path = self.lock_manager.resolve_file_path(stat)
         except Exception as e:
-            self.log.info('msg="Creating new file" filepath="%s" reason="%s"' % (file_path, e))
+            self.log.info('msg="Creating new file" file_path="%s" reason="%s"' % (file_path, e))
 
         if stat:
             # fixme - this might cause overwriting/locking issues due to unexpected error codes
@@ -156,18 +151,18 @@ class Cs3FileApi(Cs3Base):
             upload_response = self.storage_api.upload_content(file_path, content, content_size, init_file_upload)
 
         except requests.exceptions.RequestException as e:
-            self.log.error('msg="Exception when uploading file to Reva" filepath="%s" reason="%s"' % (file_path, e))
+            self.log.error('msg="Exception when uploading file to Reva" file_path="%s" reason="%s"' % (file_path, e))
             raise IOError(e)
 
         time_end = time.time()
 
         if upload_response.status_code != http.HTTPStatus.OK:
             self.log.error(
-                'msg="Error uploading file to Reva" filepath="%s" reason="%s"' % (file_path, upload_response.reason))#todo code error log
+                'msg="Error uploading file to Reva" file_path="%s" reason="%s"' % (file_path, upload_response.reason))
             raise IOError(upload_response.reason)
 
         self.log.info(
-            'msg="File open for write" filepath="%s" elapsedTimems="%.1f"' % (
+            'msg="File open for write" file_path="%s" elapsedTimems="%.1f"' % (
                 file_path, (time_end - time_start) * 1000))
 
         return file_path
@@ -182,11 +177,11 @@ class Cs3FileApi(Cs3Base):
         res = self.cs3_api.Delete(request=req, metadata=[('x-access-token', self.auth.authenticate())])
 
         if res.status.code == cs3code.CODE_NOT_FOUND:
-            self.log.error('msg="File or folder not found on remove" filepath="%s" reason="%s"' % (file_path, "not found"))
+            self.log.error('msg="File or folder not found on remove" file_path="%s" reason="%s"' % (file_path, "not found"))
             raise FileNotFoundError('No such file or directory')
 
         if res.status.code != cs3code.CODE_OK:
-            self.log.error('msg="Failed to remove file or folder" filepath="%s" reason="%s"' % (file_path, res))
+            self.log.error('msg="Failed to remove file or folder" file_path="%s" reason="%s"' % (file_path, res))
             raise IOError(res.status.message)
 
         self.log.debug('msg="Invoked remove" result="%s"' % res)
@@ -204,12 +199,12 @@ class Cs3FileApi(Cs3Base):
             raise ResourceNotFoundError(f"directory {path} not found")
 
         if res.status.code != cs3code.CODE_OK:
-            self.log.error('msg="Failed to read container" filepath="%s" reason="%s"' % (path, res.status.message))
+            self.log.error('msg="Failed to read container" file_path="%s" reason="%s"' % (path, res.status.message))
             raise IOError(res.status.message)
 
         tend = time.time()
         self.log.debug(
-            'msg="Invoked read container" filepath="%s" elapsedTimems="%.1f"' % (path, (tend - tstart) * 1000))
+            'msg="Invoked read container" file_path="%s" elapsedTimems="%.1f"' % (path, (tend - tstart) * 1000))
 
         out = []
         for info in res.infos:
@@ -258,12 +253,12 @@ class Cs3FileApi(Cs3Base):
         res = self.cs3_api.CreateContainer(request=req, metadata=[('x-access-token', self.auth.authenticate())])
 
         if res.status.code != cs3code.CODE_OK:
-            self.log.error('msg="Failed to create container" filepath="%s" reason="%s"' % (path, res.status.message))
+            self.log.error('msg="Failed to create container" file_path="%s" reason="%s"' % (path, res.status.message))
             raise IOError(res.status.message)
 
         tend = time.time()
         self.log.debug(
-            'msg="Invoked create container" filepath="%s" elapsedTimems="%.1f"' % (path, (tend - tstart) * 1000))
+            'msg="Invoked create container" file_path="%s" elapsedTimems="%.1f"' % (path, (tend - tstart) * 1000))
 
     def get_home_dir(self):
         return self.config.home_dir if self.config.home_dir else ""

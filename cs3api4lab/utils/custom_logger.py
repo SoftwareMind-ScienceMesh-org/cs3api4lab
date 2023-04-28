@@ -1,5 +1,4 @@
 # import uuid
-# import logging
 #
 # class CustomLogger(logging.LoggerAdapter):
 #     def __init__(self, logger):
@@ -8,10 +7,11 @@
 #
 #     def process(self, msg, kwargs):
 #         return f'traceId="{self.extra["traceId"]} {msg}', kwargs
-
+from logging import Logger
 import uuid
+import time
 
-class CustomLogger():
+class CustomLogger(Logger):
     log = None
     traceId = None
 
@@ -20,16 +20,30 @@ class CustomLogger():
         self.traceId = str(uuid.uuid4())
 
     def debug(self, msg, *args, **kwargs):
-        self.log.debug(f'traceId="{self.traceId}" {msg}', *args, **kwargs)
+        params = ' '.join(f'{k}="{v}"' for k, v in kwargs.items())
+        self.log.debug(f'traceId="{self.traceId}" msg="{msg}" {params}', *args)
+        # self.log.debug(f'traceId="{self.traceId}" {msg}', *args, **kwargs)
 
     def info(self, msg, *args, **kwargs):
-        self.log.info(f'traceId="{self.traceId}" {msg}', *args, **kwargs)
+        params = ' '.join(f'{k}="{v}"' for k, v in kwargs.items())
+        self.log.info(f'traceId="{self.traceId}" msg="{msg}" {params}', *args)
+        #self.log.info(f'traceId="{self.traceId}" {msg}', *args, **kwargs)
 
     def warning(self, msg, *args, **kwags):
-        self.log.warning(f'traceId="{self.traceId}" {msg}', *args, **kwargs)
+        params = ' '.join(f'{k}="{v}"' for k, v in kwargs.items())
+        self.log.warning(f'traceId="{self.traceId}" msg="{msg}" {params}', *args)
+        # self.log.warning(f'traceId="{self.traceId}" {msg}', *args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
-        self.log.error(f'traceId="{self.traceId}" {msg}', *args, **kwargs)
+        params = ' '.join(f'{k}="{v}"' for k, v in kwargs.items())
+        self.log.error(f'traceId="{self.traceId}" msg="{msg}" {params}', *args)
+        # self.log.error(f'traceId="{self.traceId}" {msg}', *args, **kwargs)
 
     def exception(self, msg, *args, exc_info=True, **kwargs):
-        self.log.error(f'traceId="{self.traceId}" {msg}', *args, exc_info=exc_info, **kwargs)
+        params = ' '.join(f'{k}="{v}"' for k, v in kwargs.items())
+        self.log.error(f'traceId="{self.traceId}" msg="{msg}" {params}', *args, exc_info=True)
+        # self.log.error(f'traceId="{self.traceId}" {msg}', *args, exc_info=exc_info, **kwargs)
+
+    @staticmethod
+    def get_timems(time_start):
+        return round((time.time() - time_start) * 1000, 1)

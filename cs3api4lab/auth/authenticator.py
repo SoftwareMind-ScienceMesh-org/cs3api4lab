@@ -41,7 +41,7 @@ class Authenticator(Cs3Base):
 
     def raise_401_error(self):
         if self.log is not None:
-            self.log.error('msg="Failed to authenticate user" filepath="user=%s" reason="%s"' % self.config.client_id, "401")
+            self.log.error("Failed to authenticate user", file_path=self.config.client_id, reason="401")
         raise web.HTTPError(401, u'Failed to authenticate user', reason="unauthenticated")
 
     def _auth_in_iop(self, client_secret_or_token, login_type="basic"):

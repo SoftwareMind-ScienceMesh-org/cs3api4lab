@@ -4,6 +4,7 @@ import posixpath
 import nest_asyncio
 import logging
 import logstash
+import time
 
 import cs3.storage.provider.v1beta1.resources_pb2 as resource_types
 import cs3.rpc.v1beta1.code_pb2 as cs3code
@@ -37,7 +38,6 @@ bound to the endpoint rules defined in ContentsManager.
 class CS3APIsManager(ContentsManager):
     cs3_config = None
     pure_log = None
-    log = None
     file_api = None
 
     def __init__(self, parent, log, **kwargs):
@@ -68,7 +68,6 @@ class CS3APIsManager(ContentsManager):
         return wrapper
 
     # _is_dir is already async, so no need to asyncify this
-    @init_new_session
     def dir_exists(self, path):
         """Does a directory exist at the given path?
         Like os.path.isdir
@@ -85,7 +84,6 @@ class CS3APIsManager(ContentsManager):
         path = FileUtils.normalize_path(path)
         return self._is_dir(path)
 
-    @init_new_session
     @asyncify
     def is_hidden(self, path):
         """Is path a hidden directory or file?
@@ -105,7 +103,6 @@ class CS3APIsManager(ContentsManager):
             return True
         return False
 
-    @init_new_session
     @asyncify
     def file_exists(self, path=''):
         """Does a file exist at the given path?
@@ -136,6 +133,7 @@ class CS3APIsManager(ContentsManager):
     def get(self, path, content=True, type=None, format=None):
         """Get a file, notebook or directory model."""
         path = FileUtils.normalize_path(path)
+        self.log.info(f"cs3apismanager.get", http_method="GET", api_endpoint=f"/api/contents{path}")
         model = None
 
         if type:
@@ -147,13 +145,13 @@ class CS3APIsManager(ContentsManager):
                 try:   #this needs to be fixed/refactored in a separate issue
                     model = self._notebook_model(path, content=content)
                 except Exception as ex:
-                    self.log.error("Notebook does not exist %s, ex: %s", path, ex)
+                    self.log.error("Notebook does not exist %s, ex", file_path=path, reason=str(ex))
         else:
             if path.endswith('.ipynb'):
                 try:   #this needs to be fixed/refactored in a separate issue
                     model = self._notebook_model(path, content=content)
-                except Exception:
-                    self.log.info("Notebook does not exist %s", path)
+                except Exception as ex:
+                    self.log.error("Notebook does not exist", file_path=path, reason=str(ex))
             elif self.file_exists(path):
                 model = self._file_model(path, content=content, format=format)
             elif self._is_dir(path):
@@ -175,9 +173,8 @@ class CS3APIsManager(ContentsManager):
 
         WARNING: root_dir will be later added to kernel_path, so consider it when defining kernel_path
         """
-        self.log.debug(f"Requesting the kernel path for {path}")
-
         # FIXME delete this everywhere
+        self.log.info(f"cs3apismanager.get_kernel_path", http_method="GET", api_endpoint=f"kernel_path")
         if ":" in path:
             path = path.split(":")[1]
 
@@ -203,13 +200,13 @@ class CS3APIsManager(ContentsManager):
         writing any data.
         """
         path = FileUtils.check_and_transform_file_path(path)
+        self.log.info(f"cs3apismanager.save", http_method="PUT", api_endpoint=f"/api/contents{path}")
         # self._check_write_permissions(path)
 
         if 'type' not in model:
             raise web.HTTPError(400, u'No file type provided')
         if 'content' not in model and model['type'] != 'directory':
             raise web.HTTPError(400, u'No file content provided')
-        self.log.debug("Saving %s", path)
         # ToDo: Implements run_pre_save_hook and run_post_save_hook
         # self.run_pre_save_hook(model=model, path=path)
 
@@ -237,7 +234,7 @@ class CS3APIsManager(ContentsManager):
             raise
 
         except Exception as e:
-            self.log.error(u'Error while saving file: %s %s', path, e, exc_info=True)
+            self.log.error('Error while saving file', file_path=path, reason=str(e))
             raise web.HTTPError(500, u'Unexpected error while saving file: %s %s' % (path, e))
 
         validation_message = None
@@ -258,6 +255,13 @@ class CS3APIsManager(ContentsManager):
 
         return model
 
+    def delete(self, path):
+        self.log.info(f"cs3apismanager.delete", http_method="DELETE", api_endpoint=f"/api/contents{path}")
+        path = path.strip('/')
+        if not path:
+            raise web.HTTPError(400, "Can't delete root")
+        self.delete_file(path)
+
     @init_new_session
     @asyncify
     def delete_file(self, path):
@@ -267,12 +271,15 @@ class CS3APIsManager(ContentsManager):
             self.file_api.remove(path, self.cs3_config.endpoint)
 
         except FileNotFoundError as e:
-            self.log.error(u'File not found error: %s %s', path, e, exc_info=True)
+            self.log.error('File not found error', file_path=path, reason=str(e))
             raise web.HTTPError(404, u'No such file or directory: %s %s' % (path, e))
 
         except Exception as e:
-            self.log.error(u'Unknown error delete file: %s %s', path, e, exc_info=True)
+            self.log.error('Unknown error while deleting file', file_path=path, reason=str(e))
             raise web.HTTPError(500, u'Unknown error delete file: %s %s' % (path, e))
+
+    def rename(self, old_path, new_path):
+        self.rename_file(old_path, new_path)
 
     @init_new_session
     @asyncify
@@ -288,10 +295,12 @@ class CS3APIsManager(ContentsManager):
         old_path = FileUtils.normalize_path(old_path)
         new_path = FileUtils.normalize_path(new_path)
 
+        self.log.info(f"cs3apismanager.rename_file", http_method="PATCH", api_endpoint=f"/api/contents{old_path}")
+
         try:
             self.file_api.move(old_path, new_path, self.cs3_config.endpoint)
         except Exception as e:
-            self.log.error(u'Error renaming file: %s %s', old_path, e)
+            self.log.error('Error renaming file', file_path=old_path, reason=str(e))
             raise web.HTTPError(500, u'Error renaming file: %s %s' % (old_path, e))
 
     # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
@@ -300,6 +309,7 @@ class CS3APIsManager(ContentsManager):
 
         path = path.strip('/')
         path = FileUtils.normalize_path(path)
+        self.log.info(f"cs3apismanager.new", http_method="PUT", api_endpoint=f"/api/contents{path}")
         # self._check_write_permissions(path)
 
         if model is None:
@@ -376,7 +386,7 @@ class CS3APIsManager(ContentsManager):
         try:
             file_info = self.file_api.stat_info(path, self.cs3_config.endpoint)
         except Exception as e:
-            self.log.info('File % does not exists' % path)
+            self.log.error('File % does not exists', file_path=path, reason=str(e))
 
         if file_info:
             model = ModelUtils.update_file_model(ModelUtils.create_empty_file_model(path), file_info)
@@ -442,7 +452,7 @@ class CS3APIsManager(ContentsManager):
             self.file_api.write_file(path, bcontent, self.cs3_config.endpoint, format)
 
         except Exception as e:
-            self.log.error(u'Error saving: %s %s', path, e)
+            self.log.error('Error saving file', file_path=path, reason=str(e))
             raise web.HTTPError(400, u'Error saving %s: %s' % (path, e))
 
     # can't be async because SQLite (used for jupyter notebooks) doesn't allow multithreaded operations by default
@@ -453,7 +463,7 @@ class CS3APIsManager(ContentsManager):
             self.file_api.write_file(path, nb_content, self.cs3_config.endpoint, format)
 
         except Exception as e:
-            self.log.error(u'Error saving: %s %s', path, e)
+            self.log.error('Error saving file', file_path=path, reason=str(e))
             raise web.HTTPError(400, u'Error saving %s: %s' % (path, e))
 
     @asyncify
@@ -499,17 +509,6 @@ class CS3APIsManager(ContentsManager):
     #
     # Notebook hack - disable checkpoint
     #
-    @asyncify
-    def delete(self, path):
-        path = path.strip('/')
-        if not path:
-            raise web.HTTPError(400, "Can't delete root")
-        self.delete_file(path)
-
-    @asyncify
-    def rename(self, old_path, new_path):
-        self.rename_file(old_path, new_path)
-
     def create_checkpoint(self, path):
         return {'id': 'checkpoint', 'last_modified': "0"}
 
