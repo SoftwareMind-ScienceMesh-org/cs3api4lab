@@ -209,12 +209,12 @@ class TestCs3UniShareApi(ShareTestBase, TestCase):
 
     def test_remove(self):
         try:
+            contains = False
             self.file_name = self.file_path + self.get_random_suffix()
             created_share = self.create_share('einstein', self.richard_id, self.richard_idp, self.file_name)
             self.share_id = created_share['opaque_id']
 
             share_list = self.uni_api.list_shares()
-            contains = False
             for share in share_list['content']:
                 if self.file_name.split('/')[-1] in share['path']:
                     contains = True

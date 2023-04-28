@@ -1,4 +1,5 @@
 import urllib.parse
+import time
 
 import cs3.ocm.provider.v1beta1.provider_api_pb2_grpc as ocm_provider_api_grpc
 import cs3.storage.provider.v1beta1.resources_pb2 as Resources
@@ -19,6 +20,7 @@ from cs3api4lab.utils.file_utils import FileUtils
 from cs3api4lab.api.storage_api import StorageApi
 from cs3api4lab.exception.exceptions import OCMDisabledError
 from cs3api4lab.api.cs3_base import Cs3Base
+from cs3api4lab.utils.custom_logger import CustomLogger
 
 class ShareAPIFacade(Cs3Base):
     def __init__(self, log):
@@ -118,6 +120,7 @@ class ShareAPIFacade(Cs3Base):
         :param: filter_duplicates - wether to filter out duplicated shares by resource id
         :rtype: dict
         """
+        time_start = time.time()
         share_list = self.share_api.list()
         if self.config.enable_ocm:
             ocm_share_list = self.ocm_share_api.list()
@@ -126,6 +129,10 @@ class ShareAPIFacade(Cs3Base):
         mapped_shares = self.map_shares(share_list, ocm_share_list)
         if filter_duplicates:
             mapped_shares = self._filter_duplicates(mapped_shares)
+
+        self.log.debug(f"Finished listing shares, filter_duplicates was: {filter_duplicates}", file_path="",
+                       elapsed_timems=CustomLogger.get_timems(time_start))
+
         return mapped_shares
 
     def _filter_duplicates(self, shares):
